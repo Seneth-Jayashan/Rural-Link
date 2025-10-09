@@ -1,4 +1,49 @@
-# React + Vite
+# Rural Link - Web Frontend
+
+This is the web frontend for the Rural Link application, built with React + Vite.
+
+## Environment Variables
+
+Create a `.env.local` file in the root of this directory with the following variables:
+
+```env
+# API Configuration
+VITE_API_URL=http://localhost:5000
+
+# Hugging Face API Configuration
+VITE_HUGGING_FACE_API_KEY=your_hugging_face_api_key_here
+```
+
+### Getting a Hugging Face API Key
+
+1. Go to [Hugging Face](https://huggingface.co/)
+2. Create an account or sign in
+3. Go to your profile settings
+4. Navigate to "Access Tokens"
+5. Create a new token with read permissions
+6. Copy the token and add it to your `.env.local` file
+
+## Features
+
+- **AI-Powered Review Suggestions**: Uses Hugging Face API to generate helpful review suggestions as users type
+- **Real-time Order Tracking**: Track orders with live status updates
+- **Interactive Chat**: Chat with delivery drivers during transit
+- **Responsive Design**: Works on desktop and mobile devices
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
