@@ -72,9 +72,6 @@ export default function CustomerHome(){
                   <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-1 text-white bg-orange-500 rounded px-2 py-1 text-xs" onClick={()=>{ addItem(p,1); notify({ type:'success', title:'Added to cart', message:p.name }) }}>
                     <FiPlus /> Add
                   </motion.button>
-                  <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-1 text-white bg-green-600 rounded px-2 py-1 text-xs" onClick={()=>placeQuickOrder(p)}>
-                    <FiShoppingBag /> Buy
-                  </motion.button>
                 </div>
               </div>
             </div>
