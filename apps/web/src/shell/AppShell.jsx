@@ -11,7 +11,7 @@ export function AppShell() {
   const { t } = useI18n();
 
   return (
-    <div className="min-h-dvh flex flex-col font-inter text-white relative">
+    <div className="min-h-dvh flex flex-col font-inter relative">
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
@@ -31,13 +31,13 @@ export function AppShell() {
             <>
               <Link
                 to="/login"
-                className="text-gray-900 hover:text-[#f97316] transition-all duration-200"
+                className="text-white hover:text-[#f97316] transition-all duration-200"
               >
                 {t("Login")}
               </Link>
               <Link
                 to="/register"
-                className="text-gray-900 hover:text-[#f97316] transition-all duration-200"
+                className="text-white hover:text-[#f97316] transition-all duration-200"
               >
                 {t("Register")}
               </Link>
@@ -170,7 +170,7 @@ function LanguageSwitcher() {
       whileHover={{ scale: 1.05 }}
       value={lang}
       onChange={(e) => setLocalLang(e.target.value)}
-      className="bg-transparent text-black text-sm rounded-lg px-2 py-1 focus:outline-none cursor-pointer hover:text-[#f97316] transition-all duration-200"
+      className="bg-transparent text-white text-sm rounded-lg px-2 py-1 focus:outline-none cursor-pointer hover:text-[#f97316] transition-all duration-200"
     >
       <option value="en" className="bg-black text-white">
         EN
