@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import './index.css'
 import { AppShell } from './shell/AppShell.jsx'
 import Login from './pages/auth/Login.jsx'
@@ -8,6 +8,10 @@ import Register from './pages/auth/Register.jsx'
 import VerifyEmail from './pages/auth/VerifyEmail.jsx'
 import CustomerHome from './pages/customer/Home.jsx'
 import MerchantDashboard from './pages/merchant/Dashboard.jsx'
+import ProductsList from './pages/merchant/ProductsList.jsx'
+import ProductCreate from './pages/merchant/ProductCreate.jsx'
+import ProductEdit from './pages/merchant/ProductEdit.jsx'
+import ProductView from './pages/merchant/ProductView.jsx'
 import DeliveryDashboard from './pages/deliver/Dashboard.jsx'
 import OrderTracking from './pages/common/OrderTracking.jsx'
 import { LanguageProvider } from './shared/i18n/LanguageContext.jsx'
@@ -24,7 +28,11 @@ function RequireRole({ role, children }){
   const { user, loading } = useAuth()
   if (loading) return <div className="p-4">Loading...</div>
   if (!user) return <Login />
-  return user.role === role ? children : <div className="p-4">Access denied</div>
+  if (user.role === role) return children
+  // Redirect to the correct dashboard instead of showing Access Denied
+  if (user.role === 'merchant') return <Navigate to="/merchant" replace />
+  if (user.role === 'deliver') return <Navigate to="/deliver" replace />
+  return <Navigate to="/" replace />
 }
 
 function NotAuthOnly({ children }){
@@ -37,16 +45,31 @@ function NotAuthOnly({ children }){
   return <CustomerHome />
 }
 
+// Home route that sends logged-in users to their role dashboard
+function HomeRouter(){
+  const { user, loading } = useAuth()
+  if (loading) return <div className="p-4">Loading...</div>
+  if (!user) return <CustomerHome />
+  if (user.role === 'merchant') return <Navigate to="/merchant" replace />
+  if (user.role === 'deliver') return <Navigate to="/deliver" replace />
+  return <CustomerHome />
+}
+
 const router = createBrowserRouter([
   {
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <RequireRole role="customer"><CustomerHome /></RequireRole> },
+      // Send users to appropriate dashboard or public home when they land on '/'
+      { index: true, element: <HomeRouter /> },
       { path: 'login', element: <NotAuthOnly><Login /></NotAuthOnly> },
       { path: 'register', element: <NotAuthOnly><Register /></NotAuthOnly> },
       { path: 'verify-email/:token', element: <NotAuthOnly><VerifyEmail /></NotAuthOnly> },
-      { path: 'merchant', element: <RequireRole role="merchant"><MerchantDashboard /></RequireRole> },
+      { path: 'merchant', element: <RequireRole role="merchant"><Navigate to="/merchant/products" replace /></RequireRole> },
+      { path: 'merchant/products', element: <RequireRole role="merchant"><ProductsList /></RequireRole> },
+      { path: 'merchant/products/new', element: <RequireRole role="merchant"><ProductCreate /></RequireRole> },
+      { path: 'merchant/products/:id', element: <RequireRole role="merchant"><ProductView /></RequireRole> },
+      { path: 'merchant/products/:id/edit', element: <RequireRole role="merchant"><ProductEdit /></RequireRole> },
       { path: 'deliver', element: <RequireRole role="deliver"><DeliveryDashboard /></RequireRole> },
       { path: 'track/:orderId', element: <RequireAuth><OrderTracking /></RequireAuth> },
     ],

@@ -2,11 +2,12 @@ const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 export async function api(path, { method = 'GET', body, headers } = {}){
   const token = localStorage.getItem('token')
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
   const res = await fetch(`${BASE}${path}`,{
     method,
-    headers: { 'Content-Type':'application/json', ...(token? { Authorization: `Bearer ${token}` } : {}), ...(headers||{}) },
+    headers: { ...(isFormData ? {} : { 'Content-Type':'application/json' }), ...(token? { Authorization: `Bearer ${token}` } : {}), ...(headers||{}) },
     credentials: 'include',
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   })
   const data = await res.json().catch(()=>({}))
   if(!res.ok) throw new Error(data.message || 'Request failed')
