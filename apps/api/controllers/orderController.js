@@ -1,7 +1,9 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 
 // Create new order
 exports.createOrder = async (req, res) => {
@@ -211,6 +213,9 @@ exports.getDeliveryOrders = async (req, res) => {
 // Get single order
 exports.getOrder = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Invalid order id' });
+    }
     const order = await Order.findById(req.params.id)
       .populate('customer', 'firstName lastName phone email')
       .populate('merchant', 'businessName firstName lastName phone')
@@ -237,10 +242,36 @@ exports.getOrder = async (req, res) => {
   }
 };
 
+// Get latest order for current customer
+exports.getLastOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({ customer: req.user._id })
+      .populate('customer', 'firstName lastName phone email')
+      .populate('merchant', 'businessName firstName lastName phone')
+      .populate('deliveryPerson', 'firstName lastName phone')
+      .populate('items.product', 'name price images description')
+      .sort({ createdAt: -1 });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'No orders found' });
+    }
+
+    // Authorization: ensure requester is the customer
+    if (order.customer._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized to view this order' });
+    }
+
+    res.json({ success: true, data: order });
+  } catch (error) {
+    console.error('Get last order error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // Update order status (merchant)
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, reason } = req.body;
     const allowedStatuses = ['confirmed', 'preparing', 'ready', 'cancelled'];
     
     if (!allowedStatuses.includes(status)) {
@@ -257,6 +288,10 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to update this order' });
     }
     
+    // If merchant is cancelling, store a reason
+    if (status === 'cancelled' && reason) {
+      order.cancellationReason = reason;
+    }
     await order.updateStatus(status);
     try {
       const { emitToOrder } = require('../services/realtime');
@@ -267,10 +302,28 @@ exports.updateOrderStatus = async (req, res) => {
     await Notification.createNotification({
       user: order.customer,
       title: 'Order Status Update',
-      message: `Your order #${order.orderNumber} status has been updated to ${status}`,
+      message: status === 'cancelled'
+        ? `Your order #${order.orderNumber} was cancelled by the merchant${reason ? `: ${reason}` : ''}`
+        : `Your order #${order.orderNumber} status has been updated to ${status}`,
       type: 'order',
       data: { orderId: order._id }
     });
+
+    // When order is ready, notify all active delivery drivers
+    if (status === 'ready') {
+      const drivers = await User.find({ role: 'deliver', isActive: true }).select('_id');
+      if (drivers.length > 0) {
+        const notifications = drivers.map(d => ({
+          user: d._id,
+          title: 'New Delivery Available',
+          message: `Order #${order.orderNumber} is ready for pickup`,
+          type: 'delivery',
+          priority: 'high',
+          data: { orderId: order._id }
+        }));
+        try { await Notification.sendBulk(notifications); } catch {}
+      }
+    }
     
     res.json({
       success: true,
@@ -279,6 +332,26 @@ exports.updateOrderStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Update order status error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Delivery person declines an available order
+exports.declineDelivery = async (req, res) => {
+  try {
+    const { reason } = req.body || {};
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    // Only declinable if not yet assigned
+    if (order.deliveryPerson) {
+      return res.status(400).json({ success: false, message: 'Order already assigned to a delivery person' });
+    }
+    await order.updateStatus('delivery_declined', null, reason || 'Declined');
+    res.json({ success: true, message: 'Declined the delivery', data: order });
+  } catch (error) {
+    console.error('Decline delivery error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

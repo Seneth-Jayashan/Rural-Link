@@ -11,6 +11,7 @@ router.post('/', auth, roles('customer'), [
   body('deliveryAddress').notEmpty()
 ], orderController.createOrder);
 router.get('/me', auth, roles('customer'), orderController.getCustomerOrders);
+router.get('/last', auth, roles('customer'), orderController.getLastOrder);
 router.post('/:id/cancel', auth, roles('customer'), orderController.cancelOrder);
 
 // Merchant
@@ -22,6 +23,7 @@ router.get('/available', auth, roles('deliver'), orderController.getAvailableOrd
 router.get('/deliver', auth, roles('deliver'), orderController.getDeliveryOrders);
 router.post('/:id/accept', auth, roles('deliver'), orderController.acceptDelivery);
 router.post('/:id/delivery-status', auth, roles('deliver'), orderController.updateDeliveryStatus);
+router.post('/:id/decline', auth, roles('deliver'), orderController.declineDelivery);
 
 // Common
 router.get('/:id', auth, orderController.getOrder);

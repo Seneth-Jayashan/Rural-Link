@@ -8,6 +8,7 @@ import Register from './pages/auth/Register.jsx'
 import VerifyEmail from './pages/auth/VerifyEmail.jsx'
 import CustomerHome from './pages/customer/Home.jsx'
 import MerchantDashboard from './pages/merchant/Dashboard.jsx'
+import MerchantOrders from './pages/merchant/Orders.jsx'
 import ProductsList from './pages/merchant/ProductsList.jsx'
 import ProductCreate from './pages/merchant/ProductCreate.jsx'
 import ProductEdit from './pages/merchant/ProductEdit.jsx'
@@ -68,7 +69,8 @@ const router = createBrowserRouter([
       { path: 'login', element: <NotAuthOnly><Login /></NotAuthOnly> },
       { path: 'register', element: <NotAuthOnly><Register /></NotAuthOnly> },
       { path: 'verify-email/:token', element: <NotAuthOnly><VerifyEmail /></NotAuthOnly> },
-      { path: 'merchant', element: <RequireRole role="merchant"><Navigate to="/merchant/products" replace /></RequireRole> },
+      { path: 'merchant', element: <RequireRole role="merchant"><Navigate to="/merchant/orders" replace /></RequireRole> },
+      { path: 'merchant/orders', element: <RequireRole role="merchant"><MerchantOrders /></RequireRole> },
       { path: 'merchant/products', element: <RequireRole role="merchant"><ProductsList /></RequireRole> },
       { path: 'merchant/products/new', element: <RequireRole role="merchant"><ProductCreate /></RequireRole> },
       { path: 'merchant/products/:id', element: <RequireRole role="merchant"><ProductView /></RequireRole> },

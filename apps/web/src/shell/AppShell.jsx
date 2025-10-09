@@ -84,11 +84,23 @@ export function AppShell() {
                 label={t("Cart")}
                 active={location.pathname.startsWith("/cart")}
               />
+              <NavItem
+                to="/track/last"
+                icon={<Truck size={20} />}
+                label={t("Track")}
+                active={location.pathname.startsWith("/track")}
+              />
             </>
           )}
 
           {user.role === "merchant" && (
             <>
+              <NavItem
+                to="/merchant/orders"
+                icon={<ShoppingCart size={20} />}
+                label={t("Orders")}
+                active={location.pathname.startsWith("/merchant/orders")}
+              />
               <NavItem
                 to="/merchant/products"
                 icon={<Store size={20} />}
