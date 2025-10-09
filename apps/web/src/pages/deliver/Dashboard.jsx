@@ -3,7 +3,7 @@ import { get, post } from '../../shared/api.js'
 import { motion } from 'framer-motion'
 import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
-// Chat/Call removed
+import OrderChat from '../common/OrderChat.jsx'
 
 export default function DeliveryDashboard(){
   const [available, setAvailable] = useState([])
@@ -87,7 +87,12 @@ export default function DeliveryDashboard(){
                 </motion.button>
               )}
             </div>
-            {/* Chat/Call removed */}
+            {['picked_up','in_transit'].includes(o.status) && o.status !== 'delivered' && (
+              <div className="mt-3">
+                <div className="font-medium mb-1">Chat with customer</div>
+                <OrderChat orderId={o._id} meId={o.deliveryPerson} />
+              </div>
+            )}
           </motion.div>
         ))}
         {assigned.length === 0 && (
