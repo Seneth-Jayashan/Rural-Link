@@ -3,12 +3,23 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { requestNotificationPermission, listenForMessages } from "../../notifications.js";
 
 export default function Onboarding() {
   const [showSplash, setShowSplash] = useState(true)
   const [current, setCurrent] = useState(0)
   const navigate = useNavigate()
   const { t } = useI18n()
+
+    useEffect(() => {
+        // Wait a bit after splash animations
+        const timer = setTimeout(() => {
+        requestNotificationPermission();
+        listenForMessages();
+        }, 4000);
+
+        return () => clearTimeout(timer);
+    }, []);
 
   // Hide splash screen after 2 seconds
   useEffect(() => {
