@@ -11,17 +11,17 @@ export function AppShell() {
   const { t } = useI18n();
 
   return (
-    <div className="min-h-dvh flex flex-col bg-black text-black font-inter">
+    <div className="min-h-dvh flex flex-col font-inter text-white relative">
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="sticky top-0 z-20 bg-black/95 backdrop-blur-sm px-5 py-3 flex items-center justify-between"
+        className="fixed top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/40 to-transparent backdrop-blur-md px-5 py-4 flex items-center justify-between shadow-md"
       >
         <Link
           to="/"
-          className="text-2xl font-bold text-[#f97316] hover:text-white transition-all duration-200"
+          className="text-2xl font-bold text-[#f97316] hover:text-white transition-all duration-200 tracking-wide"
         >
           Rural Link
         </Link>
@@ -31,26 +31,27 @@ export function AppShell() {
             <>
               <Link
                 to="/login"
-                className="text-white hover:text-[#f97316] transition-all duration-200"
+                className="text-gray-900 hover:text-[#f97316] transition-all duration-200"
               >
-                {t('Login')}
+                {t("Login")}
               </Link>
               <Link
                 to="/register"
-                className="text-white hover:text-[#f97316] transition-all duration-200"
+                className="text-gray-900 hover:text-[#f97316] transition-all duration-200"
               >
-                {t('Register')}
+                {t("Register")}
               </Link>
             </>
           )}
 
           {user && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
               onClick={logout}
-              className="text-[#f97316] hover:text-white font-semibold transition-all duration-200"
+              className="px-3 py-1.5 bg-[#f97316]/20 rounded-md text-[#f97316] hover:bg-[#f97316]/30 hover:text-white font-semibold transition-all duration-200"
             >
-              {t('Logout')}
-            </button>
+              {t("Logout")}
+            </motion.button>
           )}
 
           <LanguageSwitcher />
@@ -58,35 +59,39 @@ export function AppShell() {
       </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1 px-5 py-4 bg-white">
+      <main className="flex-1 pt-20">
         <Outlet />
       </main>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation (with black gradient) */}
       {user && (
         <motion.nav
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-300 py-2 flex justify-around"
+          className="fixed bottom-4 inset-x-4 
+            bg-gradient-to-r from-black/80 via-black/60 to-black/80
+            backdrop-blur-xl rounded-2xl py-3 
+            flex justify-around shadow-[0_4px_30px_rgba(0,0,0,0.6)]
+            border border-white/10"
         >
           {user.role === "customer" && (
             <>
               <NavItem
                 to="/"
-                icon={<Home size={20} />}
+                icon={<Home size={22} />}
                 label={t("Home")}
                 active={location.pathname === "/"}
               />
               <NavItem
                 to="/cart"
-                icon={<ShoppingCart size={20} />}
+                icon={<ShoppingCart size={22} />}
                 label={t("Cart")}
                 active={location.pathname.startsWith("/cart")}
               />
               <NavItem
                 to="/track"
-                icon={<Truck size={20} />}
+                icon={<Truck size={22} />}
                 label={t("Track")}
                 active={location.pathname.startsWith("/track")}
               />
@@ -97,19 +102,22 @@ export function AppShell() {
             <>
               <NavItem
                 to="/merchant/orders"
-                icon={<ShoppingCart size={20} />}
+                icon={<ShoppingCart size={22} />}
                 label={t("Orders")}
                 active={location.pathname.startsWith("/merchant/orders")}
               />
               <NavItem
                 to="/merchant/products"
-                icon={<Store size={20} />}
+                icon={<Store size={22} />}
                 label={t("Products")}
-                active={location.pathname.startsWith("/merchant/products") && !location.pathname.endsWith('/new')}
+                active={
+                  location.pathname.startsWith("/merchant/products") &&
+                  !location.pathname.endsWith("/new")
+                }
               />
               <NavItem
                 to="/merchant/products/new"
-                icon={<PlusCircle size={20} />}
+                icon={<PlusCircle size={22} />}
                 label={t("Add")}
                 active={location.pathname === "/merchant/products/new"}
               />
@@ -119,7 +127,7 @@ export function AppShell() {
           {user.role === "deliver" && (
             <NavItem
               to="/deliver"
-              icon={<Truck size={20} />}
+              icon={<Truck size={22} />}
               label={t("Deliver")}
               active={location.pathname.startsWith("/deliver")}
             />
@@ -136,12 +144,12 @@ function NavItem({ to, icon, label, active }) {
       to={to}
       className={`flex flex-col items-center gap-1 text-xs font-medium transition-all duration-200 ${
         active
-          ? "text-[#f97316] scale-105"
-          : "text-gray-500 hover:text-[#f97316] hover:scale-105"
+          ? "text-[#f97316] scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.7)]"
+          : "text-gray-300 hover:text-[#f97316] hover:scale-105"
       }`}
     >
       {icon}
-      <span>{label}</span>
+      <span className="tracking-wide">{label}</span>
     </Link>
   );
 }
@@ -162,11 +170,17 @@ function LanguageSwitcher() {
       whileHover={{ scale: 1.05 }}
       value={lang}
       onChange={(e) => setLocalLang(e.target.value)}
-      className="bg-white text-black text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none cursor-pointer"
+      className="bg-transparent text-black text-sm rounded-lg px-2 py-1 focus:outline-none cursor-pointer hover:text-[#f97316] transition-all duration-200"
     >
-      <option value="en">EN</option>
-      <option value="si">SI</option>
-      <option value="ta">TA</option>
+      <option value="en" className="bg-black text-white">
+        EN
+      </option>
+      <option value="si" className="bg-black text-white">
+        SI
+      </option>
+      <option value="ta" className="bg-black text-white">
+        TA
+      </option>
     </motion.select>
   );
 }
