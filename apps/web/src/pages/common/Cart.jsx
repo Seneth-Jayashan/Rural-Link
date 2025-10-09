@@ -16,9 +16,9 @@ export default function Cart() {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl mx-auto mb-8"
+        className="max-w-2xl mx-auto mb-6"
       >
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100">
@@ -33,12 +33,10 @@ export default function Cart() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center justify-center mt-32 text-center"
+          className="flex flex-col items-center justify-center mt-20 text-center"
         >
-          <div className="relative mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-amber-100 rounded-3xl flex items-center justify-center shadow-lg border border-orange-200">
-              <FiShoppingBag className="w-10 h-10 text-orange-400" />
-            </div>
+          <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-amber-100 rounded-3xl flex items-center justify-center shadow-lg border border-orange-200 mb-6">
+            <FiShoppingBag className="w-10 h-10 text-orange-400" />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Your cart feels lonely</h3>
           <p className="text-gray-500 text-sm mb-6">Add some amazing products to get started</p>
@@ -59,7 +57,7 @@ export default function Cart() {
               <motion.div
                 key={product._id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100, scale: 0.9 }}
                 className="group bg-white rounded-2xl shadow-md hover:shadow-lg border border-orange-100 p-4 transition-all duration-300"
@@ -125,58 +123,40 @@ export default function Cart() {
 
           {/* Summary Card */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-md border border-orange-100 p-6"
+            className="bg-white rounded-2xl shadow-md border border-orange-100 p-6 space-y-3"
           >
-            <h3 className="font-semibold text-gray-900 mb-4 text-lg border-b border-gray-200 pb-2">Order Summary</h3>
+            <h3 className="font-semibold text-gray-900 mb-2 text-lg border-b border-gray-200 pb-2">Order Summary</h3>
             
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Delivery</span>
-                <span className={`font-medium ${deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                  {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
-                </span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-medium text-gray-900">${tax.toFixed(2)}</span>
-              </div>
-              
-              <div className="border-t border-gray-200 pt-4 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-900 text-lg">Total</span>
-                  <span className="font-bold text-xl text-orange-600">${total.toFixed(2)}</span>
-                </div>
-                {subtotal < 50 && (
-                  <motion.p 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-sm text-orange-600 mt-3 text-center bg-orange-50 py-2 rounded-lg border border-orange-200"
-                  >
-                    🚚 Add <span className="font-semibold">${(50 - subtotal).toFixed(2)}</span> more for free delivery!
-                  </motion.p>
-                )}
-              </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Delivery</span>
+              <span className={`font-medium ${deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Tax</span>
+              <span className="font-medium text-gray-900">${tax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-gray-200">
+              <span className="font-semibold text-gray-900">Total</span>
+              <span className="font-bold text-orange-600">${total.toFixed(2)}</span>
             </div>
           </motion.div>
 
           {/* Action Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-3 pt-2"
+            className="flex flex-col sm:flex-row gap-3 mt-4"
           >
             <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: "#fef3c7" }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="flex-1 px-6 py-3 border-2 border-orange-300 text-orange-700 font-semibold rounded-xl hover:border-orange-400 transition-all shadow-sm"
               onClick={clear}
@@ -190,106 +170,11 @@ export default function Cart() {
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all shadow-md"
               onClick={() => navigate('/checkout')}
             >
-              Proceed to Checkout
-              <FiArrowRight className="w-4 h-4" />
-    <div className="p-4 pb-20 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-semibold mb-4 text-gray-900">Your Cart</h1>
-
-      {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center mt-20 text-gray-400">
-          <div className="text-xl mb-2">🛒</div>
-          <span className="text-sm">Your cart is empty</span>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {items.map(({ product, quantity }) => (
-            <motion.div
-              key={product._id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-md p-3 flex items-center gap-4"
-            >
-              {Array.isArray(product.images) && product.images.length ? (
-                <img
-                  src={product.images[0].url}
-                  alt={product.images[0].alt || product.name}
-                  className="w-16 h-16 object-cover rounded-xl border"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-xl bg-gray-200" />
-              )}
-
-              <div className="flex-1">
-                <div className="font-medium text-gray-900">{product.name}</div>
-                <div className="text-sm text-gray-500">${product.price}</div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition"
-                  onClick={() => updateQty(product._id, quantity - 1)}
-                >
-                  <FiMinus />
-                </button>
-                <div className="w-8 text-center font-medium">{quantity}</div>
-                <button
-                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition"
-                  onClick={() => updateQty(product._id, quantity + 1)}
-                >
-                  <FiPlus />
-                </button>
-              </div>
-
-              <button
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
-                onClick={() => removeItem(product._id)}
-              >
-                <FiTrash2 />
-              </button>
-            </motion.div>
-          ))}
-
-          {/* Summary */}
-          <div className="bg-white rounded-xl shadow-md p-4 space-y-2 text-sm">
-            <div className="flex justify-between text-gray-500">
-              <span>Subtotal</span>
-              <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-gray-500">
-              <span>Delivery</span>
-              <span className="font-medium text-gray-900">${deliveryFee.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-gray-500">
-              <span>Tax</span>
-              <span className="font-medium text-gray-900">${tax.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between pt-2 border-t border-gray-200">
-              <span className="font-semibold text-gray-900">Total</span>
-              <span className="font-semibold text-gray-900">${total.toFixed(2)}</span>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-gray-700 font-medium hover:bg-gray-100 transition"
-              onClick={clear}
-            >
-              Clear Cart
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white font-medium rounded-xl px-4 py-3 hover:bg-green-700 transition"
-              onClick={() => navigate('/checkout')}
-            >
-              Proceed to Checkout <FiArrowRight />
+              Proceed to Checkout <FiArrowRight className="w-4 h-4" />
             </motion.button>
           </motion.div>
         </div>
       )}
     </div>
   )
-}
 }
