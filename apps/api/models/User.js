@@ -58,16 +58,9 @@ const userSchema = new mongoose.Schema({
       return this.role === 'merchant';
     }
   },
-  businessLicense: String,
-  taxId: String,
   isApproved: { type: Boolean, default: true },
 
-  supplierBalance: {
-    type: Number,
-    default: 0, 
-    min: 0
-  },
-  totalPaid: { type: Number, default: 0 },
+
   paymentHistory: [
     {
       amount: Number,
@@ -85,26 +78,6 @@ const userSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now }
     }
   ],
-
-  // Deliver specific fields
-  employeeId: {
-    type: String,
-    required: function() {
-      return this.role === 'deliver';
-    }
-  },
-  department: {
-    type: String,
-    required: function() {
-      return this.role === 'deliver';
-    }
-  },
-  hireDate: {
-    type: Date,
-    required: function() {
-      return this.role === 'deliver';
-    }
-  }
 }, { timestamps: true });
 
 // Hash password before saving

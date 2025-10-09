@@ -59,7 +59,7 @@ function HomeRouter(){
   if (!user) return <Onboarding />
   if (user.role === 'merchant') return <Navigate to="/merchant" replace />
   if (user.role === 'deliver') return <Navigate to="/deliver" replace />
-  return <Onboarding />
+  return <CustomerHome />
 }
 
 const router = createBrowserRouter([

@@ -23,7 +23,7 @@ exports.register = async (req, res) => {
 
     const { 
       firstName, lastName, email, password, role = 'customer', phone, 
-      businessName, businessLicense, taxId, employeeId, department, hireDate 
+      businessName 
     } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -33,10 +33,8 @@ exports.register = async (req, res) => {
 
     const userData = { firstName, lastName, email, password, role, phone };
     if (role === 'merchant') {
-      Object.assign(userData, { businessName, businessLicense, taxId });
-    } else if (role === 'deliver') {
-      Object.assign(userData, { employeeId, department, hireDate });
-    }
+      Object.assign(userData, { businessName });
+    } 
 
     userData.isApproved = true;
 
