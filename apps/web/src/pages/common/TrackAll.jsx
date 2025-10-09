@@ -80,6 +80,13 @@ export default function TrackAll(){
               <Timeline status={o.status} history={o.trackingHistory} />
             </div>
 
+            {/* Review link for delivered orders */}
+            {(((o?.status||'')+'').toLowerCase().replace(/\s+/g,'_').trim() === 'delivered') && (
+              <div className="mt-2">
+                <a href={`/track/${o._id}#reviews`} className="text-green-700 underline text-sm">Review</a>
+              </div>
+            )}
+
             {/* Communication with delivery person removed */}
           </div>
         ))}
