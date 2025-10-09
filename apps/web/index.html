@@ -1,21 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>rural-link</title>
+    
+    <title>Rural Link - Your Trusted Platform</title>
+    <meta name="description" content="Rural Link is your trusted platform for connecting with local businesses, deliveries, and more. Register, login, and explore services seamlessly." />
+    <meta name="keywords" content="Rural Link, local business, delivery, online services, register, login" />
+    <meta name="author" content="Rural Link Team" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/logo.png" />
+
+    <!-- Manifest for PWA -->
     <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:title" content="Rural Link - Your Trusted Platform" />
+    <meta property="og:description" content="Rural Link connects you with local businesses, deliveries, and services easily." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rural-link.vercel.app" />
+    <meta property="og:image" content="https://rural-link.vercel.app/logo.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Rural Link - Your Trusted Platform" />
+    <meta name="twitter:description" content="Rural Link connects you with local businesses, deliveries, and services easily." />
+    <meta name="twitter:image" content="https://rural-link.vercel.app/logo.png" />
+
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Service Worker for PWA -->
     <script>
       if ('serviceWorker' in navigator){
-        window.addEventListener('load', ()=>{
+        window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered:', reg))
+            .catch(err => console.error('Service Worker registration failed:', err));
         })
       }
     </script>
+
+    <!-- Main Vite React entry -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

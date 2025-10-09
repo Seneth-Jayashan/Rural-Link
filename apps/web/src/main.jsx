@@ -23,6 +23,7 @@ import { LanguageProvider } from './shared/i18n/LanguageContext.jsx'
 import { ToastProvider } from './shared/ui/Toast.jsx'
 import { useAuth, AuthProvider } from './shared/auth/AuthContext.jsx'
 import { CartProvider } from './shared/CartContext.jsx'
+import Onboarding from './pages/common/Onboarding.jsx'
 
 function RequireAuth({ children }){
   const { user, loading } = useAuth()
@@ -55,10 +56,10 @@ function NotAuthOnly({ children }){
 function HomeRouter(){
   const { user, loading } = useAuth()
   if (loading) return <div className="p-4">Loading...</div>
-  if (!user) return <CustomerHome />
+  if (!user) return <Onboarding />
   if (user.role === 'merchant') return <Navigate to="/merchant" replace />
   if (user.role === 'deliver') return <Navigate to="/deliver" replace />
-  return <CustomerHome />
+  return <Onboarding />
 }
 
 const router = createBrowserRouter([
