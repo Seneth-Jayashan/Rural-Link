@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { get } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
-import DeliveryComm from '../deliver/DeliveryComm.jsx'
+// Chat/Call removed
 
 export default function OrderTracking(){
   const { orderId } = useParams()
@@ -75,13 +75,7 @@ export default function OrderTracking(){
             </div>
           </div>
 
-          {/* Communication with assigned deliverer */}
-          {order.deliveryPerson?._id && !['delivered','cancelled','refunded'].includes(order.status) && (
-            <div className="mt-4">
-              <div className="font-medium mb-1">Contact Delivery Person</div>
-              <DeliveryComm targetId={order.deliveryPerson._id} />
-            </div>
-          )}
+          {/* Communication with assigned deliverer removed */}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { get } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
-import DeliveryComm from '../deliver/DeliveryComm.jsx'
+// Chat/Call removed
 
 function Timeline({ status, history }){
   const steps = ['pending','confirmed','preparing','ready','picked_up','in_transit','delivered']
@@ -80,12 +80,7 @@ export default function TrackAll(){
               <Timeline status={o.status} history={o.trackingHistory} />
             </div>
 
-            {o.deliveryPerson?._id && !['delivered','cancelled','refunded'].includes(o.status) && (
-              <div className="mt-3">
-                <div className="font-medium mb-1">Contact Delivery Person</div>
-                <DeliveryComm targetId={o.deliveryPerson._id} />
-              </div>
-            )}
+            {/* Communication with delivery person removed */}
           </div>
         ))}
       </div>

@@ -15,7 +15,6 @@ import ProductEdit from './pages/merchant/ProductEdit.jsx'
 import ProductView from './pages/merchant/ProductView.jsx'
 import DeliveryDashboard from './pages/deliver/Dashboard.jsx'
 import OrderTracking from './pages/common/OrderTracking.jsx'
-import CommDemo from './pages/common/CommDemo.jsx'
 import Cart from './pages/common/Cart.jsx'
 import Checkout from './pages/common/Checkout.jsx'
 import CustomerOrders from './pages/customer/Orders.jsx'
@@ -82,7 +81,7 @@ const router = createBrowserRouter([
       { path: 'track/:orderId', element: <RequireAuth><OrderTracking /></RequireAuth> },
       { path: 'track', element: <RequireRole role="customer"><TrackAll /></RequireRole> },
       { path: 'orders', element: <RequireRole role="customer"><CustomerOrders /></RequireRole> },
-      { path: 'comm', element: <RequireAuth><CommDemo /></RequireAuth> },
+      // Chat/Call demo route removed
       { path: 'cart', element: <RequireRole role="customer"><Cart /></RequireRole> },
       { path: 'checkout', element: <RequireRole role="customer"><Checkout /></RequireRole> },
     ],
