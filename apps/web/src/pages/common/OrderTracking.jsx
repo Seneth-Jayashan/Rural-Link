@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { get, post } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
-// Chat/Call removed
+import OrderChat from './OrderChat.jsx'
 
 export default function OrderTracking(){
   const { orderId } = useParams()
@@ -88,7 +88,13 @@ export default function OrderTracking(){
             </div>
           </div>
 
-          {/* Communication with assigned deliverer removed */}
+          {/* Customer chat with assigned driver when picked_up or in_transit (not delivered) */}
+          {order.deliveryPerson?._id && ['picked_up','in_transit'].includes(order.status) && order.status !== 'delivered' && (
+            <div className="mt-3">
+              <div className="font-medium mb-1">Chat with your courier</div>
+              <OrderChat orderId={order._id} meId={order.customer?._id} />
+            </div>
+          )}
 
           {/* Quick CTA to review */}
           {order.status === 'delivered' && (

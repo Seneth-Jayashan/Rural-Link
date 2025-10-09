@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react'
 import { get, post } from '../../shared/api.js'
 import { motion } from 'framer-motion'
-import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle } from 'react-icons/fi'
+import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle, FiPhoneCall } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
-// Chat/Call removed
+import OrderChat from '../common/OrderChat.jsx'
+import CallComponent from '../../shared/ui/CallComponent.jsx'
+import webrtcService from '../../shared/webrtc.js'
 
 export default function DeliveryDashboard(){
   const [available, setAvailable] = useState([])
   const [assigned, setAssigned] = useState([])
+  const [callState, setCallState] = useState({
+    isOpen: false,
+    callType: 'outgoing',
+    orderId: null,
+    recipientInfo: null,
+    callId: null,
+    offer: null
+  })
 
   async function load(){
     try{
@@ -20,6 +30,26 @@ export default function DeliveryDashboard(){
     }catch{}
   }
   useEffect(()=>{ load() },[])
+
+  // Setup WebRTC listeners
+  useEffect(() => {
+    const handleIncomingCall = (data) => {
+      setCallState({
+        isOpen: true,
+        callType: 'incoming',
+        orderId: data.orderId,
+        recipientInfo: data.from,
+        callId: data.callId,
+        offer: data.offer
+      })
+    }
+
+    webrtcService.on('onIncomingCall', handleIncomingCall)
+
+    return () => {
+      webrtcService.off('onIncomingCall')
+    }
+  }, [])
 
   const { notify } = useToast()
   async function accept(order){
@@ -41,6 +71,32 @@ export default function DeliveryDashboard(){
     await post(`/api/orders/${order._id}/delivery-status`, { status:'delivered' })
     notify({ type:'success', title:'Delivered', message:`Order ${order.orderNumber}` })
     load()
+  }
+
+  const handleCallCustomer = async (order) => {
+    try {
+      const callId = await webrtcService.startCall(order._id, order.customer._id)
+      setCallState({
+        isOpen: true,
+        callType: 'outgoing',
+        orderId: order._id,
+        recipientInfo: order.customer,
+        callId
+      })
+    } catch (error) {
+      notify({ type:'error', title:'Call Failed', message:'Unable to start call. Please check your microphone permissions.' })
+    }
+  }
+
+  const handleCallClose = () => {
+    setCallState({
+      isOpen: false,
+      callType: 'outgoing',
+      orderId: null,
+      recipientInfo: null,
+      callId: null,
+      offer: null
+    })
   }
 
   return (
@@ -75,7 +131,7 @@ export default function DeliveryDashboard(){
               <div className="flex items-center gap-2"><FiMapPin /> {o.deliveryAddress?.street}, {o.deliveryAddress?.city}</div>
             </div>
             <div className="mt-2 text-xs text-gray-600">Items: {o.items?.map((it,idx)=> `${it.product?.name || 'Item'} x${it.quantity}`).join(', ')}</div>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
               {o.status === 'picked_up' && (
                 <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-blue-600 text-white rounded px-3 py-1" onClick={()=>startDelivery(o)}>
                   <FiTruck /> Start Delivery
@@ -86,14 +142,39 @@ export default function DeliveryDashboard(){
                   <FiCheckCircle /> Mark Delivered
                 </motion.button>
               )}
+              {['picked_up','in_transit'].includes(o.status) && o.customer && (
+                <motion.button 
+                  whileTap={{ scale:0.98 }} 
+                  className="flex items-center gap-2 bg-purple-600 text-white rounded px-3 py-1" 
+                  onClick={()=>handleCallCustomer(o)}
+                >
+                  <FiPhoneCall /> Voice Call
+                </motion.button>
+              )}
             </div>
-            {/* Chat/Call removed */}
+            {['picked_up','in_transit'].includes(o.status) && o.status !== 'delivered' && (
+              <div className="mt-3">
+                <div className="font-medium mb-1">Chat with customer</div>
+                <OrderChat orderId={o._id} meId={o.deliveryPerson} />
+              </div>
+            )}
           </motion.div>
         ))}
         {assigned.length === 0 && (
           <div className="text-gray-600 text-sm">No assigned deliveries</div>
         )}
       </div>
+
+      {/* Call Component */}
+      <CallComponent
+        isOpen={callState.isOpen}
+        onClose={handleCallClose}
+        callType={callState.callType}
+        orderId={callState.orderId}
+        recipientInfo={callState.recipientInfo}
+        callId={callState.callId}
+        offer={callState.offer}
+      />
     </div>
   )
 }
