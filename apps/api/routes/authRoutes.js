@@ -12,7 +12,7 @@ router.post('/register', [
   body('role').optional().isIn(['customer', 'deliver', 'merchant'])
 ], authController.register);
 
-router.get('/verify-email/:token', authController.verifyEmail);
+router.get('/verify-email/:token/:hint', authController.verifyEmail);
 
 router.post('/login', [
   body('email').isEmail(),

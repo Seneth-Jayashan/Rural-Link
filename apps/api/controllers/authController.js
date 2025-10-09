@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
-const { verifyEmailTemplate, forgotPasswordTemplate, passwordChangedTemplate } = require('../emails/emailTemplates');
+const { verifyEmailTemplate } = require('../emails/emailTemplates');
 require("dotenv").config();
 
 // Generate JWT Token
@@ -13,6 +13,7 @@ const generateToken = (id) => {
   });
 };
 
+// -------------------- REGISTER --------------------
 exports.register = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -20,7 +21,10 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Validation failed', errors: errors.array() });
     }
 
-    const { firstName, lastName, email, password, role = 'customer', phone, businessName, businessLicense, taxId, employeeId, department, hireDate } = req.body;
+    const { 
+      firstName, lastName, email, password, role = 'customer', phone, 
+      businessName, businessLicense, taxId, employeeId, department, hireDate 
+    } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -28,27 +32,27 @@ exports.register = async (req, res) => {
     }
 
     const userData = { firstName, lastName, email, password, role, phone };
-
     if (role === 'merchant') {
-      userData.businessName = businessName;
-      userData.businessLicense = businessLicense;
-      userData.taxId = taxId;
+      Object.assign(userData, { businessName, businessLicense, taxId });
     } else if (role === 'deliver') {
-      userData.employeeId = employeeId;
-      userData.department = department;
-      userData.hireDate = hireDate;
+      Object.assign(userData, { employeeId, department, hireDate });
     }
 
-    // Ensure approval defaults to true for all roles
     userData.isApproved = true;
+
+    // -------------------- SECURE TOKEN CREATION --------------------
+    const tokenHint = Math.random().toString(36).substring(2, 10); // short lookup ID
+    const rawToken = `${email}-${Date.now()}-${tokenHint}`;
+
+    const salt = await bcrypt.genSalt(10);
+    const verificationTokenHash = await bcrypt.hash(rawToken + process.env.JWT_SECRET, salt);
+
+    userData.verificationTokenHash = verificationTokenHash;
+    userData.verificationTokenHint = tokenHint; // used for quick lookup
 
     const user = await User.create(userData);
 
-    const verificationToken = crypto.randomBytes(20).toString('hex');
-    user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
-    await user.save({ validateBeforeSave: false });
-
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${encodeURIComponent(rawToken)}/${tokenHint}`;
 
     await sendEmail({
       to: user.email,
@@ -67,27 +71,45 @@ exports.register = async (req, res) => {
   }
 };
 
+// -------------------- VERIFY EMAIL --------------------
 exports.verifyEmail = async (req, res) => {
   try {
-    const { token } = req.params;
+    const { token, hint } = req.params;
+    console.log('token: ', token , 'Hint : ', hint);
+    if (!token || !hint) {
+      return res.status(400).json({ success: false, message: 'Invalid verification link' });
+    }
 
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-    const user = await User.findOne({ verificationToken: hashedToken });
+    // 👇 Explicitly include the hidden field
+    const user = await User.findOne({ verificationTokenHint: hint }).select('+verificationTokenHash');
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
     }
 
+    if (!user.verificationTokenHash) {
+      console.log('Verification token hash missing for user:', user.email);
+      return res.status(400).json({ success: false, message: 'Verification token not set for this user' });
+    }
+
+    const isMatch = await bcrypt.compare(token + process.env.JWT_SECRET, user.verificationTokenHash);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+    }
+
     user.isVerified = true;
-    user.verificationToken = undefined;
+    user.verificationTokenHash = null;
+    user.verificationTokenHint = null;
     await user.save();
 
     res.json({ success: true, message: 'Email verified successfully. You can now log in.' });
+
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({ success: false, message: 'Server error during email verification' });
   }
 };
+
+
 
 
 exports.login = async (req, res) => {

@@ -32,10 +32,7 @@ const userSchema = new mongoose.Schema({
     enum: ['customer', 'deliver', 'merchant'],
     default: 'customer'
   },
-  phone: {
-    type: String,
-    trim: true
-  },
+  phone: { type: String, trim: true },
   address: {
     street: String,
     city: String,
@@ -43,22 +40,17 @@ const userSchema = new mongoose.Schema({
     zipCode: String,
     country: String
   },
-  profileImage: {
-    type: String,
-    default: ''
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
-  verificationToken: String,
+  profileImage: { type: String, default: '' },
+  isActive: { type: Boolean, default: true },
+  isVerified: { type: Boolean, default: false },
+
+  // ✅ Updated verification token fields (new)
+  verificationTokenHash: { type: String, select: false }, // hashed token
+  verificationTokenHint: { type: String, index: true }, // short lookup string
+
   resetPasswordToken: String,
   resetPasswordExpire: Date,
-  
+
   // Merchant specific fields
   businessName: {
     type: String,
@@ -68,19 +60,14 @@ const userSchema = new mongoose.Schema({
   },
   businessLicense: String,
   taxId: String,
-  isApproved: {
-    type: Boolean,
-    default: true
-  },
+  isApproved: { type: Boolean, default: true },
+
   supplierBalance: {
     type: Number,
     default: 0, 
     min: 0
   },
-  totalPaid: {
-    type: Number,
-    default: 0
-  },
+  totalPaid: { type: Number, default: 0 },
   paymentHistory: [
     {
       amount: Number,
@@ -95,14 +82,11 @@ const userSchema = new mongoose.Schema({
         default: 'pending'
       },
       transactionId: String,
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
+      createdAt: { type: Date, default: Date.now }
     }
   ],
 
-  // deliver specific fields
+  // Deliver specific fields
   employeeId: {
     type: String,
     required: function() {
@@ -121,14 +105,11 @@ const userSchema = new mongoose.Schema({
       return this.role === 'deliver';
     }
   }
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
@@ -143,14 +124,12 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Get full name
+// Get full name virtual
 userSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
 // Ensure virtual fields are serialized
-userSchema.set('toJSON', {
-  virtuals: true
-});
+userSchema.set('toJSON', { virtuals: true });
 
 module.exports = mongoose.model('User', userSchema);

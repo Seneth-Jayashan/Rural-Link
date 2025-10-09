@@ -4,11 +4,14 @@ import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { motion } from 'framer-motion'
 import { FiUser, FiMail, FiLock, FiUserCheck, FiChevronDown } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
+import { useNavigate } from 'react-router-dom'  // <== Import useNavigate
 
 export default function Register() {
   const { t } = useI18n()
   const { register: registerUser } = useAuth()
   const { notify } = useToast()
+  const navigate = useNavigate() // <== Initialize navigate
+
 
   const [form, setForm] = useState({
     firstName: '',
@@ -44,6 +47,10 @@ export default function Register() {
         title: 'Registration complete',
         message: 'Check your email to verify.'
       })
+
+      setTimeout(() => {
+        navigate('/login')
+      }, 1500)
     } catch (err) {
       setError(err.message)
       notify({

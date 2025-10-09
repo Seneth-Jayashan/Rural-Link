@@ -70,7 +70,7 @@ const router = createBrowserRouter([
       { index: true, element: <HomeRouter /> },
       { path: 'login', element: <NotAuthOnly><Login /></NotAuthOnly> },
       { path: 'register', element: <NotAuthOnly><Register /></NotAuthOnly> },
-      { path: 'verify-email/:token', element: <NotAuthOnly><VerifyEmail /></NotAuthOnly> },
+      { path: 'verify-email/:token/:hint', element: <NotAuthOnly><VerifyEmail /></NotAuthOnly> },
       { path: 'merchant', element: <RequireRole role="merchant"><Navigate to="/merchant/orders" replace /></RequireRole> },
       { path: 'merchant/orders', element: <RequireRole role="merchant"><MerchantOrders /></RequireRole> },
       { path: 'merchant/products', element: <RequireRole role="merchant"><ProductsList /></RequireRole> },
