@@ -48,7 +48,6 @@ export default function CustomerOrders(){
             </div>
             <div className="mt-2 flex items-center gap-2 text-sm">
               <Link className="text-blue-700 underline" to={`/track/${o._id}`}>Track</Link>
-              <Link className="text-gray-700 underline" to={`/track/${o._id}`}>Chat/Call</Link>
             </div>
           </div>
         ))}

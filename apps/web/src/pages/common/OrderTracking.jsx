@@ -1,13 +1,18 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { get } from '../../shared/api.js'
+import { useEffect, useState, useRef } from 'react'
+import { useParams, useLocation } from 'react-router-dom'
+import { get, post } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
-import DeliveryComm from '../deliver/DeliveryComm.jsx'
+// Chat/Call removed
 
 export default function OrderTracking(){
   const { orderId } = useParams()
+  const location = useLocation()
   const [order, setOrder] = useState(null)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [reviewed, setReviewed] = useState({}) // { product:<bool>, delivery:<bool> }
+  const [productReviews, setProductReviews] = useState({}) // productId -> { rating, comment }
+  const [driverReview, setDriverReview] = useState({ rating: 0, comment: '' })
 
   useEffect(()=>{
     const path = orderId === 'last' ? '/api/orders/last' : `/api/orders/${orderId}`
@@ -15,6 +20,14 @@ export default function OrderTracking(){
       .then(d=> setOrder(d.data))
       .catch(e=> setError(e.message))
   },[orderId])
+
+  // Scroll to reviews if hash provided
+  const reviewsRef = useRef(null)
+  useEffect(()=>{
+    if (order && location?.hash === '#reviews' && reviewsRef.current) {
+      reviewsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [order, location?.hash])
 
   return (
     <div className="p-3 pb-16">
@@ -75,11 +88,103 @@ export default function OrderTracking(){
             </div>
           </div>
 
-          {/* Communication with assigned deliverer */}
-          {order.deliveryPerson?._id && !['delivered','cancelled','refunded'].includes(order.status) && (
-            <div className="mt-4">
-              <div className="font-medium mb-1">Contact Delivery Person</div>
-              <DeliveryComm targetId={order.deliveryPerson._id} />
+          {/* Communication with assigned deliverer removed */}
+
+          {/* Quick CTA to review */}
+          {order.status === 'delivered' && (
+            <div className="mt-3">
+              <a href="#reviews" className="inline-block bg-green-600 text-white px-3 py-1 text-sm rounded">Review this order</a>
+            </div>
+          )}
+
+          {/* Reviews after delivery */}
+          {order.status === 'delivered' && (
+            <div ref={reviewsRef} id="reviews" className="mt-4 space-y-4">
+              <div>
+                <div className="font-medium mb-2">Rate Your Products</div>
+                <div className="space-y-3">
+                  {order.items?.map((it, idx)=>{
+                    const pid = it.product?._id
+                    return (
+                      <div key={idx} className="border rounded p-2">
+                        <div className="text-sm font-medium">{it.product?.name || 'Item'}</div>
+                        {!reviewed[`product:${pid}`] ? (
+                          <div className="mt-2 space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span>Rating:</span>
+                              {[1,2,3,4,5].map(st=> (
+                                <button type="button" key={st} className={`px-2 py-0.5 border ${ (productReviews[pid]?.rating||0) >= st ? 'bg-yellow-300' : 'bg-white' }`}
+                                  onClick={()=> setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), rating: st }}))}>{st}</button>
+                              ))}
+                            </div>
+                            <textarea className="w-full border rounded p-2 text-sm" rows={2} placeholder="Write your feedback (optional)"
+                              value={productReviews[pid]?.comment||''}
+                              onChange={(e)=> setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: e.target.value }}))}
+                            />
+                            <button className="bg-green-600 text-white px-3 py-1 text-sm disabled:opacity-50"
+                              disabled={submitting || !(productReviews[pid]?.rating>0)}
+                              onClick={async ()=>{
+                                try{
+                                  setSubmitting(true)
+                                  await post('/api/reviews', {
+                                    orderId: order._id,
+                                    type: 'product',
+                                    rating: productReviews[pid]?.rating,
+                                    comment: productReviews[pid]?.comment||'',
+                                    productId: pid
+                                  })
+                                  setReviewed(prev=> ({...prev, [`product:${pid}`]: true}))
+                                }catch(e){ setError(e.message||'Failed to submit review') }
+                                finally{ setSubmitting(false) }
+                              }}>Submit Review</button>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-green-700 mt-1">Thanks! Your review was submitted.</div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {order.deliveryPerson?._id && (
+                <div>
+                  <div className="font-medium mb-2">Rate Your Delivery</div>
+                  {!reviewed['delivery'] ? (
+                    <div className="border rounded p-2 space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span>Driver rating:</span>
+                        {[1,2,3,4,5].map(st=> (
+                          <button type="button" key={st} className={`px-2 py-0.5 border ${ (driverReview.rating||0) >= st ? 'bg-yellow-300' : 'bg-white' }`}
+                            onClick={()=> setDriverReview(prev=> ({...prev, rating: st}))}>{st}</button>
+                        ))}
+                      </div>
+                      <textarea className="w-full border rounded p-2 text-sm" rows={2} placeholder="Feedback for driver (optional)"
+                        value={driverReview.comment}
+                        onChange={(e)=> setDriverReview(prev=> ({...prev, comment: e.target.value}))}
+                      />
+                      <button className="bg-blue-600 text-white px-3 py-1 text-sm disabled:opacity-50"
+                        disabled={submitting || !(driverReview.rating>0)}
+                        onClick={async ()=>{
+                          try{
+                            setSubmitting(true)
+                            await post('/api/reviews', {
+                              orderId: order._id,
+                              type: 'delivery',
+                              rating: driverReview.rating,
+                              comment: driverReview.comment||'',
+                              deliveryPersonId: order.deliveryPerson._id
+                            })
+                            setReviewed(prev=> ({...prev, ['delivery']: true}))
+                          }catch(e){ setError(e.message||'Failed to submit review') }
+                          finally{ setSubmitting(false) }
+                        }}>Submit Driver Review</button>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-green-700">Thanks! Your driver review was submitted.</div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -17,6 +17,9 @@ exports.createReview = async (req, res) => {
     if (order.customer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to review this order' });
     }
+    if (order.status !== 'delivered') {
+      return res.status(400).json({ success: false, message: 'You can review only after the order is delivered' });
+    }
 
     const reviewData = {
       order: order._id,
