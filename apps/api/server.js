@@ -48,6 +48,10 @@ io.on('connection', (socket) => {
     try {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       socket.data.user = { _id: payload.id, role: payload.role };
+      
+      // Join user-specific room for WebRTC calls
+      socket.join(`user_${payload.id}`);
+      
       socket.emit('auth:ok');
     } catch (e) {
       socket.emit('auth:error', 'Invalid token');
@@ -102,6 +106,86 @@ io.on('connection', (socket) => {
       }
     } catch (error) {
       console.error('Socket message error:', error);
+    }
+  });
+
+  // WebRTC Call signaling
+  socket.on('call:offer', async ({ orderId, recipientId, offer }) => {
+    try {
+      if (!socket.data.user) return socket.emit('auth:required');
+      
+      const order = await Order.findById(orderId).select('customer deliveryPerson');
+      if (!order) return socket.emit('call:error', 'Order not found');
+      
+      const uid = String(socket.data.user._id);
+      const isParticipant = String(order.customer) === uid || String(order.deliveryPerson || '') === uid;
+      if (!isParticipant) return socket.emit('call:error', 'Not authorized for this order');
+      
+      // Forward offer to recipient
+      socket.to(`user_${recipientId}`).emit('call:offer', {
+        callId: `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        orderId,
+        offer,
+        from: socket.data.user
+      });
+    } catch (error) {
+      console.error('Call offer error:', error);
+      socket.emit('call:error', 'Failed to send call offer');
+    }
+  });
+
+  socket.on('call:answer', ({ callId, answer }) => {
+    try {
+      if (!socket.data.user) return socket.emit('auth:required');
+      
+      // Forward answer to all participants in the call
+      socket.broadcast.emit('call:answer', { callId, answer });
+    } catch (error) {
+      console.error('Call answer error:', error);
+    }
+  });
+
+  socket.on('call:ice-candidate', ({ callId, candidate }) => {
+    try {
+      if (!socket.data.user) return socket.emit('auth:required');
+      
+      // Forward ICE candidate to all participants in the call
+      socket.broadcast.emit('call:ice-candidate', { callId, candidate });
+    } catch (error) {
+      console.error('ICE candidate error:', error);
+    }
+  });
+
+  socket.on('call:accepted', ({ callId, orderId }) => {
+    try {
+      if (!socket.data.user) return socket.emit('auth:required');
+      
+      // Notify all participants that call was accepted
+      io.to(`order_${orderId}`).emit('call:accepted', { callId, orderId });
+    } catch (error) {
+      console.error('Call accepted error:', error);
+    }
+  });
+
+  socket.on('call:rejected', ({ callId, orderId }) => {
+    try {
+      if (!socket.data.user) return socket.emit('auth:required');
+      
+      // Notify all participants that call was rejected
+      io.to(`order_${orderId}`).emit('call:rejected', { callId, orderId });
+    } catch (error) {
+      console.error('Call rejected error:', error);
+    }
+  });
+
+  socket.on('call:ended', ({ callId }) => {
+    try {
+      if (!socket.data.user) return socket.emit('auth:required');
+      
+      // Notify all participants that call ended
+      socket.broadcast.emit('call:ended', { callId });
+    } catch (error) {
+      console.error('Call ended error:', error);
     }
   });
 
