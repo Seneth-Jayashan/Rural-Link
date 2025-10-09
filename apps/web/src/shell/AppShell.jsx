@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../shared/i18n/LanguageContext.jsx";
 import { useAuth } from "../shared/auth/AuthContext.jsx";
 import { motion } from "framer-motion";
-import { Home, Store, Truck, PlusCircle } from "lucide-react";
+import { Home, Store, Truck, PlusCircle, ShoppingCart } from "lucide-react";
 
 export function AppShell() {
   const location = useLocation();
@@ -71,12 +71,20 @@ export function AppShell() {
           className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-300 py-2 flex justify-around"
         >
           {user.role === "customer" && (
-            <NavItem
-              to="/"
-              icon={<Home size={20} />}
-              label={t("Home")}
-              active={location.pathname === "/"}
-            />
+            <>
+              <NavItem
+                to="/"
+                icon={<Home size={20} />}
+                label={t("Home")}
+                active={location.pathname === "/"}
+              />
+              <NavItem
+                to="/cart"
+                icon={<ShoppingCart size={20} />}
+                label={t("Cart")}
+                active={location.pathname.startsWith("/cart")}
+              />
+            </>
           )}
 
           {user.role === "merchant" && (

@@ -146,6 +146,15 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Auto-generate order number if missing
+orderSchema.pre('validate', function(next){
+  if(!this.orderNumber){
+    const rand = Math.floor(1000 + Math.random()*9000)
+    this.orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}-${rand}`
+  }
+  next()
+})
+
 // Index for better query performance
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ merchant: 1, status: 1 });

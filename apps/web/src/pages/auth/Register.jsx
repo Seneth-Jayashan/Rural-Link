@@ -16,10 +16,11 @@ export default function Register() {
     email: '',
     password: '',
     role: 'customer',
-    // deliver-specific fields
-    employeeId: '',
-    department: '',
-    hireDate: ''
+    phone: '',
+    // merchant-specific fields
+    businessName: '',
+    businessLicense: '',
+    taxId: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -115,6 +116,16 @@ export default function Register() {
             />
           </div>
 
+          <div className="border border-gray-300 rounded-lg p-3 flex items-center gap-2">
+            <FiUser className="text-orange-500 text-lg" />
+            <input
+              className="flex-1 bg-transparent text-black placeholder-gray-500 outline-none text-sm"
+              placeholder="Phone"
+              value={form.phone}
+              onChange={e => update('phone', e.target.value)}
+            />
+          </div>
+
           {/* Custom Dropdown */}
           <div className="relative">
             <button
@@ -159,6 +170,20 @@ export default function Register() {
               </motion.div>
             )}
           </div>
+
+          {form.role === 'merchant' && (
+            <div className="space-y-3">
+              <div className="border border-gray-300 rounded-lg p-3 flex items-center gap-2">
+                <FiUser className="text-orange-500 text-lg" />
+                <input
+                  className="flex-1 bg-transparent text-black placeholder-gray-500 outline-none text-sm"
+                  placeholder="Business name"
+                  value={form.businessName}
+                  onChange={e => update('businessName', e.target.value)}
+                />
+              </div>
+            </div>
+          )}
 
           {error && (
             <motion.div

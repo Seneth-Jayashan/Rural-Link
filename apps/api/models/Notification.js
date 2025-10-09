@@ -113,11 +113,19 @@ notificationSchema.statics.getByType = function(userId, type, limit = 20) {
 
 // Static method to create notification
 notificationSchema.statics.createNotification = async function(data) {
+  if (!data || typeof data !== 'object') data = {}
+  if (!Array.isArray(data.deliveryMethod)) {
+    data.deliveryMethod = data.deliveryMethod ? [data.deliveryMethod] : ['in_app']
+  }
   const notification = new this(data);
+  // Normalize deliveryMethod to array to avoid undefined errors
+  if (!Array.isArray(notification.deliveryMethod)) {
+    notification.deliveryMethod = notification.deliveryMethod ? [notification.deliveryMethod] : ['in_app'];
+  }
   await notification.save();
   
   // If it's a push notification, trigger push service
-  if (data.deliveryMethod.includes('push')) {
+  if (Array.isArray(notification.deliveryMethod) && notification.deliveryMethod.includes('push')) {
     // This would integrate with push notification service
     // await pushNotificationService.send(notification);
   }
@@ -131,7 +139,7 @@ notificationSchema.statics.sendBulk = async function(notifications) {
     const created = await this.insertMany(notifications);
     
     // Send push notifications for bulk
-    const pushNotifications = created.filter(n => n.deliveryMethod.includes('push'));
+  const pushNotifications = created.filter(n => Array.isArray(n.deliveryMethod) && n.deliveryMethod.includes('push'));
     if (pushNotifications.length > 0) {
       // await pushNotificationService.sendBulk(pushNotifications);
     }

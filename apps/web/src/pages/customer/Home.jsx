@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { get, post } from '../../shared/api.js'
 import { motion } from 'framer-motion'
-import { FiSearch, FiShoppingBag } from 'react-icons/fi'
+import { FiSearch, FiShoppingBag, FiPlus } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
+import { useCart } from '../../shared/CartContext.jsx'
 
 export default function CustomerHome(){
   const [q, setQ] = useState('')
@@ -22,6 +23,7 @@ export default function CustomerHome(){
   },[q])
 
   const { notify } = useToast()
+  const { addItem } = useCart()
   async function placeQuickOrder(product){
     try{
       const res = await post('/api/orders',{
@@ -56,15 +58,24 @@ export default function CustomerHome(){
       <div className="grid grid-cols-2 gap-3 mt-3">
         {products.map((p,idx)=> (
           <motion.div key={p._id} className="border rounded overflow-hidden" initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay: idx*0.02 }}>
-            <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200" />
+            {Array.isArray(p.images) && p.images.length ? (
+              <img src={p.images[0].url} alt={p.images[0].alt||p.name} className="w-full aspect-video object-cover" />
+            ) : (
+              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200" />
+            )}
             <div className="p-2">
               <div className="text-sm font-medium line-clamp-2">{p.name}</div>
               <div className="text-xs text-gray-500">{p?.merchant?.businessName || ''}</div>
               <div className="flex items-center justify-between mt-2">
                 <div className="font-semibold">${p.price}</div>
-                <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-1 text-white bg-green-600 rounded px-2 py-1 text-xs" onClick={()=>placeQuickOrder(p)}>
-                  <FiShoppingBag /> Buy
-                </motion.button>
+                <div className="flex items-center gap-2">
+                  <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-1 text-white bg-orange-500 rounded px-2 py-1 text-xs" onClick={()=>{ addItem(p,1); notify({ type:'success', title:'Added to cart', message:p.name }) }}>
+                    <FiPlus /> Add
+                  </motion.button>
+                  <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-1 text-white bg-green-600 rounded px-2 py-1 text-xs" onClick={()=>placeQuickOrder(p)}>
+                    <FiShoppingBag /> Buy
+                  </motion.button>
+                </div>
               </div>
             </div>
           </motion.div>

@@ -68,12 +68,6 @@ const userSchema = new mongoose.Schema({
   },
   businessLicense: String,
   taxId: String,
-  isApproved: {
-    type: Boolean,
-    default: function() {
-      return this.role === 'merchant' ? false : true;
-    }
-  },
   supplierBalance: {
     type: Number,
     default: 0, 
@@ -105,24 +99,9 @@ const userSchema = new mongoose.Schema({
   ],
 
   // deliver specific fields
-  employeeId: {
-    type: String,
-    required: function() {
-      return this.role === 'deliver';
-    }
-  },
-  department: {
-    type: String,
-    required: function() {
-      return this.role === 'deliver';
-    }
-  },
-  hireDate: {
-    type: Date,
-    required: function() {
-      return this.role === 'deliver';
-    }
-  }
+  employeeId: String,
+  department: String,
+  hireDate: Date
 }, {
   timestamps: true
 });

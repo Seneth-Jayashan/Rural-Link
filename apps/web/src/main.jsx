@@ -14,9 +14,12 @@ import ProductEdit from './pages/merchant/ProductEdit.jsx'
 import ProductView from './pages/merchant/ProductView.jsx'
 import DeliveryDashboard from './pages/deliver/Dashboard.jsx'
 import OrderTracking from './pages/common/OrderTracking.jsx'
+import Cart from './pages/common/Cart.jsx'
+import Checkout from './pages/common/Checkout.jsx'
 import { LanguageProvider } from './shared/i18n/LanguageContext.jsx'
 import { ToastProvider } from './shared/ui/Toast.jsx'
 import { useAuth, AuthProvider } from './shared/auth/AuthContext.jsx'
+import { CartProvider } from './shared/CartContext.jsx'
 
 function RequireAuth({ children }){
   const { user, loading } = useAuth()
@@ -72,6 +75,8 @@ const router = createBrowserRouter([
       { path: 'merchant/products/:id/edit', element: <RequireRole role="merchant"><ProductEdit /></RequireRole> },
       { path: 'deliver', element: <RequireRole role="deliver"><DeliveryDashboard /></RequireRole> },
       { path: 'track/:orderId', element: <RequireAuth><OrderTracking /></RequireAuth> },
+      { path: 'cart', element: <RequireRole role="customer"><Cart /></RequireRole> },
+      { path: 'checkout', element: <RequireRole role="customer"><Checkout /></RequireRole> },
     ],
   },
 ])
@@ -81,7 +86,9 @@ createRoot(document.getElementById('root')).render(
     <LanguageProvider>
       <ToastProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <CartProvider>
+            <RouterProvider router={router} />
+          </CartProvider>
         </AuthProvider>
       </ToastProvider>
     </LanguageProvider>
