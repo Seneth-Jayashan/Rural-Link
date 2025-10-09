@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom'
 import { get, post } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import OrderChat from './OrderChat.jsx'
+import { generateGhostText, generateSimpleGhostText } from '../../shared/huggingFaceApi.js'
 
 export default function OrderTracking(){
   const { orderId } = useParams()
@@ -13,6 +14,9 @@ export default function OrderTracking(){
   const [reviewed, setReviewed] = useState({}) // { product:<bool>, delivery:<bool> }
   const [productReviews, setProductReviews] = useState({}) // productId -> { rating, comment }
   const [driverReview, setDriverReview] = useState({ rating: 0, comment: '' })
+  const [ghostText, setGhostText] = useState({}) // productId -> ghost text
+  const [generatingGhost, setGeneratingGhost] = useState({}) // productId -> loading state
+  const [typingTimeout, setTypingTimeout] = useState({}) // productId -> timeout ID
 
   useEffect(()=>{
     const path = orderId === 'last' ? '/api/orders/last' : `/api/orders/${orderId}`
@@ -28,6 +32,88 @@ export default function OrderTracking(){
       reviewsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [order, location?.hash])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(typingTimeout).forEach(timeoutId => {
+        if (timeoutId) clearTimeout(timeoutId)
+      })
+    }
+  }, [typingTimeout])
+
+  const generateProductGhostText = async (productId, productName) => {
+    setGeneratingGhost(prev => ({ ...prev, [productId]: true }))
+    try {
+      const aiText = await generateGhostText(productName, 'product')
+      const fallbackText = generateSimpleGhostText('product')
+      setGhostText(prev => ({ ...prev, [productId]: aiText || fallbackText }))
+    } catch (error) {
+      console.error('Error generating ghost text:', error)
+      setGhostText(prev => ({ ...prev, [productId]: generateSimpleGhostText('product') }))
+    } finally {
+      setGeneratingGhost(prev => ({ ...prev, [productId]: false }))
+    }
+  }
+
+  const generateDeliveryGhostText = async () => {
+    setGeneratingGhost(prev => ({ ...prev, 'delivery': true }))
+    try {
+      const aiText = await generateGhostText('delivery service', 'delivery')
+      const fallbackText = generateSimpleGhostText('delivery')
+      setGhostText(prev => ({ ...prev, 'delivery': aiText || fallbackText }))
+    } catch (error) {
+      console.error('Error generating ghost text:', error)
+      setGhostText(prev => ({ ...prev, 'delivery': generateSimpleGhostText('delivery') }))
+    } finally {
+      setGeneratingGhost(prev => ({ ...prev, 'delivery': false }))
+    }
+  }
+
+  // Auto-generate suggestions as user types
+  const handleProductTextChange = (productId, productName, value) => {
+    // Update the text immediately
+    setProductReviews(prev => ({...prev, [productId]: { ...(prev[productId]||{}), comment: value }}))
+    
+    // Clear existing timeout
+    if (typingTimeout[productId]) {
+      clearTimeout(typingTimeout[productId])
+    }
+    
+    // Only generate suggestions if user has typed at least 3 characters
+    if (value.length >= 3) {
+      const timeoutId = setTimeout(() => {
+        generateProductGhostText(productId, productName)
+      }, 1000) // Wait 1 second after user stops typing
+      
+      setTypingTimeout(prev => ({ ...prev, [productId]: timeoutId }))
+    } else {
+      // Clear ghost text if user hasn't typed enough
+      setGhostText(prev => ({ ...prev, [productId]: null }))
+    }
+  }
+
+  const handleDeliveryTextChange = (value) => {
+    // Update the text immediately
+    setDriverReview(prev => ({...prev, comment: value}))
+    
+    // Clear existing timeout
+    if (typingTimeout['delivery']) {
+      clearTimeout(typingTimeout['delivery'])
+    }
+    
+    // Only generate suggestions if user has typed at least 3 characters
+    if (value.length >= 3) {
+      const timeoutId = setTimeout(() => {
+        generateDeliveryGhostText()
+      }, 1000) // Wait 1 second after user stops typing
+      
+      setTypingTimeout(prev => ({ ...prev, 'delivery': timeoutId }))
+    } else {
+      // Clear ghost text if user hasn't typed enough
+      setGhostText(prev => ({ ...prev, 'delivery': null }))
+    }
+  }
 
   return (
     <div className="p-3 pb-16">
@@ -96,12 +182,6 @@ export default function OrderTracking(){
             </div>
           )}
 
-          {/* Quick CTA to review */}
-          {order.status === 'delivered' && (
-            <div className="mt-3">
-              <a href="#reviews" className="inline-block bg-green-600 text-white px-3 py-1 text-sm rounded">Review this order</a>
-            </div>
-          )}
 
           {/* Reviews after delivery */}
           {order.status === 'delivered' && (
@@ -123,10 +203,45 @@ export default function OrderTracking(){
                                   onClick={()=> setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), rating: st }}))}>{st}</button>
                               ))}
                             </div>
-                            <textarea className="w-full border rounded p-2 text-sm" rows={2} placeholder="Write your feedback (optional)"
-                              value={productReviews[pid]?.comment||''}
-                              onChange={(e)=> setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: e.target.value }}))}
-                            />
+                            <div className="relative">
+                              <textarea className="w-full border rounded p-2 text-sm" rows={2} 
+                                placeholder="Write your feedback (optional)"
+                                value={productReviews[pid]?.comment||''}
+                                onChange={(e)=> handleProductTextChange(pid, it.product?.name || 'product', e.target.value)}
+                              />
+                              {ghostText[pid] && productReviews[pid]?.comment && productReviews[pid]?.comment.length >= 3 && (
+                                <div className="mt-1 p-2 text-sm text-blue-500 italic bg-blue-50/50 rounded border-l-2 border-blue-300">
+                                  💡 AI Suggestion: {ghostText[pid]}
+                                  <button 
+                                    type="button"
+                                    className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                                    onClick={() => setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: ghostText[pid] }}))}
+                                  >
+                                    Use
+                                  </button>
+                                </div>
+                              )}
+                              {generatingGhost[pid] && (
+                                <div className="mt-1 p-2 text-sm text-gray-500 italic bg-gray-50 rounded">
+                                  🤖 Generating AI suggestion...
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              <button type="button" className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 disabled:opacity-50"
+                                onClick={() => generateProductGhostText(pid, it.product?.name || 'product')}
+                                disabled={generatingGhost[pid]}
+                              >
+                                {generatingGhost[pid] ? 'Generating...' : '🤖 Get AI suggestion'}
+                              </button>
+                              {ghostText[pid] && (
+                                <button type="button" className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded border border-green-300 hover:bg-green-200"
+                                  onClick={() => setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: ghostText[pid] }}))}
+                                >
+                                  ✓ Use suggestion
+                                </button>
+                              )}
+                            </div>
                             <button className="bg-green-600 text-white px-3 py-1 text-sm disabled:opacity-50"
                               disabled={submitting || !(productReviews[pid]?.rating>0)}
                               onClick={async ()=>{
@@ -165,10 +280,45 @@ export default function OrderTracking(){
                             onClick={()=> setDriverReview(prev=> ({...prev, rating: st}))}>{st}</button>
                         ))}
                       </div>
-                      <textarea className="w-full border rounded p-2 text-sm" rows={2} placeholder="Feedback for driver (optional)"
-                        value={driverReview.comment}
-                        onChange={(e)=> setDriverReview(prev=> ({...prev, comment: e.target.value}))}
-                      />
+                      <div className="relative">
+                        <textarea className="w-full border rounded p-2 text-sm" rows={2} 
+                          placeholder="Feedback for driver (optional)"
+                          value={driverReview.comment}
+                          onChange={(e)=> handleDeliveryTextChange(e.target.value)}
+                        />
+                        {ghostText['delivery'] && driverReview.comment && driverReview.comment.length >= 3 && (
+                          <div className="mt-1 p-2 text-sm text-blue-500 italic bg-blue-50/50 rounded border-l-2 border-blue-300">
+                            💡 AI Suggestion: {ghostText['delivery']}
+                            <button 
+                              type="button"
+                              className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                              onClick={() => setDriverReview(prev=> ({...prev, comment: ghostText['delivery']}))}
+                            >
+                              Use
+                            </button>
+                          </div>
+                        )}
+                        {generatingGhost['delivery'] && (
+                          <div className="mt-1 p-2 text-sm text-gray-500 italic bg-gray-50 rounded">
+                            🤖 Generating AI suggestion...
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button type="button" className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 disabled:opacity-50"
+                          onClick={generateDeliveryGhostText}
+                          disabled={generatingGhost['delivery']}
+                        >
+                          {generatingGhost['delivery'] ? 'Generating...' : '🤖 Get AI suggestion'}
+                        </button>
+                        {ghostText['delivery'] && (
+                          <button type="button" className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded border border-green-300 hover:bg-green-200"
+                            onClick={() => setDriverReview(prev=> ({...prev, comment: ghostText['delivery']}))}
+                          >
+                            ✓ Use suggestion
+                          </button>
+                        )}
+                      </div>
                       <button className="bg-blue-600 text-white px-3 py-1 text-sm disabled:opacity-50"
                         disabled={submitting || !(driverReview.rating>0)}
                         onClick={async ()=>{

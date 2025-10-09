@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { get, post } from '../../shared/api.js'
+import { generateGhostText, generateSimpleGhostText } from '../../shared/huggingFaceApi.js'
 
 export default function ReviewOrder(){
   const { orderId } = useParams()
@@ -11,6 +12,8 @@ export default function ReviewOrder(){
   const [reviewed, setReviewed] = useState({}) // product:<bool>, delivery:<bool>
   const [productReviews, setProductReviews] = useState({}) // productId -> { rating, comment }
   const [driverReview, setDriverReview] = useState({ rating: 0, comment: '' })
+  const [ghostText, setGhostText] = useState({}) // productId -> ghost text
+  const [generatingGhost, setGeneratingGhost] = useState({}) // productId -> loading state
 
   useEffect(()=>{
     async function load(){
@@ -30,6 +33,34 @@ export default function ReviewOrder(){
 
   const normalizedStatus = ((order?.status||'')+'').toLowerCase().trim().replace(/\s+/g,'_')
   const isDelivered = normalizedStatus === 'delivered' || normalizedStatus.includes('deliver')
+
+  const generateProductGhostText = async (productId, productName) => {
+    setGeneratingGhost(prev => ({ ...prev, [productId]: true }))
+    try {
+      const aiText = await generateGhostText(productName, 'product')
+      const fallbackText = generateSimpleGhostText('product')
+      setGhostText(prev => ({ ...prev, [productId]: aiText || fallbackText }))
+    } catch (error) {
+      console.error('Error generating ghost text:', error)
+      setGhostText(prev => ({ ...prev, [productId]: generateSimpleGhostText('product') }))
+    } finally {
+      setGeneratingGhost(prev => ({ ...prev, [productId]: false }))
+    }
+  }
+
+  const generateDeliveryGhostText = async () => {
+    setGeneratingGhost(prev => ({ ...prev, 'delivery': true }))
+    try {
+      const aiText = await generateGhostText('delivery service', 'delivery')
+      const fallbackText = generateSimpleGhostText('delivery')
+      setGhostText(prev => ({ ...prev, 'delivery': aiText || fallbackText }))
+    } catch (error) {
+      console.error('Error generating ghost text:', error)
+      setGhostText(prev => ({ ...prev, 'delivery': generateSimpleGhostText('delivery') }))
+    } finally {
+      setGeneratingGhost(prev => ({ ...prev, 'delivery': false }))
+    }
+  }
 
   return (
     <div className="p-3 pb-16">
@@ -65,10 +96,33 @@ export default function ReviewOrder(){
                               onClick={()=> setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), rating: st }}))}>{st}</button>
                           ))}
                         </div>
-                        <textarea className="w-full border rounded p-2 text-sm" rows={2} placeholder="Write your feedback (optional)"
-                          value={productReviews[pid]?.comment||''}
-                          onChange={(e)=> setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: e.target.value }}))}
-                        />
+                        <div className="relative">
+                          <textarea className="w-full border rounded p-2 text-sm" rows={2} 
+                            placeholder={ghostText[pid] && !productReviews[pid]?.comment ? "" : "Write your feedback (optional)"}
+                            value={productReviews[pid]?.comment||''}
+                            onChange={(e)=> setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: e.target.value }}))}
+                          />
+                          {ghostText[pid] && !productReviews[pid]?.comment && (
+                            <div className="absolute inset-0 p-2 text-sm text-blue-500 italic pointer-events-none bg-blue-50/50 rounded">
+                              💡 {ghostText[pid]}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <button type="button" className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 disabled:opacity-50"
+                            onClick={() => generateProductGhostText(pid, it.product?.name || 'product')}
+                            disabled={generatingGhost[pid]}
+                          >
+                            {generatingGhost[pid] ? 'Generating...' : '🤖 Get AI suggestion'}
+                          </button>
+                          {ghostText[pid] && (
+                            <button type="button" className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded border border-green-300 hover:bg-green-200"
+                              onClick={() => setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: ghostText[pid] }}))}
+                            >
+                              ✓ Use suggestion
+                            </button>
+                          )}
+                        </div>
                         <button className="bg-green-600 text-white px-3 py-1 text-sm disabled:opacity-50"
                           disabled={submitting || !(productReviews[pid]?.rating>0)}
                           onClick={async ()=>{
@@ -107,10 +161,33 @@ export default function ReviewOrder(){
                         onClick={()=> setDriverReview(prev=> ({...prev, rating: st}))}>{st}</button>
                     ))}
                   </div>
-                  <textarea className="w-full border rounded p-2 text-sm" rows={2} placeholder="Feedback for driver (optional)"
-                    value={driverReview.comment}
-                    onChange={(e)=> setDriverReview(prev=> ({...prev, comment: e.target.value}))}
-                  />
+                  <div className="relative">
+                    <textarea className="w-full border rounded p-2 text-sm" rows={2} 
+                      placeholder={ghostText['delivery'] && !driverReview.comment ? "" : "Feedback for driver (optional)"}
+                      value={driverReview.comment}
+                      onChange={(e)=> setDriverReview(prev=> ({...prev, comment: e.target.value}))}
+                    />
+                    {ghostText['delivery'] && !driverReview.comment && (
+                      <div className="absolute inset-0 p-2 text-sm text-blue-500 italic pointer-events-none bg-blue-50/50 rounded">
+                        💡 {ghostText['delivery']}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button type="button" className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 disabled:opacity-50"
+                      onClick={generateDeliveryGhostText}
+                      disabled={generatingGhost['delivery']}
+                    >
+                      {generatingGhost['delivery'] ? 'Generating...' : '🤖 Get AI suggestion'}
+                    </button>
+                    {ghostText['delivery'] && (
+                      <button type="button" className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded border border-green-300 hover:bg-green-200"
+                        onClick={() => setDriverReview(prev=> ({...prev, comment: ghostText['delivery']}))}
+                      >
+                        ✓ Use suggestion
+                      </button>
+                    )}
+                  </div>
                   <button className="bg-blue-600 text-white px-3 py-1 text-sm disabled:opacity-50"
                     disabled={submitting || !(driverReview.rating>0)}
                     onClick={async ()=>{
