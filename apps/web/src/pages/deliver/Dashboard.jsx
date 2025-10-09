@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react'
 import { get, post } from '../../shared/api.js'
 import { motion } from 'framer-motion'
-import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle, FiPhoneCall } from 'react-icons/fi'
+import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import OrderChat from '../common/OrderChat.jsx'
-import CallComponent from '../../shared/ui/CallComponent.jsx'
-import webrtcService from '../../shared/webrtc.js'
 
 export default function DeliveryDashboard(){
   const [available, setAvailable] = useState([])
   const [assigned, setAssigned] = useState([])
-  const [callState, setCallState] = useState({
-    isOpen: false,
-    callType: 'outgoing',
-    orderId: null,
-    recipientInfo: null,
-    callId: null,
-    offer: null
-  })
 
   async function load(){
     try{
@@ -31,25 +21,6 @@ export default function DeliveryDashboard(){
   }
   useEffect(()=>{ load() },[])
 
-  // Setup WebRTC listeners
-  useEffect(() => {
-    const handleIncomingCall = (data) => {
-      setCallState({
-        isOpen: true,
-        callType: 'incoming',
-        orderId: data.orderId,
-        recipientInfo: data.from,
-        callId: data.callId,
-        offer: data.offer
-      })
-    }
-
-    webrtcService.on('onIncomingCall', handleIncomingCall)
-
-    return () => {
-      webrtcService.off('onIncomingCall')
-    }
-  }, [])
 
   const { notify } = useToast()
   async function accept(order){
@@ -73,31 +44,6 @@ export default function DeliveryDashboard(){
     load()
   }
 
-  const handleCallCustomer = async (order) => {
-    try {
-      const callId = await webrtcService.startCall(order._id, order.customer._id)
-      setCallState({
-        isOpen: true,
-        callType: 'outgoing',
-        orderId: order._id,
-        recipientInfo: order.customer,
-        callId
-      })
-    } catch (error) {
-      notify({ type:'error', title:'Call Failed', message:'Unable to start call. Please check your microphone permissions.' })
-    }
-  }
-
-  const handleCallClose = () => {
-    setCallState({
-      isOpen: false,
-      callType: 'outgoing',
-      orderId: null,
-      recipientInfo: null,
-      callId: null,
-      offer: null
-    })
-  }
 
   return (
     <div className="p-3 pb-16">
@@ -142,15 +88,6 @@ export default function DeliveryDashboard(){
                   <FiCheckCircle /> Mark Delivered
                 </motion.button>
               )}
-              {['picked_up','in_transit'].includes(o.status) && o.customer && (
-                <motion.button 
-                  whileTap={{ scale:0.98 }} 
-                  className="flex items-center gap-2 bg-purple-600 text-white rounded px-3 py-1" 
-                  onClick={()=>handleCallCustomer(o)}
-                >
-                  <FiPhoneCall /> Voice Call
-                </motion.button>
-              )}
             </div>
             {['picked_up','in_transit'].includes(o.status) && o.status !== 'delivered' && (
               <div className="mt-3">
@@ -165,16 +102,6 @@ export default function DeliveryDashboard(){
         )}
       </div>
 
-      {/* Call Component */}
-      <CallComponent
-        isOpen={callState.isOpen}
-        onClose={handleCallClose}
-        callType={callState.callType}
-        orderId={callState.orderId}
-        recipientInfo={callState.recipientInfo}
-        callId={callState.callId}
-        offer={callState.offer}
-      />
     </div>
   )
 }
