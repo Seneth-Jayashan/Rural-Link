@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { get } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
+import DeliveryComm from '../deliver/DeliveryComm.jsx'
 
 export default function OrderTracking(){
   const { orderId } = useParams()
@@ -25,7 +26,7 @@ export default function OrderTracking(){
       {order && (
         <div className="space-y-2">
           <div className="font-medium">Order {order.orderNumber}</div>
-          <div className="text-sm">Status: {order.status}</div>
+          <div className="text-sm">Status: {order.status.replace('_',' ')}</div>
           <div className="text-sm text-gray-700">Total: ${order.total?.toFixed?.(2) || order.total}</div>
           <div>
             <div className="font-medium mb-1">Items</div>
@@ -40,7 +41,32 @@ export default function OrderTracking(){
           </div>
           <div>
             <div className="font-medium mb-1">Timeline</div>
-            <div className="space-y-1">
+            {/* Progress steps */}
+            {(()=>{
+              const steps = ['pending','confirmed','preparing','ready','picked_up','in_transit','delivered']
+              const currentIdx = Math.max(0, steps.indexOf(order.status))
+              return (
+                <div className="flex items-center gap-2 overflow-x-auto py-2">
+                  {steps.map((s, idx)=>{
+                    const done = idx <= currentIdx
+                    return (
+                      <div key={s} className="flex items-center gap-2">
+                        <div className={`flex items-center gap-2 ${done? 'text-green-600' : 'text-gray-400'}`}>
+                          <div className={`w-2.5 h-2.5 rounded-full ${done? 'bg-green-600' : 'bg-gray-300'}`}></div>
+                          <div className="text-xs whitespace-nowrap">{s.replace('_',' ')}</div>
+                        </div>
+                        {idx < steps.length-1 && (
+                          <div className={`h-0.5 w-8 ${idx < currentIdx ? 'bg-green-600' : 'bg-gray-300'}`}></div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+
+            {/* Raw history */}
+            <div className="space-y-1 mt-2">
               {order.trackingHistory?.map((h,idx)=> (
                 <div key={idx} className="text-xs text-gray-700">
                   {new Date(h.timestamp).toLocaleString()} — {h.status.replace('_',' ')} {h.note?`• ${h.note}`:''}
@@ -48,6 +74,14 @@ export default function OrderTracking(){
               ))}
             </div>
           </div>
+
+          {/* Communication with assigned deliverer */}
+          {order.deliveryPerson?._id && !['delivered','cancelled','refunded'].includes(order.status) && (
+            <div className="mt-4">
+              <div className="font-medium mb-1">Contact Delivery Person</div>
+              <DeliveryComm targetId={order.deliveryPerson._id} />
+            </div>
+          )}
         </div>
       )}
     </div>

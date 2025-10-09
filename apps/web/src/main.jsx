@@ -15,8 +15,11 @@ import ProductEdit from './pages/merchant/ProductEdit.jsx'
 import ProductView from './pages/merchant/ProductView.jsx'
 import DeliveryDashboard from './pages/deliver/Dashboard.jsx'
 import OrderTracking from './pages/common/OrderTracking.jsx'
+import CommDemo from './pages/common/CommDemo.jsx'
 import Cart from './pages/common/Cart.jsx'
 import Checkout from './pages/common/Checkout.jsx'
+import CustomerOrders from './pages/customer/Orders.jsx'
+import TrackAll from './pages/common/TrackAll.jsx'
 import { LanguageProvider } from './shared/i18n/LanguageContext.jsx'
 import { ToastProvider } from './shared/ui/Toast.jsx'
 import { useAuth, AuthProvider } from './shared/auth/AuthContext.jsx'
@@ -77,6 +80,9 @@ const router = createBrowserRouter([
       { path: 'merchant/products/:id/edit', element: <RequireRole role="merchant"><ProductEdit /></RequireRole> },
       { path: 'deliver', element: <RequireRole role="deliver"><DeliveryDashboard /></RequireRole> },
       { path: 'track/:orderId', element: <RequireAuth><OrderTracking /></RequireAuth> },
+      { path: 'track', element: <RequireRole role="customer"><TrackAll /></RequireRole> },
+      { path: 'orders', element: <RequireRole role="customer"><CustomerOrders /></RequireRole> },
+      { path: 'comm', element: <RequireAuth><CommDemo /></RequireAuth> },
       { path: 'cart', element: <RequireRole role="customer"><Cart /></RequireRole> },
       { path: 'checkout', element: <RequireRole role="customer"><Checkout /></RequireRole> },
     ],

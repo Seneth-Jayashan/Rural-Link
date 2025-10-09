@@ -85,7 +85,7 @@ export function AppShell() {
                 active={location.pathname.startsWith("/cart")}
               />
               <NavItem
-                to="/track/last"
+                to="/track"
                 icon={<Truck size={20} />}
                 label={t("Track")}
                 active={location.pathname.startsWith("/track")}
