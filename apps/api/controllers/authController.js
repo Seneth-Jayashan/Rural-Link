@@ -33,12 +33,14 @@ exports.register = async (req, res) => {
       userData.businessName = businessName;
       userData.businessLicense = businessLicense;
       userData.taxId = taxId;
-      userData.isApproved = false;
     } else if (role === 'deliver') {
       userData.employeeId = employeeId;
       userData.department = department;
       userData.hireDate = hireDate;
     }
+
+    // Ensure approval defaults to true for all roles
+    userData.isApproved = true;
 
     const user = await User.create(userData);
 
@@ -98,7 +100,6 @@ exports.login = async (req, res) => {
     if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
     if (!user.isActive) return res.status(401).json({ success: false, message: 'Account is deactivated. Please contact support.' });
     if (!user.isVerified) return res.status(401).json({ success: false, message: 'Please verify your email before logging in' });
-    if (user.role === 'merchant' && !user.isApproved) return res.status(401).json({ success: false, message: 'Please wait until admin approve your account' });
 
     const isPasswordMatch = await user.comparePassword(password);
     if (!isPasswordMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });

@@ -70,9 +70,7 @@ const userSchema = new mongoose.Schema({
   taxId: String,
   isApproved: {
     type: Boolean,
-    default: function() {
-      return this.role === 'merchant' ? false : true;
-    }
+    default: true
   },
   supplierBalance: {
     type: Number,
