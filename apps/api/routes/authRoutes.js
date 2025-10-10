@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Ensure uplod directory exists
-const uploadsDir = path.join(__dirname, '..', 'uplod');
+const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -82,6 +82,8 @@ router.post('/reset-password/:token', [body('newPassword').isLength({ min: 6 })]
 
 router.post('/update-fcm-token', authController.updateFCMToken);
 // Removed profile photo upload and fetch routes
+
+router.put('/update/fcm-token',auth, authController.updateFCMToken);
 
 module.exports = router;
 
