@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { get } from '../../shared/api.js'
+import { get, getImageUrl } from '../../shared/api.js'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiEdit2, FiArrowLeft, FiPackage, FiTag, FiDollarSign, FiBox, FiActivity, FiFileText, FiShoppingBag } from 'react-icons/fi'
@@ -139,7 +139,7 @@ export default function ProductView(){
                 className="relative"
               >
                 <img 
-                  src={firstImg.url} 
+                  src={getImageUrl(firstImg.url)} 
                   alt={firstImg.alt||product.name} 
                   className="w-full h-64 object-cover"
                 />
@@ -270,7 +270,7 @@ export default function ProductView(){
                       className="aspect-square rounded-2xl border border-gray-200 overflow-hidden bg-gray-100"
                     >
                       <img 
-                        src={image.url} 
+                        src={getImageUrl(image.url)} 
                         alt={image.alt || `${product.name} ${index + 2}`}
                         className="w-full h-full object-cover"
                       />

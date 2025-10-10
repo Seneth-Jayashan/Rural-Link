@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { get } from '../../shared/api.js'
+import { get, getImageUrl } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import { getSocket, authenticate, onOrderMessage } from '../../shared/socket.js'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -327,7 +327,7 @@ export default function TrackAll(){
                         <div key={idx} className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-xl border border-gray-200">
                           {item.product?.images?.[0]?.url ? (
                             <img
-                              src={item.product.images[0].url}
+                              src={getImageUrl(item.product.images[0].url)}
                               alt={item.product.name}
                               className="w-6 h-6 object-cover rounded-lg border"
                             />

@@ -2,7 +2,16 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useAuth } from './auth/AuthContext.jsx'
 import { get, post, put, del } from './api.js'
 
-const CartContext = createContext({ items: [], addItem: ()=>{}, updateQty: ()=>{}, removeItem: ()=>{}, clear: ()=>{}, subtotal: 0 })
+const CartContext = createContext({ 
+  items: [], 
+  addItem: ()=>{}, 
+  updateQty: ()=>{}, 
+  removeItem: ()=>{}, 
+  clear: ()=>{}, 
+  subtotal: 0,
+  currentMerchant: null,
+  canAddProduct: ()=>{}
+})
 
 export function CartProvider({ children }){
   const [items, setItems] = useState([])
@@ -52,7 +61,39 @@ export function CartProvider({ children }){
     return ()=>{ cancelled = true }
   },[user])
 
+  // Clean up items with null products
+  const cleanItems = useMemo(() => {
+    return items.filter(it => it.product && it.product._id);
+  }, [items]);
+
+  // Get current merchant from cart items
+  const currentMerchant = useMemo(() => {
+    if (cleanItems.length === 0) return null;
+    const firstItem = cleanItems[0];
+    return firstItem.product?.merchant || null;
+  }, [cleanItems]);
+
+  // Check if a product can be added to cart (same merchant or empty cart)
+  const canAddProduct = useCallback((product) => {
+    if (!product || !product.merchant) return false;
+    if (cleanItems.length === 0) return true;
+    
+    // More robust comparison - check both _id and businessName
+    const isSameMerchant = currentMerchant && (
+      currentMerchant._id === product.merchant._id ||
+      (currentMerchant.businessName && product.merchant.businessName && 
+       currentMerchant.businessName === product.merchant.businessName)
+    );
+    
+    return isSameMerchant;
+  }, [cleanItems, currentMerchant]);
+
   const addItem = useCallback(async (product, quantity = 1)=>{
+    // Check if product can be added (same merchant validation)
+    if (!canAddProduct(product)) {
+      throw new Error(`You can only add products from ${currentMerchant?.businessName || 'the current merchant'}. Please clear your cart first to add products from a different merchant.`);
+    }
+
     if(user){
       try{
         const data = await post('/api/cart/items', { productId: product._id, quantity })
@@ -71,7 +112,7 @@ export function CartProvider({ children }){
       }
       return [...prev, { product, quantity }]
     })
-  },[user])
+  },[user, canAddProduct, currentMerchant])
 
   const updateQty = useCallback(async (productId, quantity)=>{
     const clamped = Math.max(1, Math.min(99, quantity||1))
@@ -113,11 +154,6 @@ export function CartProvider({ children }){
     setItems([])
   },[user])
 
-  // Clean up items with null products
-  const cleanItems = useMemo(() => {
-    return items.filter(it => it.product && it.product._id);
-  }, [items]);
-
   // Auto-cleanup invalid items
   useEffect(() => {
     const hasInvalidItems = items.some(it => !it.product || !it.product._id);
@@ -131,7 +167,16 @@ export function CartProvider({ children }){
     return sum + (it.product.price * it.quantity);
   }, 0), [cleanItems])
 
-  const value = useMemo(()=>({ items: cleanItems, addItem, updateQty, removeItem, clear, subtotal }), [cleanItems, addItem, updateQty, removeItem, clear, subtotal])
+  const value = useMemo(()=>({ 
+    items: cleanItems, 
+    addItem, 
+    updateQty, 
+    removeItem, 
+    clear, 
+    subtotal,
+    currentMerchant,
+    canAddProduct
+  }), [cleanItems, addItem, updateQty, removeItem, clear, subtotal, currentMerchant, canAddProduct])
 
   return (
     <CartContext.Provider value={value}>{children}</CartContext.Provider>

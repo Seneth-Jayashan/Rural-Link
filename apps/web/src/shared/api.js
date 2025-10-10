@@ -52,6 +52,17 @@ export async function uploadFormData(path, formData, method = 'POST') {
 
 export const API_BASE = BASE
 
+// Helper function to get full image URL
+export function getImageUrl(imagePath) {
+  if (!imagePath) return null
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) return imagePath
+  // If it starts with /, it's a relative path from the API
+  if (imagePath.startsWith('/')) return `${BASE}${imagePath}`
+  // Otherwise, assume it's a relative path
+  return `${BASE}/${imagePath}`
+}
+
 
 
 // Removed NLP helper

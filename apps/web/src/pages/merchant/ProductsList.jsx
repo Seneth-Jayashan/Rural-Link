@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { get, del } from '../../shared/api.js'
+import { get, del, getImageUrl } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiPlus, FiTrash2, FiEdit2, FiPackage, FiSearch, FiFilter, FiBox, FiDollarSign, FiActivity } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
@@ -221,7 +221,7 @@ export default function ProductsList(){
                     >
                       {firstImg ? (
                         <img 
-                          src={firstImg.url} 
+                          src={getImageUrl(firstImg.url)} 
                           alt={firstImg.alt || p.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />

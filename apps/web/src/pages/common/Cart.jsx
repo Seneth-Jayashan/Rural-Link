@@ -5,9 +5,10 @@ import { FiTrash2, FiMinus, FiPlus, FiArrowRight, FiShoppingBag } from 'react-ic
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { formatLKR } from '../../shared/currency.js'
+import { getImageUrl } from '../../shared/api.js'
 
 export default function Cart() {
-  const { items, updateQty, removeItem, clear, subtotal } = useCart()
+  const { items, updateQty, removeItem, clear, subtotal, currentMerchant } = useCart()
   const navigate = useNavigate()
   const { t } = useI18n()
 
@@ -31,6 +32,37 @@ export default function Cart() {
         </div>
         <p className="text-gray-600 text-sm">{items.length} {items.length !== 1 ? t('items') : t('item')} {t('in your cart')}</p>
       </motion.div>
+
+      {/* Merchant Information */}
+      {currentMerchant && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-2xl mx-auto mb-4"
+        >
+          <div className="bg-white rounded-2xl shadow-md border border-orange-100 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <FiShoppingBag className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Shopping from {currentMerchant.businessName}</h3>
+                  <p className="text-sm text-gray-600">All items in your cart are from this merchant</p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={clear}
+                className="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
+              >
+                Clear Cart
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {items.length === 0 ? (
         <motion.div
@@ -70,7 +102,7 @@ export default function Cart() {
                   <div className="relative flex-shrink-0">
                     {Array.isArray(product.images) && product.images.length ? (
                       <img
-                        src={product.images[0].url}
+                        src={getImageUrl(product.images[0].url)}
                         alt={product.images[0].alt || product.name}
                         className="w-20 h-20 object-cover rounded-xl shadow-sm group-hover:scale-105 transition-transform duration-300 border border-gray-200"
                       />

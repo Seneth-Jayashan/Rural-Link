@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { get, post } from '../../shared/api.js'
+import { get, post, getImageUrl } from '../../shared/api.js'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -261,7 +261,7 @@ export default function MerchantOrders() {
                         <div className="flex items-center gap-3">
                           {it.product?.images?.[0]?.url ? (
                             <img
-                              src={it.product.images[0].url}
+                              src={getImageUrl(it.product.images[0].url)}
                               alt={it.product.name}
                               className="w-10 h-10 object-cover rounded-lg border"
                             />
