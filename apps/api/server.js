@@ -19,6 +19,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const utilityRoutes = require('./routes/utilityRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -145,6 +146,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/utils', utilityRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));
