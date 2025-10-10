@@ -15,6 +15,8 @@ import {
   FiEyeOff,
   FiCamera,
   FiX,
+  FiMapPin,
+  FiHome,
 } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useNavigate } from 'react-router-dom'
@@ -34,9 +36,14 @@ export default function Register() {
     role: 'customer',
     phone: '',
     businessName: '',
-    businessLicense: '',
-    taxId: '',
     profilePic: null,
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: 'Sri Lanka',
+    },
   })
 
   const [loading, setLoading] = useState(false)
@@ -48,7 +55,18 @@ export default function Register() {
   const [profilePicPreview, setProfilePicPreview] = useState(null)
 
   function update(k, v) {
-    setForm(prev => ({ ...prev, [k]: v }))
+    if (k.startsWith('address.')) {
+      const addressField = k.split('.')[1]
+      setForm(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [addressField]: v
+        }
+      }))
+    } else {
+      setForm(prev => ({ ...prev, [k]: v }))
+    }
   }
 
   function handleProfilePicChange(e) {
@@ -293,6 +311,66 @@ export default function Register() {
             />
           </div>
 
+          {/* Address Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <FiHome className="text-orange-500 text-lg" />
+              <h3 className="text-sm font-medium text-gray-700">{t('Address Information')}</h3>
+            </div>
+            
+            <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+              <FiMapPin className="text-orange-500 text-lg" />
+              <input
+                className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
+                placeholder={t('Street Address')}
+                value={form.address.street}
+                onChange={e => update('address.street', e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+                <FiMapPin className="text-orange-500 text-lg" />
+                <input
+                  className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
+                  placeholder={t('City')}
+                  value={form.address.city}
+                  onChange={e => update('address.city', e.target.value)}
+                />
+              </div>
+              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+                <FiMapPin className="text-orange-500 text-lg" />
+                <input
+                  className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
+                  placeholder={t('State/Province')}
+                  value={form.address.state}
+                  onChange={e => update('address.state', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+                <FiMapPin className="text-orange-500 text-lg" />
+                <input
+                  className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
+                  placeholder={t('Postal Code')}
+                  value={form.address.zipCode}
+                  onChange={e => update('address.zipCode', e.target.value)}
+                />
+              </div>
+              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+                <FiMapPin className="text-orange-500 text-lg" />
+                <input
+                  className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
+                  placeholder={t('Country')}
+                  value={form.address.country}
+                  onChange={e => update('address.country', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Role Dropdown */}
           <div className="relative">
             <button
@@ -348,26 +426,6 @@ export default function Register() {
                   placeholder={t('Business name')}
                   value={form.businessName}
                   onChange={e => update('businessName', e.target.value)}
-                />
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
-                <FiFileText className="text-orange-500 text-lg" />
-                <input
-                  className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
-                  placeholder={t('Business License')}
-                  value={form.businessLicense}
-                  onChange={e => update('businessLicense', e.target.value)}
-                />
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
-                <FiFileText className="text-orange-500 text-lg" />
-                <input
-                  className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
-                  placeholder={t('Tax ID')}
-                  value={form.taxId}
-                  onChange={e => update('taxId', e.target.value)}
                 />
               </div>
             </div>

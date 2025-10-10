@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
 
     const { 
       firstName, lastName, email, password, role = 'customer', phone, 
-      businessName 
+      businessName, address
     } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -33,6 +33,12 @@ exports.register = async (req, res) => {
     }
 
     const userData = { firstName, lastName, email, password, role, phone };
+    
+    // Add address if provided
+    if (address) {
+      userData.address = address;
+    }
+    
     // If a profile image was uploaded, save its relative path
     if (req.file && req.file.filename) {
       userData.profileImage = `/uplod/${req.file.filename}`;
