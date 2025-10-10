@@ -113,7 +113,7 @@ export function CartProvider({ children }){
     setItems([])
   },[user])
 
-  const subtotal = useMemo(()=> items.reduce((sum, it)=> sum + (it.product.price * it.quantity), 0), [items])
+  const subtotal = useMemo(()=> items.reduce((sum, it)=> sum + (it.product?.price * it.quantity), 0), [items])
 
   const value = useMemo(()=>({ items, addItem, updateQty, removeItem, clear, subtotal }), [items, addItem, updateQty, removeItem, clear, subtotal])
 
