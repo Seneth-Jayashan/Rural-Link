@@ -57,6 +57,7 @@ export default function Register() {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         notify({
           type: 'error',
+          title: t('Validation Error'),
           message: 'Please select an image smaller than 5MB.',
         })
         return
@@ -65,7 +66,7 @@ export default function Register() {
       if (!file.type.startsWith('image/')) {
         notify({
           type: 'error',
-          title: 'Invalid file type',
+          title: t('Validation Error'),
           message: 'Please select an image file.',
         })
         return
@@ -119,6 +120,7 @@ export default function Register() {
 
     try {
       await registerUser(form)
+      setMessage(t('Registered successfully. Please verify your email.'))
       notify({
         type: 'success',
         title: t('Registration complete'),
