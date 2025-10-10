@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { get, del } from '../../shared/api.js'
 import { motion } from 'framer-motion'
 import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi'
