@@ -1,5 +1,6 @@
 // src/notifications.js
 import { messaging, getToken, onMessage } from "./firebase";
+import { get, put, post, API_BASE } from './shared/api.js'
 
 export async function requestNotificationPermission() {
   console.log("Requesting notification permission...");
@@ -14,6 +15,7 @@ export async function requestNotificationPermission() {
 
       const token = await getToken(messaging, { vapidKey });
       console.log("FCM Token:", token);
+      sessionStorage.setItem('FCM-Token',token);
 
       // Optionally send token to your backend
       return token;
@@ -32,4 +34,14 @@ export function listenForMessages() {
     const { title, body } = payload.notification;
     new Notification(title, { body });
   });
+}
+
+export async function saveFCMToken(token){
+  try{
+    const response = await put('/api/auth/update/fcm-token',{token});
+    console.log("FCM Token Saved", response);
+    return response
+  }catch(error){
+    console.error("Error saving fcm notification:", error);
+  }
 }

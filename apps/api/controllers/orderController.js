@@ -4,6 +4,7 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
+const { sendNotification } = require('../notifications')
 
 // Create new order
 exports.createOrder = async (req, res) => {
@@ -78,18 +79,23 @@ exports.createOrder = async (req, res) => {
     }
     
     // Create notifications
-    await Notification.createNotification({
-      user: order.merchant,
-      title: 'New Order Received',
-      message: `You have received a new order #${order.orderNumber}`,
-      type: 'order',
-      data: { orderId: order._id },
-      priority: 'high'
-    });
+    const merchant = await User.findById(order.merchant)
+    if (merchant.fcmToken) {
+      await sendNotification(
+        merchant.fcmToken,
+        'New Order Received',
+        `Order #${order.orderNumber} has been placed. Total LKR${order.total}`,
+        { orderId: order._id.toString() }
+      )
+    }
+
+
     try {
       const { emitToOrder } = require('../services/realtime');
       emitToOrder(order._id, 'orderStatus', { status: order.status });
     } catch {}
+
+
     
     res.status(201).json({
       success: true,
@@ -297,33 +303,36 @@ exports.updateOrderStatus = async (req, res) => {
       const { emitToOrder } = require('../services/realtime');
       emitToOrder(order._id, 'orderStatus', { status });
     } catch {}
-    
-    // Create notification for customer
-    await Notification.createNotification({
-      user: order.customer,
-      title: 'Order Status Update',
-      message: status === 'cancelled'
+
+    const customer = await User.findById(order.customer)
+    if (customer.fcmToken) {
+      await sendNotification(
+        customer.fcmToken,
+        'Order Status Update',
+        status === 'cancelled'
         ? `Your order #${order.orderNumber} was cancelled by the merchant${reason ? `: ${reason}` : ''}`
         : `Your order #${order.orderNumber} status has been updated to ${status}`,
-      type: 'order',
-      data: { orderId: order._id }
-    });
-
-    // When order is ready, notify all active delivery drivers
-    if (status === 'ready') {
-      const drivers = await User.find({ role: 'deliver', isActive: true }).select('_id');
-      if (drivers.length > 0) {
-        const notifications = drivers.map(d => ({
-          user: d._id,
-          title: 'New Delivery Available',
-          message: `Order #${order.orderNumber} is ready for pickup`,
-          type: 'delivery',
-          priority: 'high',
-          data: { orderId: order._id }
-        }));
-        try { await Notification.sendBulk(notifications); } catch {}
-      }
+        { orderId: order._id.toString() }
+      )
     }
+    if (status === 'ready') {
+      const drivers = await User.find({ role: 'deliver', isActive: true }).select('fcmToken');
+
+      const notifications = drivers
+        .filter(driver => driver.fcmToken)
+        .map(driver =>
+          sendNotification(
+            driver.fcmToken,
+            'New Delivery Available', // title
+            `Order #${order.orderNumber} is ready for pickup`, // message
+            { orderId: order._id.toString() } // optional data
+          )
+        );
+
+      await Promise.all(notifications); // send all in parallel
+    }
+
+    
     
     res.json({
       success: true,
@@ -375,34 +384,25 @@ exports.acceptDelivery = async (req, res) => {
     
     order.deliveryPerson = req.user._id;
     await order.updateStatus('picked_up');
-    
-    // Create notifications
-    await Notification.createNotification({
-      user: order.customer,
-      title: 'Delivery Accepted',
-      message: `Your order #${order.orderNumber} has been picked up and is on its way`,
-      type: 'delivery',
-      data: { orderId: order._id }
-    });
-    
-    await Notification.createNotification({
-      user: order.merchant,
-      title: 'Delivery Accepted',
-      message: `Order #${order.orderNumber} has been picked up by delivery person`,
-      type: 'delivery',
-      data: { orderId: order._id }
-    });
 
-    // Notify all other delivery drivers that this order is no longer available
-    try {
-      const { emitToDeliveryDrivers } = require('../services/realtime');
-      emitToDeliveryDrivers('orderAccepted', {
-        orderId: order._id,
-        orderNumber: order.orderNumber,
-        acceptedBy: req.user._id
-      });
-    } catch (error) {
-      console.error('Real-time notification error:', error);
+    const customer = await User.findById(order.customer)
+    if (customer.fcmToken) {
+      await sendNotification(
+        customer.fcmToken,
+        'Delivery Accepted',
+        `Your order #${order.orderNumber} has been picked up and is on its way`,
+        { orderId: order._id.toString() }
+      )
+    }
+
+    const merchant = await User.findById(order.merchant)
+    if (merchant.fcmToken) {
+      await sendNotification(
+        merchant.fcmToken,
+        'Delivery Accepted',
+        `Order #${order.orderNumber} has been picked up by delivery person`,
+        { orderId: order._id.toString() }
+      )
     }
     
     res.json({
@@ -441,15 +441,16 @@ exports.updateDeliveryStatus = async (req, res) => {
       const { emitToOrder } = require('../services/realtime');
       emitToOrder(order._id, 'orderStatus', { status, location });
     } catch {}
-    
-    // Create notification for customer
-    await Notification.createNotification({
-      user: order.customer,
-      title: 'Delivery Update',
-      message: `Your order #${order.orderNumber} is now ${status.replace('_', ' ')}`,
-      type: 'delivery',
-      data: { orderId: order._id }
-    });
+
+    const customer = await User.findById(order.customer)
+    if (customer.fcmToken) {
+      await sendNotification(
+        customer.fcmToken,
+        'Order Cancelled',
+        `Order #${order.orderNumber} is now ${status.replace('_', ' ')}`,
+        { orderId: order._id.toString() }
+      )
+    }
     
     res.json({
       success: true,
@@ -491,15 +492,16 @@ exports.cancelOrder = async (req, res) => {
         $inc: { stock: item.quantity, salesCount: -item.quantity }
       });
     }
-    
-    // Create notifications
-    await Notification.createNotification({
-      user: order.merchant,
-      title: 'Order Cancelled',
-      message: `Order #${order.orderNumber} has been cancelled by customer`,
-      type: 'order',
-      data: { orderId: order._id }
-    });
+
+    const merchant = await User.findById(order.merchant)
+    if (merchant.fcmToken) {
+      await sendNotification(
+        merchant.fcmToken,
+        'Order Cancelled',
+        `Order #${order.orderNumber} has been placed`,
+        { orderId: order._id.toString() }
+      )
+    }
     
     res.json({
       success: true,
