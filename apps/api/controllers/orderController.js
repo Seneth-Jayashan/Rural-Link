@@ -536,3 +536,143 @@ exports.getAvailableOrders = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+// Get merchant analytics
+exports.getMerchantAnalytics = async (req, res) => {
+  try {
+    const { period = 'monthly' } = req.query;
+    const merchantId = req.user._id;
+    
+    // Calculate date range based on period
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    switch (period) {
+      case 'daily':
+        startDate.setDate(endDate.getDate() - 30);
+        break;
+      case 'weekly':
+        startDate.setDate(endDate.getDate() - 12 * 7);
+        break;
+      case 'monthly':
+        startDate.setMonth(endDate.getMonth() - 12);
+        break;
+      case 'yearly':
+        startDate.setFullYear(endDate.getFullYear() - 5);
+        break;
+    }
+    
+    // Get order metrics
+    const orderMetrics = await Order.aggregate([
+      { $match: { 
+        merchant: merchantId,
+        createdAt: { $gte: startDate, $lte: endDate }
+      }},
+      { $group: {
+        _id: null,
+        totalOrders: { $sum: 1 },
+        completedOrders: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } },
+        cancelledOrders: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
+        pendingOrders: { $sum: { $cond: [{ $in: ['$status', ['pending', 'confirmed', 'preparing', 'ready']] }, 1, 0] } },
+        totalRevenue: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, '$total', 0] } },
+        averageOrderValue: { $avg: { $cond: [{ $eq: ['$status', 'delivered'] }, '$total', null] } }
+      }}
+    ]);
+    
+    // Get delivery metrics
+    const deliveryMetrics = await Order.aggregate([
+      { $match: { 
+        merchant: merchantId,
+        status: 'delivered',
+        createdAt: { $gte: startDate, $lte: endDate }
+      }},
+      { $group: {
+        _id: null,
+        totalDeliveries: { $sum: 1 },
+        averageDeliveryTime: { $avg: '$deliveryTime' },
+        totalDistance: { $sum: '$deliveryDistance' }
+      }}
+    ]);
+    
+    // Get recent orders for dashboard
+    const recentOrders = await Order.find({ merchant: merchantId })
+      .populate('customer', 'firstName lastName')
+      .populate('items.product', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5);
+    
+    // Get top products
+    const topProducts = await Order.aggregate([
+      { $match: { 
+        merchant: merchantId,
+        status: 'delivered',
+        createdAt: { $gte: startDate, $lte: endDate }
+      }},
+      { $unwind: '$items' },
+      { $group: {
+        _id: '$items.product',
+        totalSold: { $sum: '$items.quantity' },
+        totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } }
+      }},
+      { $lookup: {
+        from: 'products',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'product'
+      }},
+      { $unwind: '$product' },
+      { $project: {
+        productName: '$product.name',
+        totalSold: 1,
+        totalRevenue: 1
+      }},
+      { $sort: { totalSold: -1 } },
+      { $limit: 5 }
+    ]);
+    
+    // Get daily revenue for chart
+    const dailyRevenue = await Order.aggregate([
+      { $match: { 
+        merchant: merchantId,
+        status: 'delivered',
+        createdAt: { $gte: startDate, $lte: endDate }
+      }},
+      { $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' }
+        },
+        revenue: { $sum: '$total' },
+        orders: { $sum: 1 }
+      }},
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        overview: orderMetrics[0] || {
+          totalOrders: 0,
+          completedOrders: 0,
+          cancelledOrders: 0,
+          pendingOrders: 0,
+          totalRevenue: 0,
+          averageOrderValue: 0
+        },
+        deliveries: deliveryMetrics[0] || {
+          totalDeliveries: 0,
+          averageDeliveryTime: 0,
+          totalDistance: 0
+        },
+        recentOrders,
+        topProducts,
+        dailyRevenue,
+        period
+      }
+    });
+  } catch (error) {
+    console.error('Get merchant analytics error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

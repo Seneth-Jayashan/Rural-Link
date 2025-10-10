@@ -280,7 +280,6 @@ const strings = {
     Track: 'හඹා යන්න',
     Account: 'ගිණුම',
     Orders: 'ඇණවුම්',
-    Products: 'නිෂ්පාදන',
     Add: 'එක් කරන්න',
     Deliver: 'බෙදාහැරීම',
     // Auth screens
@@ -535,7 +534,6 @@ const strings = {
     Track: 'பின்தொடர்',
     Account: 'கணக்கு',
     Orders: 'ஆர்டர்கள்',
-    Products: 'பொருட்கள்',
     Add: 'சேர்',
     Deliver: 'விநியோகம்',
     // Auth screens

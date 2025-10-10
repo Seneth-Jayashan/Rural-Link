@@ -94,63 +94,17 @@ export default function Account(){
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
-      <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} className="max-w-2xl mx-auto space-y-6">
-        {/* Compact Profile Card with Avatar, Name and Edit */}
-        <section className="bg-white rounded-2xl shadow-md border border-orange-100 p-6 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-orange-100 border border-orange-200 flex items-center justify-center">
-              {(photoPreview || photoUrl) ? (
-                <img key={photoBust} src={photoPreview || photoUrl} alt={fullName} className="w-full h-full object-cover" onError={()=>{ setPhotoPreview(''); setPhotoUrl('') }} />
-              ) : (
-                <UserIcon className="w-8 h-8 text-orange-500" />
-              )}
-              {editing && (
-                <>
-                  <input id="accountPhoto" type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
-                  <label htmlFor="accountPhoto" className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-md flex items-center justify-center cursor-pointer">
-                    <PencilIcon className="w-3.5 h-3.5" />
-                  </label>
-                </>
-              )}
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900">{fullName}</h2>
-              <p className="text-gray-500 text-sm">{user?.email}</p>
-            </div>
-            <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }} onClick={()=> navigate('/account/edit')}
-              className="px-4 py-2 rounded-xl border border-orange-300 text-orange-700 font-semibold hover:bg-orange-50">
-              {t('Edit Account')}
-            </motion.button>
-          </div>
-
-          {/* Editing moved to /account/edit */}
-        </section>
-
-        {/* Language & Legal */}
-        <section className="bg-white rounded-2xl shadow-md border border-orange-100 p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Globe2 className="w-5 h-5 text-orange-600" />
-            <h2 className="text-lg font-semibold text-gray-900">{t('Language')}</h2>
-          </div>
-          <select value={lang} onChange={(e)=> setLang(e.target.value)} className="w-full sm:w-48 px-3 py-2 border rounded-xl">
-            <option value="en">EN</option>
-            <option value="si">SI</option>
-            <option value="ta">TA</option>
-          </select>
-
-          <Link to="/terms" className="flex items-center gap-2 text-sm text-gray-700 hover:text-orange-600">
-            <FileText className="w-4 h-4" /> {t('Terms and Conditions')}
-          </Link>
-        </section>
-
-        {/* Auth */}
-        <section className="bg-white rounded-2xl shadow-md border border-orange-100 p-6">
-          <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }} onClick={logout}
-            className="w-full sm:w-auto px-5 py-2 bg-red-500 text-white rounded-xl font-semibold shadow-md hover:bg-red-600 flex items-center gap-2 justify-center">
-            <LogOut className="w-4 h-4" /> {t('Logout')}
-          </motion.button>
-        </section>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 pb-24">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-sm border-b border-orange-100 px-4 py-4 shadow-lg"
+      >
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-2xl font-bold text-gray-900 text-center">{t('My Profile')}</h1>
+          <p className="text-gray-600 text-sm text-center mt-1">{t('Manage your account settings')}</p>
+        </div>
       </motion.div>
     </div>
   )
