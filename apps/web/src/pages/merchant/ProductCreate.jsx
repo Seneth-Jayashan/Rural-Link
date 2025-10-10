@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { post } from '../../shared/api.js'
-import { motion } from 'framer-motion'
-import { FiPlus, FiImage, FiX } from 'react-icons/fi'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FiPlus, FiImage, FiX, FiArrowLeft, FiDollarSign, FiPackage, FiTag, FiFileText, FiBox } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useNavigate } from 'react-router-dom'
 
@@ -53,79 +53,242 @@ export default function ProductCreate(){
         images: imageDataUrl ? [{ url: imageDataUrl, alt: name }] : []
       }
       await post('/api/products', payload)
-      notify({ type:'success', title:'Product created' })
+      notify({ type:'success', title:'Product Created', message: 'Your product has been added successfully!' })
       navigate('/merchant/products')
     }catch(err){
-      notify({ type:'error', title:'Create failed', message: err.message })
+      notify({ type:'error', title:'Create Failed', message: err.message })
     }finally{ setSaving(false) }
   }
 
+  const isFormValid = name && price && stock
+
   return (
-    <div className="p-3 pb-16">
-      <h1 className="text-lg font-semibold mb-3 text-black">Add Product</h1>
-
-      <form onSubmit={addProduct} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-black mb-1">Name</label>
-            <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Product name" value={name} onChange={e=>setName(e.target.value)} />
-          </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto mb-6"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <button 
+            onClick={() => navigate('/merchant/products')}
+            className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100 hover:shadow-xl transition-all"
+          >
+            <FiArrowLeft className="w-5 h-5 text-orange-600" />
+          </button>
           <div>
-            <label className="block text-sm font-medium text-black mb-1">Category</label>
-            <select className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black focus:outline-none focus:ring-2 focus:ring-orange-400" value={category} onChange={e=>setCategory(e.target.value)}>
-              <option value="food">Food</option>
-              <option value="groceries">Groceries</option>
-              <option value="pharmacy">Pharmacy</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="books">Books</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 col-span-2">
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">Price</label>
-              <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="0.00" inputMode="decimal" value={price} onChange={e=>setPrice(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black mb-1">Stock</label>
-              <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="0" inputMode="numeric" value={stock} onChange={e=>setStock(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-black mb-1">Description</label>
-            <textarea rows={4} className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Describe the product" value={desc} onChange={e=>setDesc(e.target.value)} />
+            <h1 className="text-3xl font-bold text-gray-900">Add New Product</h1>
+            <p className="text-gray-600 text-sm mt-1">Create a new product for your catalog</p>
           </div>
         </div>
+      </motion.div>
 
-        <div>
-          <label className="block text-sm font-medium text-black mb-2">Product Photo</label>
-          {!imageDataUrl ? (
-            <button type="button" onClick={onPickImage} className="w-full border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl p-6 bg-white text-gray-600 flex flex-col items-center justify-center gap-2 transition">
-              <FiImage className="text-black" />
-              <span className="text-sm">Tap to upload image (PNG, JPG, WEBP, max 2MB)</span>
-            </button>
-          ) : (
-            <div className="relative">
-              <img src={imageDataUrl} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-gray-300" />
-              <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-white/90 text-black rounded-full p-2 border border-gray-300">
-                <FiX />
-              </button>
+      <div className="max-w-2xl mx-auto">
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          onSubmit={addProduct}
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6 space-y-6"
+        >
+          {/* Product Image Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-orange-100 rounded-xl">
+                <FiImage className="w-4 h-4 text-orange-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Product Image</h2>
             </div>
-          )}
-          {imageError && <div className="text-red-600 text-sm mt-2">{imageError}</div>}
-          <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={onFileChange} />
-        </div>
+            
+            <AnimatePresence>
+              {!imageDataUrl ? (
+                <motion.button
+                  type="button"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onPickImage}
+                  className="w-full border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-2xl p-8 bg-gray-50/50 text-gray-600 flex flex-col items-center justify-center gap-3 transition-all hover:bg-orange-50/50 group"
+                >
+                  <div className="p-3 bg-orange-100 rounded-xl group-hover:bg-orange-200 transition-colors">
+                    <FiImage className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-gray-900">Upload Product Image</div>
+                    <div className="text-sm text-gray-500 mt-1">PNG, JPG, WEBP, GIF • Max 2MB</div>
+                  </div>
+                </motion.button>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="relative group"
+                >
+                  <img 
+                    src={imageDataUrl} 
+                    alt="Preview" 
+                    className="w-full h-64 object-cover rounded-2xl border-2 border-orange-200 shadow-md group-hover:shadow-lg transition-all" 
+                  />
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={removeImage}
+                    className="absolute top-3 right-3 bg-white/90 text-red-600 rounded-full p-2 border border-red-200 shadow-lg hover:bg-red-50 transition-all"
+                  >
+                    <FiX className="w-4 h-4" />
+                  </motion.button>
+                  <div className="absolute bottom-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                    Image Preview
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            {imageError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm"
+              >
+                {imageError}
+              </motion.div>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={onFileChange} />
+          </div>
 
-        <motion.button whileTap={{ scale:0.98 }} disabled={saving || !name || !price || !stock} className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-xl p-3 font-semibold disabled:opacity-60">
-          <FiPlus /> {saving ? 'Saving...' : 'Add Product'}
-        </motion.button>
-      </form>
+          {/* Basic Information */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-blue-100 rounded-xl">
+                <FiPackage className="w-4 h-4 text-blue-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+            </div>
+
+            <div className="space-y-4">
+              {/* Product Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                <input 
+                  className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400"
+                  placeholder="Enter product name"
+                  value={name} 
+                  onChange={e=>setName(e.target.value)} 
+                />
+              </div>
+
+              {/* Category and Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                  <div className="relative">
+                    <FiTag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <select 
+                      className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none appearance-none"
+                      value={category} 
+                      onChange={e=>setCategory(e.target.value)}
+                    >
+                      <option value="food">🍕 Food</option>
+                      <option value="groceries">🛒 Groceries</option>
+                      <option value="pharmacy">💊 Pharmacy</option>
+                      <option value="electronics">📱 Electronics</option>
+                      <option value="clothing">👕 Clothing</option>
+                      <option value="books">📚 Books</option>
+                      <option value="other">📦 Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Price *</label>
+                  <div className="relative">
+                    <FiDollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input 
+                      className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400"
+                      placeholder="0.00"
+                      inputMode="decimal" 
+                      value={price} 
+                      onChange={e=>setPrice(e.target.value)} 
+                    />
+                  </div>
+                </div>
+
+                {/* Stock */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Stock *</label>
+                  <div className="relative">
+                    <FiBox className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input 
+                      className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400"
+                      placeholder="0"
+                      inputMode="numeric" 
+                      value={stock} 
+                      onChange={e=>setStock(e.target.value)} 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-purple-100 rounded-xl">
+                <FiFileText className="w-4 h-4 text-purple-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Description</h2>
+            </div>
+            
+            <textarea 
+              rows={4} 
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400 resize-none"
+              placeholder="Describe your product features, benefits, and details..."
+              value={desc} 
+              onChange={e=>setDesc(e.target.value)} 
+            />
+            <div className="text-xs text-gray-500 mt-2">
+              Optional but recommended for better customer understanding
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <motion.button 
+            whileHover={{ scale: isFormValid && !saving ? 1.02 : 1 }}
+            whileTap={{ scale: isFormValid && !saving ? 0.98 : 1 }}
+            disabled={saving || !isFormValid}
+            type="submit"
+            className={`w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-semibold text-lg shadow-lg transition-all ${
+              isFormValid && !saving
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:shadow-xl hover:from-orange-600 hover:to-amber-600'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            {saving ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Creating Product...
+              </>
+            ) : (
+              <>
+                <FiPlus className="w-5 h-5" />
+                Create Product
+              </>
+            )}
+          </motion.button>
+
+          {/* Form Requirements */}
+          <div className="text-center text-sm text-gray-500">
+            * Required fields
+          </div>
+        </motion.form>
+      </div>
     </div>
   )
 }
-
-
