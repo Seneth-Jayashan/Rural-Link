@@ -77,6 +77,14 @@ exports.createProduct = async (req, res) => {
       merchant: req.user._id
     };
     
+    // Handle uploaded image
+    if (req.file) {
+      productData.images = [{
+        url: `/uploads/${req.file.filename}`,
+        alt: req.body.name || 'Product image'
+      }];
+    }
+    
     const product = await Product.create(productData);
     
     res.status(201).json({
@@ -108,9 +116,19 @@ exports.updateProduct = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to update this product' });
     }
     
+    const updateData = { ...req.body };
+    
+    // Handle uploaded image
+    if (req.file) {
+      updateData.images = [{
+        url: `/uploads/${req.file.filename}`,
+        alt: req.body.name || 'Product image'
+      }];
+    }
+    
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
     

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { post } from '../../shared/api.js'
+import { uploadFormData } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiPlus, FiImage, FiX, FiArrowLeft, FiDollarSign,
@@ -59,15 +59,23 @@ export default function ProductCreate() {
     e.preventDefault()
     try {
       setSaving(true)
-      const payload = {
-        name,
-        description: desc,
-        category,
-        price: parseFloat(price || 0),
-        stock: parseInt(stock || 0),
-        images: imageDataUrl ? [{ url: imageDataUrl, alt: name }] : []
+      
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('name', name)
+      formData.append('description', desc)
+      formData.append('category', category)
+      formData.append('price', parseFloat(price || 0))
+      formData.append('stock', parseInt(stock || 0))
+      
+      // Add image file if selected
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append('image', fileInputRef.current.files[0])
       }
-      await post('/api/products', payload)
+      
+      // Use the uploadFormData helper
+      await uploadFormData('/api/products', formData, 'POST')
+      
       notify({ type: 'success', title: 'Product Created', message: 'Your product has been added successfully!' })
       navigate('/merchant/products')
     } catch (err) {

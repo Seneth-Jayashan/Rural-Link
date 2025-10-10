@@ -141,6 +141,7 @@ app.use(cookieParser());
 // Serve uploaded files statically
 const path = require('path');
 app.use('/uplod', express.static(path.join(__dirname, 'uplod')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Basic rate limiter (JSON responses + relaxed limit)
 const limiter = rateLimit({

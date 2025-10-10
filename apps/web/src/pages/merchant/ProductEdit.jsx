@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { get, put, del } from '../../shared/api.js'
+import { get, uploadFormData, del } from '../../shared/api.js'
 import { motion } from 'framer-motion'
 import { FiSave, FiTrash2, FiImage, FiX } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
@@ -68,18 +68,23 @@ export default function ProductEdit(){
     e.preventDefault()
     try{
       setSaving(true)
-      const payload = {
-        name,
-        description: desc,
-        category,
-        price: parseFloat(price||0),
-        stock: parseInt(stock||0),
+      
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('name', name)
+      formData.append('description', desc)
+      formData.append('category', category)
+      formData.append('price', parseFloat(price||0))
+      formData.append('stock', parseInt(stock||0))
+      
+      // Add image file if a new one was selected
+      if (fileInputRef.current?.files?.[0]) {
+        formData.append('image', fileInputRef.current.files[0])
       }
-      // If a new image was selected, send it; otherwise leave images unchanged
-      if(imageDataUrl){
-        payload.images = [{ url: imageDataUrl, alt: name }]
-      }
-      await put(`/api/products/${id}`, payload)
+      
+      // Use the uploadFormData helper
+      await uploadFormData(`/api/products/${id}`, formData, 'PUT')
+      
       notify({ type:'success', title:'Saved' })
       navigate('/merchant/products')
     }catch(err){

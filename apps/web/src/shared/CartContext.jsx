@@ -113,9 +113,25 @@ export function CartProvider({ children }){
     setItems([])
   },[user])
 
-  const subtotal = useMemo(()=> items.reduce((sum, it)=> sum + (it.product.price * it.quantity), 0), [items])
+  // Clean up items with null products
+  const cleanItems = useMemo(() => {
+    return items.filter(it => it.product && it.product._id);
+  }, [items]);
 
-  const value = useMemo(()=>({ items, addItem, updateQty, removeItem, clear, subtotal }), [items, addItem, updateQty, removeItem, clear, subtotal])
+  // Auto-cleanup invalid items
+  useEffect(() => {
+    const hasInvalidItems = items.some(it => !it.product || !it.product._id);
+    if (hasInvalidItems) {
+      setItems(prev => prev.filter(it => it.product && it.product._id));
+    }
+  }, [items]);
+
+  const subtotal = useMemo(()=> cleanItems.reduce((sum, it)=> {
+    if (!it.product || typeof it.product.price !== 'number') return sum;
+    return sum + (it.product.price * it.quantity);
+  }, 0), [cleanItems])
+
+  const value = useMemo(()=>({ items: cleanItems, addItem, updateQty, removeItem, clear, subtotal }), [cleanItems, addItem, updateQty, removeItem, clear, subtotal])
 
   return (
     <CartContext.Provider value={value}>{children}</CartContext.Provider>
