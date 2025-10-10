@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiTruck, FiMapPin, FiClock, FiNavigation, FiRefreshCw } from 'react-icons/fi'
+import { FiTruck, FiMapPin, FiClock, FiNavigation, FiRefreshCw, FiTarget } from 'react-icons/fi'
 import { useI18n } from '../i18n/LanguageContext.jsx'
 import { getSocket } from '../socket.js'
 
@@ -95,6 +95,7 @@ export default function DeliveryTrackingMap({
   const [isLoadingRoute, setIsLoadingRoute] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false)
   const mapRef = useRef(null)
   const socket = getSocket()
 
@@ -194,6 +195,21 @@ export default function DeliveryTrackingMap({
     return `${(route.distance / 1000).toFixed(1)} km`
   }
 
+  // Request location update from delivery person
+  const requestLocationUpdate = () => {
+    if (!socket || !orderId || isRequestingLocation) return
+
+    setIsRequestingLocation(true)
+    
+    // Emit request for location update
+    socket.emit('requestLocationUpdate', { orderId })
+    
+    // Reset loading state after 3 seconds
+    setTimeout(() => {
+      setIsRequestingLocation(false)
+    }, 3000)
+  }
+
   return (
     <div className="w-full h-full bg-white rounded-2xl overflow-hidden shadow-lg">
       {/* Header */}
@@ -218,9 +234,21 @@ export default function DeliveryTrackingMap({
             </div>
           )}
           <button
+            onClick={requestLocationUpdate}
+            disabled={isRequestingLocation || !isConnected}
+            className="p-2 hover:bg-orange-100 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={t('Request location update')}
+          >
+            {isRequestingLocation ? (
+              <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FiTarget className="w-4 h-4 text-orange-600" />
+            )}
+          </button>
+          <button
             onClick={() => window.location.reload()}
             className="p-2 hover:bg-orange-100 rounded-xl transition-colors"
-            title={t('Refresh')}
+            title={t('Refresh page')}
           >
             <FiRefreshCw className="w-4 h-4 text-orange-600" />
           </button>
@@ -371,6 +399,25 @@ export default function DeliveryTrackingMap({
                 <div className="text-sm text-gray-600">
                   {deliveryPerson.phone || t('Delivery person')}
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Location Request Status */}
+        {isRequestingLocation && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-200"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium text-blue-900 text-sm">{t('Requesting location update...')}</div>
+                <div className="text-xs text-blue-600">{t('Asking delivery person to share their current location')}</div>
               </div>
             </div>
           </motion.div>
