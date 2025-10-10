@@ -16,6 +16,7 @@ router.post('/:id/cancel', auth, roles('customer'), orderController.cancelOrder)
 
 // Merchant
 router.get('/merchant', auth, roles('merchant'), orderController.getMerchantOrders);
+router.get('/merchant/analytics', auth, roles('merchant'), orderController.getMerchantAnalytics);
 router.post('/:id/status', auth, roles('merchant'), orderController.updateOrderStatus);
 
 // Delivery

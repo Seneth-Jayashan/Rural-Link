@@ -13,6 +13,7 @@ import ProductsList from './pages/merchant/ProductsList.jsx'
 import ProductCreate from './pages/merchant/ProductCreate.jsx'
 import ProductEdit from './pages/merchant/ProductEdit.jsx'
 import ProductView from './pages/merchant/ProductView.jsx'
+import MerchantReports from './pages/merchant/Reports.jsx'
 import DeliveryDashboard from './pages/deliver/Dashboard.jsx'
 import OrderTracking from './pages/common/OrderTracking.jsx'
 import Cart from './pages/common/Cart.jsx'
@@ -76,12 +77,14 @@ const router = createBrowserRouter([
       { path: 'login', element: <NotAuthOnly><Login /></NotAuthOnly> },
       { path: 'register', element: <NotAuthOnly><Register /></NotAuthOnly> },
       { path: 'verify-email/:token/:hint', element: <NotAuthOnly><VerifyEmail /></NotAuthOnly> },
-      { path: 'merchant', element: <RequireRole role="merchant"><Navigate to="/merchant/orders" replace /></RequireRole> },
+      { path: 'merchant', element: <RequireRole role="merchant"><Navigate to="/merchant/dashboard" replace /></RequireRole> },
+      { path: 'merchant/dashboard', element: <RequireRole role="merchant"><MerchantDashboard /></RequireRole> },
       { path: 'merchant/orders', element: <RequireRole role="merchant"><MerchantOrders /></RequireRole> },
       { path: 'merchant/products', element: <RequireRole role="merchant"><ProductsList /></RequireRole> },
       { path: 'merchant/products/new', element: <RequireRole role="merchant"><ProductCreate /></RequireRole> },
       { path: 'merchant/products/:id', element: <RequireRole role="merchant"><ProductView /></RequireRole> },
       { path: 'merchant/products/:id/edit', element: <RequireRole role="merchant"><ProductEdit /></RequireRole> },
+      { path: 'merchant/reports', element: <RequireRole role="merchant"><MerchantReports /></RequireRole> },
       { path: 'deliver', element: <RequireRole role="deliver"><DeliveryDashboard /></RequireRole> },
       { path: 'track/:orderId', element: <RequireAuth><OrderTracking /></RequireAuth> },
       { path: 'track', element: <RequireRole role="customer"><TrackAll /></RequireRole> },
