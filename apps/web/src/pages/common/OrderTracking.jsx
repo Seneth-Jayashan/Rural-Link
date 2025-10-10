@@ -3,9 +3,10 @@ import { useParams, useLocation } from 'react-router-dom'
 import { get, post } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import OrderChat from './OrderChat.jsx'
+import DeliveryTrackingMap from '../../shared/ui/DeliveryTrackingMap.jsx'
 import { generateGhostText, generateSimpleGhostText, generateNextWord } from '../../shared/huggingFaceApi.js'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiPackage, FiTruck, FiCheck, FiStar, FiMessageSquare, FiClock, FiArrowLeft } from 'react-icons/fi'
+import { FiPackage, FiTruck, FiCheck, FiStar, FiMessageSquare, FiClock, FiArrowLeft, FiMap } from 'react-icons/fi'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { formatLKR } from '../../shared/currency.js'
 
@@ -22,6 +23,7 @@ export default function OrderTracking(){
   const [ghostText, setGhostText] = useState({}) // productId -> ghost text
   const [generatingGhost, setGeneratingGhost] = useState({}) // productId -> loading state
   const [typingTimeout, setTypingTimeout] = useState({}) // productId -> timeout ID
+  const [showTrackingMap, setShowTrackingMap] = useState(false)
 
   useEffect(()=>{
     const path = orderId === 'last' ? '/api/orders/last' : `/api/orders/${orderId}`
@@ -390,12 +392,63 @@ export default function OrderTracking(){
               })()}
             </motion.div>
 
+            {/* Delivery Tracking Map */}
+            {order.deliveryAddress?.coordinates && ['picked_up','in_transit'].includes(order.status) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-orange-100 rounded-xl">
+                      <FiMap className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('Live Delivery Tracking')}</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowTrackingMap(!showTrackingMap)}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors flex items-center gap-2"
+                  >
+                    <FiMap className="w-4 h-4" />
+                    {showTrackingMap ? t('Hide Map') : t('Show Map')}
+                  </button>
+                </div>
+                
+                {showTrackingMap && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4"
+                  >
+                    <DeliveryTrackingMap
+                      orderId={order._id}
+                      customerLocation={{
+                        latitude: order.deliveryAddress.coordinates.latitude,
+                        longitude: order.deliveryAddress.coordinates.longitude,
+                        address: order.deliveryAddress.fullAddress || `${order.deliveryAddress.street}, ${order.deliveryAddress.city}`
+                      }}
+                      restaurantLocation={{
+                        latitude: order.merchant?.location?.latitude || 6.9271,
+                        longitude: order.merchant?.location?.longitude || 79.8612,
+                        name: order.merchant?.businessName || 'Restaurant'
+                      }}
+                      deliveryPerson={order.deliveryPerson}
+                      status={order.status}
+                    />
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
             {/* Chat Section */}
             {order.deliveryPerson?._id && ['picked_up','in_transit'].includes(order.status) && order.status !== 'delivered' && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
                 className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6"
               >
                 <div className="flex items-center gap-2 mb-4">

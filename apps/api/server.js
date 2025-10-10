@@ -21,6 +21,7 @@ const utilityRoutes = require('./routes/utilityRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const locationRoutes = require('./routes/locationRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -163,9 +164,14 @@ app.use('/api/utils', utilityRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/location', locationRoutes);
 
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// Initialize realtime service
+const { setRealtime } = require('./services/realtime');
+setRealtime(io);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`API running on port ${PORT}`));
