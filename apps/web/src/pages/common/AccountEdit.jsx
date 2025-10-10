@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { get, put, post, API_BASE } from '../../shared/api.js'
-import { motion, AnimatePresence } from 'framer-motion'
-import { User as UserIcon, Phone as PhoneIcon, Pencil as PencilIcon, ArrowLeft, Mail, MapPin, Camera, Save } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { User as UserIcon, Phone as PhoneIcon, Pencil as PencilIcon, ArrowLeft } from 'lucide-react'
 
 export default function AccountEdit(){
   const navigate = useNavigate()
@@ -73,251 +73,90 @@ export default function AccountEdit(){
         }
       }
       const res = await put('/api/auth/profile', profile)
-      if(res?.success){ 
-        setMessage(t('Profile updated successfully')); 
-        setTimeout(()=> navigate('/account'), 1000) 
-      }
+      if(res?.success){ setMessage(t('Profile updated successfully')); setTimeout(()=> navigate('/account'), 600) }
     }catch(e){ setMessage(e.message || t('Failed to update')) }
     setSaving(false)
   }
 
   if(loading){
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('Loading...')}</p>
-        </div>
-      </div>
-    )
+    return <div className="p-6">{t('Loading...')}</div>
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl mx-auto mb-6"
-      >
+      <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <motion.button 
-            whileHover={{ scale:1.05 }} 
-            whileTap={{ scale:0.95 }} 
-            onClick={()=> navigate(-1)}
-            className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100 hover:shadow-xl transition-all"
-          >
-            <ArrowLeft className="w-5 h-5 text-orange-600" />
+          <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }} onClick={()=> navigate(-1)}
+            className="p-2 rounded-xl border border-orange-200 text-orange-600 hover:bg-orange-50">
+            <ArrowLeft className="w-5 h-5" />
           </motion.button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('Edit Profile')}</h1>
-            <p className="text-gray-600 text-sm mt-1">{t('Update your personal information')}</p>
-          </div>
+          <h1 className="text-xl font-semibold text-gray-900">{t('Edit Account')}</h1>
         </div>
-      </motion.div>
 
-      <div className="max-w-2xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6 space-y-6"
-        >
-          {/* Profile Photo Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-orange-100 rounded-xl">
-                <Camera className="w-4 h-4 text-orange-600" />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">{t('Profile Photo')}</h2>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              {/* Profile Picture */}
-              <div className="relative group">
-                <div className="w-28 h-28 rounded-2xl overflow-hidden bg-gradient-to-br from-orange-100 to-amber-100 border-4 border-white shadow-xl">
-                  <AnimatePresence mode="wait">
-                    {(photoPreview || photoUrl) ? (
-                      <motion.img
-                        key={photoBust}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        src={photoPreview || photoUrl} 
-                        alt={fullName} 
-                        className="w-full h-full object-cover"
-                        onError={()=>{ setPhotoPreview(''); setPhotoUrl('') }} 
-                      />
-                    ) : (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center"
-                      >
-                        <UserIcon className="w-12 h-12 text-orange-500" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-                
-                {/* Camera Button */}
-                <input id="accountPhotoEdit" type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
-                <motion.label 
-                  htmlFor="accountPhotoEdit"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg flex items-center justify-center cursor-pointer border-2 border-white transition-all"
-                >
-                  <PencilIcon className="w-4 h-4" />
-                </motion.label>
-              </div>
-
-              {/* User Info */}
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{fullName}</h3>
-                <p className="text-gray-500 text-sm mb-2">{user?.email}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Personal Information Form */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-blue-100 rounded-xl">
-                <UserIcon className="w-4 h-4 text-blue-600" />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">{t('Personal Information')}</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* First Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('First Name')} *</label>
-                <input 
-                  name="firstName" 
-                  value={profile.firstName} 
-                  onChange={onChange}
-                  className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
-                  placeholder={t('Enter your first name')}
-                />
-              </div>
-
-              {/* Last Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('Last Name')} *</label>
-                <input 
-                  name="lastName" 
-                  value={profile.lastName} 
-                  onChange={onChange}
-                  className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
-                  placeholder={t('Enter your last name')}
-                />
-              </div>
-
-              {/* Email (Read-only) */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('Email Address')}</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input 
-                    value={user?.email || ''}
-                    disabled
-                    className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed"
-                    placeholder={t('Email address')}
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-500">{t('Email cannot be changed')}</p>
-              </div>
-
-              {/* Phone Number */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('Phone Number')}</label>
-                <div className="relative">
-                  <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    name="phone"
-                    value={profile.phone}
-                    onChange={onChange}
-                    placeholder={t('Enter your phone number')}
-                    className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-500">{t('Include country code if applicable')}</p>
-              </div>
-
-              {/* Address */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('Address')}</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
-                  <textarea
-                    name="address"
-                    value={profile.address}
-                    onChange={onChange}
-                    rows={3}
-                    placeholder={t('Enter your complete address')}
-                    className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none resize-none"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-500">{t('Your address helps with accurate deliveries')}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onSave}
-              disabled={saving || !profile.firstName || !profile.lastName}
-              className={`flex-1 flex items-center justify-center gap-3 rounded-2xl py-4 font-semibold text-lg shadow-lg transition-all ${
-                !saving && profile.firstName && profile.lastName
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:shadow-xl hover:from-orange-600 hover:to-amber-600'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              {saving ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  {t('Saving Changes...')}
-                </>
+        <section className="bg-white rounded-2xl shadow-md border border-orange-100 p-6 space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-orange-100 border border-orange-200 flex items-center justify-center group cursor-pointer">
+              {(photoPreview || photoUrl) ? (
+                <img key={photoBust} src={photoPreview || photoUrl} alt={fullName} className="w-full h-full object-cover" onError={()=>{ setPhotoPreview(''); setPhotoUrl('') }} />
               ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  {t('Save Changes')}
-                </>
+                <UserIcon className="w-10 h-10 text-orange-500" />
               )}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(-1)}
-              className="flex-1 py-4 border-2 border-gray-300 text-gray-700 rounded-2xl font-semibold hover:bg-gray-50 transition-all"
-            >
-              {t('Cancel')}
-            </motion.button>
+              <input id="accountPhotoEdit" type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
+              <label
+                htmlFor="accountPhotoEdit"
+                className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors duration-200"
+                role="button"
+                tabIndex={0}
+                aria-label={t('Change photo')}
+                title={t('Change photo')}
+              >
+                <div className="opacity-0 group-hover:opacity-100 text-white flex items-center gap-2 text-xs font-medium bg-black/30 px-3 py-1.5 rounded-full">
+                  <PencilIcon className="w-4 h-4" />
+                  <span>{t('Change photo')}</span>
+                </div>
+              </label>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-gray-900">{fullName}</h2>
+              <p className="text-gray-500 text-sm">{user?.email}</p>
+            </div>
           </div>
 
-          {/* Status Message */}
-          <AnimatePresence>
-            {message && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                className={`p-4 rounded-2xl text-center font-medium ${
-                  message.includes('success') 
-                    ? 'bg-green-50 text-green-700 border border-green-200' 
-                    : 'bg-red-50 text-red-700 border border-red-200'
-                }`}
-              >
-                {message}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">{t('First Name')}</label>
+              <input name="firstName" value={profile.firstName} onChange={onChange} className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-orange-400 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">{t('Last Name')}</label>
+              <input name="lastName" value={profile.lastName} onChange={onChange} className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-orange-400 outline-none" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm text-gray-600 mb-1">{t('Phone Number')}</label>
+              <div className="flex items-center gap-2 w-full px-3 py-2 border rounded-xl focus-within:ring-2 focus-within:ring-orange-400">
+                <PhoneIcon className="w-4 h-4 text-orange-500" />
+                <input
+                  name="phone"
+                  value={profile.phone}
+                  onChange={onChange}
+                  placeholder={t('Enter your phone number')}
+                  className="flex-1 outline-none"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">{t('Include country code if applicable')}</p>
+            </div>
+            <div className="sm:col-span-2 flex items-center gap-3">
+              <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }} onClick={onSave} disabled={saving}
+                className="px-5 py-2 bg-emerald-600 text-white rounded-xl font-semibold shadow-md hover:bg-emerald-700 disabled:opacity-50">
+                {saving ? t('Saving...') : t('Save Changes')}
+              </motion.button>
+              {message && <div className="text-sm text-green-600">{message}</div>}
+            </div>
+          </div>
+        </section>
+      </motion.div>
     </div>
   )
 }
+
+
