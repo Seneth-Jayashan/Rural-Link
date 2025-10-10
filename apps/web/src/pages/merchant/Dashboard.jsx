@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { get } from '../../shared/api.js'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiDollarSign, 
   FiShoppingBag, 
@@ -10,7 +10,9 @@ import {
   FiUsers,
   FiClock,
   FiDownload,
-  FiRefreshCw
+  FiRefreshCw,
+  FiBarChart2,
+  FiStar
 } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
@@ -23,16 +25,18 @@ export default function MerchantDashboard(){
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('monthly')
+  const [refreshing, setRefreshing] = useState(false)
 
   async function loadAnalytics() {
     try {
-      setLoading(true)
+      setRefreshing(true)
       const data = await get(`/api/orders/merchant/analytics?period=${period}`)
       setAnalytics(data.data)
     } catch (err) {
       notify({ type: 'error', title: 'Failed to load analytics', message: err.message })
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -64,9 +68,10 @@ export default function MerchantDashboard(){
 
   if (loading) {
     return (
-      <div className="p-3 pb-16">
-        <div className="flex items-center justify-center h-64">
-          <FiRefreshCw className="animate-spin text-2xl text-blue-600" />
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">{t('Loading...')}</p>
         </div>
       </div>
     )
@@ -75,206 +80,291 @@ export default function MerchantDashboard(){
   const { overview, deliveries, recentOrders, topProducts } = analytics || {}
 
   return (
-    <div className="p-3 pb-16">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{t('Dashboard')}</h1>
-        <div className="flex items-center gap-3">
-          <select 
-            value={period} 
-            onChange={(e) => setPeriod(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm"
-          >
-            <option value="daily">{t('Last 30 Days')}</option>
-            <option value="weekly">{t('Last 12 Weeks')}</option>
-            <option value="monthly">{t('Last 12 Months')}</option>
-            <option value="yearly">{t('Last 5 Years')}</option>
-          </select>
-          <button
-            onClick={exportReport}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
-          >
-            <FiDownload /> {t('Export PDF')}
-          </button>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100">
+            <FiBarChart2 className="w-6 h-6 text-orange-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{t('Dashboard')}</h1>
+            <p className="text-gray-600 text-sm">{t('Business overview')}</p>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* Controls */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-4 mb-6"
+      >
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none">
+              <FiClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 w-4 h-4" />
+              <select 
+                value={period} 
+                onChange={(e) => setPeriod(e.target.value)}
+                className="w-full border border-orange-200 rounded-2xl pl-10 pr-4 py-3 bg-white text-gray-700 focus:border-orange-300 focus:ring-2 focus:ring-orange-200 outline-none appearance-none"
+              >
+                <option value="daily">{t('Last 30 Days')}</option>
+                <option value="weekly">{t('Last 12 Weeks')}</option>
+                <option value="monthly">{t('Last 12 Months')}</option>
+                <option value="yearly">{t('Last 5 Years')}</option>
+              </select>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={loadAnalytics}
+              disabled={refreshing}
+              className="p-3 bg-orange-100 rounded-2xl border border-orange-200 disabled:opacity-50"
+            >
+              <FiRefreshCw className={`w-4 h-4 text-orange-600 ${refreshing ? 'animate-spin' : ''}`} />
+            </motion.button>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={exportReport}
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl px-4 py-3 font-semibold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl w-full sm:w-auto"
+          >
+            <FiDownload className="w-4 h-4" />
+            {t('Export PDF')}
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Main Stats Cards */}
+      <div className="grid grid-cols-1 gap-4 mb-6">
+        {/* Revenue Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white"
+          className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-3xl p-6 text-white shadow-2xl"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">{t('Total Revenue')}</p>
-              <p className="text-2xl font-bold">{formatLKR(overview?.totalRevenue || 0)}</p>
+              <p className="text-orange-100 text-sm font-medium mb-1">{t('Total Revenue')}</p>
+              <p className="text-3xl font-bold">{formatLKR(overview?.totalRevenue || 0)}</p>
+              <p className="text-orange-200 text-xs mt-2">{t('All time earnings')}</p>
             </div>
-            <FiDollarSign className="text-3xl text-green-200" />
+            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+              <FiDollarSign className="text-2xl text-white" />
+            </div>
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm">{t('Total Orders')}</p>
-              <p className="text-2xl font-bold">{overview?.totalOrders || 0}</p>
+        {/* Secondary Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-orange-100"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium mb-1">{t('Total Orders')}</p>
+                <p className="text-2xl font-bold text-gray-900">{overview?.totalOrders || 0}</p>
+              </div>
+              <div className="p-2 bg-blue-100 rounded-xl">
+                <FiShoppingBag className="w-5 h-5 text-blue-600" />
+              </div>
             </div>
-            <FiShoppingBag className="text-3xl text-blue-200" />
-          </div>
-        </motion.div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm">{t('Deliveries')}</p>
-              <p className="text-2xl font-bold">{deliveries?.totalDeliveries || 0}</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-orange-100"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium mb-1">{t('Deliveries')}</p>
+                <p className="text-2xl font-bold text-gray-900">{deliveries?.totalDeliveries || 0}</p>
+              </div>
+              <div className="p-2 bg-green-100 rounded-xl">
+                <FiTruck className="w-5 h-5 text-green-600" />
+              </div>
             </div>
-            <FiTruck className="text-3xl text-purple-200" />
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white"
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-orange-100"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-sm">{t('Avg Order Value')}</p>
-              <p className="text-2xl font-bold">{formatLKR(overview?.averageOrderValue || 0)}</p>
+              <p className="text-gray-600 text-sm font-medium mb-1">{t('Avg Order Value')}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatLKR(overview?.averageOrderValue || 0)}</p>
             </div>
-            <FiTrendingUp className="text-3xl text-orange-200" />
+            <div className="p-2 bg-purple-100 rounded-xl">
+              <FiTrendingUp className="w-5 h-5 text-purple-600" />
+            </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Secondary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <FiPackage className="text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t('Completed Orders')}</p>
-              <p className="text-xl font-semibold">{overview?.completedOrders || 0}</p>
-            </div>
+      {/* Order Status Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="flex overflow-x-auto gap-3 mb-6 pb-2 scrollbar-hide"
+      >
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-orange-100 min-w-[120px]">
+          <div className="p-2 bg-green-100 rounded-xl w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+            <FiPackage className="w-6 h-6 text-green-600" />
           </div>
+          <p className="text-xs text-gray-600 mb-1">{t('Completed')}</p>
+          <p className="text-xl font-bold text-gray-900">{overview?.completedOrders || 0}</p>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <FiUsers className="text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t('Cancelled Orders')}</p>
-              <p className="text-xl font-semibold">{overview?.cancelledOrders || 0}</p>
-            </div>
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-orange-100 min-w-[120px]">
+          <div className="p-2 bg-yellow-100 rounded-xl w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+            <FiClock className="w-6 h-6 text-yellow-600" />
           </div>
+          <p className="text-xs text-gray-600 mb-1">{t('Pending')}</p>
+          <p className="text-xl font-bold text-gray-900">{overview?.pendingOrders || 0}</p>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <FiClock className="text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">{t('Pending Orders')}</p>
-              <p className="text-xl font-semibold">{overview?.pendingOrders || 0}</p>
-            </div>
+        <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm rounded-2xl p-4 text-center shadow-lg border border-orange-100 min-w-[120px]">
+          <div className="p-2 bg-red-100 rounded-xl w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+            <FiUsers className="w-6 h-6 text-red-600" />
           </div>
+          <p className="text-xs text-gray-600 mb-1">{t('Cancelled')}</p>
+          <p className="text-xl font-bold text-gray-900">{overview?.cancelledOrders || 0}</p>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Charts and Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Recent Orders & Top Products */}
+      <div className="space-y-6">
         {/* Recent Orders */}
-        <div className="bg-white rounded-lg p-4 border">
-          <h3 className="text-lg font-semibold mb-4">{t('Recent Orders')}</h3>
-          <div className="space-y-3">
-            {recentOrders?.length > 0 ? (
-              recentOrders.map((order, index) => (
-                <motion.div
-                  key={order._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{order.orderNumber}</p>
-                    <p className="text-sm text-gray-600">
-                      {order.customer?.firstName} {order.customer?.lastName}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatLKR(order.total)}</p>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {order.status}
-                    </span>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-4">{t('No recent orders')}</p>
-            )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 overflow-hidden"
+        >
+          <div className="p-4 border-b border-orange-100">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <FiShoppingBag className="w-5 h-5 text-orange-600" />
+              {t('Recent Orders')}
+            </h3>
           </div>
-        </div>
+          
+          <div className="divide-y divide-orange-100">
+            <AnimatePresence>
+              {recentOrders?.length > 0 ? (
+                recentOrders.slice(0, 5).map((order, index) => (
+                  <motion.div
+                    key={order._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 hover:bg-orange-50/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-gray-900 truncate">
+                            #{order.orderNumber}
+                          </p>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                            order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {order.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 truncate">
+                          {order.customer?.firstName} {order.customer?.lastName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="font-bold text-gray-900">{formatLKR(order.total)}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="p-8 text-center">
+                  <FiShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">{t('No recent orders')}</p>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
 
         {/* Top Products */}
-        <div className="bg-white rounded-lg p-4 border">
-          <h3 className="text-lg font-semibold mb-4">{t('Top Products')}</h3>
-          <div className="space-y-3">
-            {topProducts?.length > 0 ? (
-              topProducts.map((product, index) => (
-                <motion.div
-                  key={product._id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{product.productName}</p>
-                    <p className="text-sm text-gray-600">
-                      {product.totalSold} {t('sold')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatLKR(product.totalRevenue)}</p>
-                    <p className="text-xs text-gray-500">{t('revenue')}</p>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-4">{t('No product data')}</p>
-            )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 overflow-hidden"
+        >
+          <div className="p-4 border-b border-orange-100">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <FiStar className="w-5 h-5 text-orange-600" />
+              {t('Top Products')}
+            </h3>
           </div>
-        </div>
+          
+          <div className="divide-y divide-orange-100">
+            <AnimatePresence>
+              {topProducts?.length > 0 ? (
+                topProducts.slice(0, 5).map((product, index) => (
+                  <motion.div
+                    key={product._id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 hover:bg-orange-50/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 truncate mb-1">
+                          {product.productName}
+                        </p>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <span>{product.totalSold} {t('sold')}</span>
+                        </div>
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="font-bold text-gray-900">{formatLKR(product.totalRevenue)}</p>
+                        <p className="text-xs text-gray-500">{t('revenue')}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="p-8 text-center">
+                  <FiPackage className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">{t('No product data')}</p>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
       </div>
     </div>
   )
 }
-
-
