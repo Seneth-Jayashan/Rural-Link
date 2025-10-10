@@ -353,6 +353,9 @@ export default function Account(){
             >
               <LogOut className="w-5 h-5" /> 
               {t('Logout')}
+            <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }} onClick={()=> navigate('/account/edit')}
+              className="px-4 py-2 rounded-xl border border-orange-300 text-orange-700 font-semibold hover:bg-orange-50">
+              {t('Edit Account')}
             </motion.button>
           </motion.section>
         </motion.div>

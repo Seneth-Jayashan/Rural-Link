@@ -80,6 +80,7 @@ router.post('/change-password', auth, [
 router.post('/forgot-password', [body('email').isEmail()], authController.forgotPassword);
 router.post('/reset-password/:token', [body('newPassword').isLength({ min: 6 })], authController.resetPassword);
 
+router.post('/update-fcm-token', authController.updateFCMToken);
 // Removed profile photo upload and fetch routes
 
 module.exports = router;

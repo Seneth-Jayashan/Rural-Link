@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
-import { requestNotificationPermission, listenForMessages } from "../../notifications.js";
 
 export default function Onboarding() {
   const [showSplash, setShowSplash] = useState(true)
@@ -11,17 +10,7 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const { t } = useI18n()
 
-    useEffect(() => {
-        // Wait a bit after splash animations
-        const timer = setTimeout(() => {
-        requestNotificationPermission();
-        listenForMessages();
-        }, 4000);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-  // Hide splash screen after 2 seconds
+  // --- Hide splash after 2 seconds ---
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 2000)
     return () => clearTimeout(timer)
@@ -29,67 +18,56 @@ export default function Onboarding() {
 
   // Slides dynamically from translations
   const slides = [
-    {
-      title: t('onboard1Title'),
-      description: t('onboard1Desc'),
-      image: '/onboard1.png',
-    },
-    {
-      title: t('onboard2Title'),
-      description: t('onboard2Desc'),
-      image: '/onboard2.png',
-    },
-    {
-      title: t('onboard3Title'),
-      description: t('onboard3Desc'),
-      image: '/onboard3.png',
-    },
+    { title: t('onboard1Title'), description: t('onboard1Desc'), image: '/onboard1.png' },
+    { title: t('onboard2Title'), description: t('onboard2Desc'), image: '/onboard2.png' },
+    { title: t('onboard3Title'), description: t('onboard3Desc'), image: '/onboard3.png' },
   ]
 
   const nextSlide = () => {
     if (current < slides.length - 1) setCurrent(current + 1)
-    else navigate('/login')
+    else navigate('/login') // navigate to login at the end
   }
 
   const prevSlide = () => {
     if (current > 0) setCurrent(current - 1)
   }
 
-    if (showSplash) {
+  // --- Splash Screen ---
+  if (showSplash) {
     return (
-        <div className="h-screen w-full flex items-center justify-center bg-white relative overflow-hidden">
+      <div className="h-screen w-full flex items-center justify-center bg-white relative overflow-hidden">
         {/* Animated background gradient */}
         <motion.div
-            className="absolute top-0 left-0 w-full h-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.2 }}
-            transition={{ duration: 2, yoyo: Infinity }}
+          className="absolute top-0 left-0 w-full h-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.2 }}
+          transition={{ duration: 2, yoyo: Infinity }}
         />
 
         {/* Logo animation */}
         <motion.img
-            src="/logo.png"
-            alt="Rural Link Logo"
-            className="w-48 h-48 object-contain z-10"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1.2, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15, duration: 1.5 }}
-            whileHover={{ scale: 1.25 }}
-            whileTap={{ scale: 1.1 }}
+          src="/logo.png"
+          alt="Rural Link Logo"
+          className="w-48 h-48 object-contain z-10"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1.2, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15, duration: 1.5 }}
+          whileHover={{ scale: 1.25 }}
+          whileTap={{ scale: 1.1 }}
         />
 
         {/* Optional pulse effect */}
         <motion.div
-            className="absolute w-48 h-48 rounded-full border-4 border-orange-300 z-0"
-            initial={{ scale: 0.8, opacity: 0.5 }}
-            animate={{ scale: 1.2, opacity: 0 }}
-            transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+          className="absolute w-48 h-48 rounded-full border-4 border-orange-300 z-0"
+          initial={{ scale: 0.8, opacity: 0.5 }}
+          animate={{ scale: 1.2, opacity: 0 }}
+          transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
         />
-        </div>
+      </div>
     )
-    }
+  }
 
-  // Onboarding slides
+  // --- Onboarding Slides ---
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-white p-4">
       {/* Slide content */}

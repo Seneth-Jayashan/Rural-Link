@@ -9,7 +9,14 @@ export async function api(path, { method = 'GET', body, headers } = {}){
     credentials: 'include',
     body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   })
-  const data = await res.json().catch(()=>({}))
+  const contentType = res.headers.get('content-type') || ''
+  let data
+  if(contentType.includes('application/json')){
+    data = await res.json().catch(()=>({}))
+  }else{
+    const text = await res.text().catch(()=> '')
+    data = text ? { message: text } : {}
+  }
   if(!res.ok) throw new Error(data.message || 'Request failed')
   return data
 }
@@ -22,3 +29,5 @@ export const del = (path)=> api(path, { method:'DELETE' })
 export const API_BASE = BASE
 
 
+
+// Removed NLP helper

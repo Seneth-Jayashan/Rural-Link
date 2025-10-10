@@ -6,9 +6,12 @@ import {
   FiPackage, FiClock, FiCheck, FiX, FiRotateCw,
   FiTruck, FiFilter, FiChevronLeft, FiChevronRight, FiChevronDown
 } from 'react-icons/fi'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function MerchantOrders() {
   const { notify } = useToast()
+  const { t } = useI18n()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('all')
@@ -86,6 +89,19 @@ export default function MerchantOrders() {
     delivered: 'bg-green-100 text-green-800 border-green-200',
     cancelled: 'bg-red-100 text-red-800 border-red-200'
   }[status] || 'bg-gray-100 text-gray-800 border-gray-200')
+  return (
+    <div className="p-3 pb-16">
+      <div className="flex items-center justify-between mb-3">
+        <h1 className="text-lg font-semibold text-black">{t('Orders')}</h1>
+        <select className="border rounded p-2 text-sm" value={status} onChange={e=>{ setPage(1); setStatus(e.target.value) }}>
+          <option value="pending">{t('Pending')}</option>
+          <option value="confirmed">{t('Confirmed')}</option>
+          <option value="preparing">{t('Preparing')}</option>
+          <option value="ready">{t('Ready')}</option>
+          <option value="cancelled">{t('Cancelled')}</option>
+          <option value="delivered">{t('Delivered')}</option>
+        </select>
+      </div>
 
   const getStatusIcon = (status) => ({
     pending: <FiClock className="w-4 h-4" />,
@@ -114,6 +130,9 @@ export default function MerchantOrders() {
           </div>
         </div>
       </motion.div>
+      {!loading && orders.length === 0 && (
+        <div className="text-gray-600">{t('No orders')}</div>
+      )}
 
       <div className="max-w-5xl mx-auto">
         {/* Filter Section */}
@@ -199,6 +218,36 @@ export default function MerchantOrders() {
           <div className="bg-white/80 rounded-3xl border border-orange-100 p-8 text-center shadow-lg">
             <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
             <p className="text-gray-600">Loading orders...</p>
+              <div className="text-sm font-medium text-black">{formatLKR(o.total)}</div>
+            </div>
+            <div className="mt-2 text-sm text-gray-700">
+              {o.items?.slice(0,3).map((it, idx)=> (
+                <span key={idx} className="mr-2">{it.product?.name} x{it.quantity}</span>
+              ))}
+              {o.items?.length > 3 && <span>+{o.items.length - 3} more</span>}
+            </div>
+
+            {o.status === 'pending' && (
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-2">
+                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-green-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'confirmed')}>{t('Accept')}</button>
+                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-red-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'cancelled')}>{t('Reject')}</button>
+                </div>
+                <input value={rejectReason} onChange={e=>setRejectReason(e.target.value)} placeholder={t('Reason for rejection')} className="w-full border rounded p-2 text-sm" />
+              </div>
+            )}
+
+            {o.status === 'confirmed' && (
+              <div className="mt-3 flex gap-2">
+                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-blue-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'preparing')}>{t('Start Preparing')}</button>
+              </div>
+            )}
+
+            {o.status === 'preparing' && (
+              <div className="mt-3 flex gap-2">
+                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-indigo-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'ready')}>{t('Mark Ready')}</button>
+              </div>
+            )}
           </div>
         )}
 
