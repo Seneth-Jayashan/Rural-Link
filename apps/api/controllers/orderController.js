@@ -4,6 +4,7 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
+const { sendNotification } = require('../notifications')
 
 // Create new order
 exports.createOrder = async (req, res) => {
@@ -78,18 +79,23 @@ exports.createOrder = async (req, res) => {
     }
     
     // Create notifications
-    await Notification.createNotification({
-      user: order.merchant,
-      title: 'New Order Received',
-      message: `You have received a new order #${order.orderNumber}`,
-      type: 'order',
-      data: { orderId: order._id },
-      priority: 'high'
-    });
+    const merchant = await User.findById(order.merchant)
+    if (merchant.fcmToken) {
+      await sendNotification(
+        merchant.fcmToken,
+        'New Order Received',
+        `Order #${order.orderNumber} has been placed. Total LKR${order.total}`,
+        { orderId: order._id.toString() }
+      )
+    }
+
+
     try {
       const { emitToOrder } = require('../services/realtime');
       emitToOrder(order._id, 'orderStatus', { status: order.status });
     } catch {}
+
+
     
     res.status(201).json({
       success: true,

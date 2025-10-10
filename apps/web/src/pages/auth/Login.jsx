@@ -5,6 +5,7 @@ import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { motion } from 'framer-motion'
 import { FiMail, FiLock } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
+import { requestNotificationPermission , saveFCMToken} from '../../notifications.js'
 
 export default function Login() {
   const { t } = useI18n()
@@ -29,9 +30,17 @@ export default function Login() {
     setLoading(true)
     setError('')
     try {
+      let token = sessionStorage.getItem('FCM-Token')
+      if (!token) {
+        notify({ type: 'error', title: 'Need Notification Permission', message: 'Please allow notifications before logging in' })
+        token = await requestNotificationPermission()
+        if (!token) return
+      }
+      await saveFCMToken(token)
       const u = await login(email, password)
       if (u?.token) localStorage.setItem('token', u.token)
       notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
+
       if (u?.role === 'merchant') navigate('/merchant', { replace: true })
       else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
       else navigate('/', { replace: true })
@@ -42,6 +51,7 @@ export default function Login() {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-5 py-10 text-black">
