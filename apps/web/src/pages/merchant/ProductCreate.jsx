@@ -91,7 +91,7 @@ export default function ProductCreate(){
             <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder={t('Product name')} value={name} onChange={e=>setName(e.target.value)} />
           </div>
         </div>
-      </motion.div>
+      </form>
 
       <div className="max-w-2xl mx-auto">
         <motion.form
@@ -129,22 +129,22 @@ export default function ProductCreate(){
             <label className="block text-sm font-medium text-black mb-1">{t('Description')}</label>
             <textarea rows={4} className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder={t('Describe the product')} value={desc} onChange={e=>setDesc(e.target.value)} />
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-black mb-2">{t('Product Photo')}</label>
-          {!imageDataUrl ? (
-            <button type="button" onClick={onPickImage} className="w-full border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl p-6 bg-white text-gray-600 flex flex-col items-center justify-center gap-2 transition">
-              <FiImage className="text-black" />
-              <span className="text-sm">{t('Tap to upload image (PNG, JPG, WEBP, max 2MB)')}</span>
-            </button>
-          ) : (
-            <div className="relative">
-              <img src={imageDataUrl} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-gray-300" />
-              <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-white/90 text-black rounded-full p-2 border border-gray-300">
-                <FiX />
+          <div>
+            <label className="block text-sm font-medium text-black mb-2">{t('Product Photo')}</label>
+            {!imageDataUrl ? (
+              <button type="button" onClick={onPickImage} className="w-full border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl p-6 bg-white text-gray-600 flex flex-col items-center justify-center gap-2 transition">
+                <FiImage className="text-black" />
+                <span className="text-sm">{t('Tap to upload image (PNG, JPG, WEBP, max 2MB)')}</span>
               </button>
-            </div>
+            ) : (
+              <div className="relative">
+                <img src={imageDataUrl} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-gray-300" />
+                <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-white/90 text-black rounded-full p-2 border border-gray-300">
+                  <FiX />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -171,10 +171,11 @@ export default function ProductCreate(){
             )}
           </motion.button>
 
-        <motion.button whileTap={{ scale:0.98 }} disabled={saving || !name || !price || !stock} className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-xl p-3 font-semibold disabled:opacity-60">
-          <FiPlus /> {saving ? t('Saving...') : t('Add Product')}
-        </motion.button>
-      </form>
+          <motion.button whileTap={{ scale:0.98 }} disabled={saving || !name || !price || !stock} className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-xl p-3 font-semibold disabled:opacity-60">
+            <FiPlus /> {saving ? t('Saving...') : t('Add Product')}
+          </motion.button>
+      </motion.form>
+      </div>
     </div>
   )
 }

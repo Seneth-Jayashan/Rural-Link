@@ -47,8 +47,6 @@ export default function ProductView(){
         <h1 className="text-lg font-semibold text-black">{t('Product Details')}</h1>
         <button className="flex items-center gap-2 text-blue-600" onClick={()=>navigate(`/merchant/products/${product._id}/edit`)}><FiEdit2 /> {t('Edit')}</button>
       </div>
-    </div>
-  )
 
       <div className="space-y-3">
         {firstImg && (
@@ -92,7 +90,8 @@ export default function ProductView(){
             <div className="text-sm text-gray-500">{t('Description')}</div>
             <div className="text-base text-black whitespace-pre-wrap">{product.description}</div>
           </div>
-        </motion.div>
+        )}
+      </div>
 
       <div className="mt-6">
         <motion.button whileTap={{ scale:0.98 }} onClick={()=>navigate(`/merchant/products/${product._id}/edit`)} className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-xl p-3 font-semibold">

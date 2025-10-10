@@ -74,6 +74,25 @@ export default function MerchantOrders() {
     }
   }
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return <FiClock className="w-4 h-4" />;
+      case 'confirmed':
+        return <FiCheck className="w-4 h-4" />;
+      case 'preparing':
+        return <FiRotateCw className="w-4 h-4" />;
+      case 'ready':
+        return <FiPackage className="w-4 h-4" />;
+      case 'delivered':
+        return <FiTruck className="w-4 h-4" />;
+      case 'cancelled':
+        return <FiX className="w-4 h-4" />;
+      default:
+        return <FiPackage className="w-4 h-4" />;
+    }
+  }
+
   return (
     <div className="p-3 pb-16">
       <div className="flex items-center justify-between mb-3">
@@ -87,15 +106,6 @@ export default function MerchantOrders() {
           <option value="delivered">{t('Delivered')}</option>
         </select>
       </div>
-
-  const getStatusIcon = (status) => ({
-    pending: <FiClock className="w-4 h-4" />,
-    confirmed: <FiCheck className="w-4 h-4" />,
-    preparing: <FiRotateCw className="w-4 h-4" />,
-    ready: <FiPackage className="w-4 h-4" />,
-    delivered: <FiTruck className="w-4 h-4" />,
-    cancelled: <FiX className="w-4 h-4" />
-  }[status] || <FiPackage className="w-4 h-4" />)
 
       {!loading && orders.length === 0 && (
         <div className="text-gray-600">{t('No orders')}</div>
@@ -113,38 +123,13 @@ export default function MerchantOrders() {
               <div className="p-2 bg-orange-100 rounded-xl">
                 <FiFilter className="w-4 h-4 text-orange-600" />
               </div>
-              <div className="text-sm font-medium text-black">{formatLKR(o.total)}</div>
+              <div className="text-sm font-medium text-black">Filter Orders</div>
             </div>
             <div className="mt-2 text-sm text-gray-700">
-              {o.items?.slice(0,3).map((it, idx)=> (
-                <span key={idx} className="mr-2">{it.product?.name} x{it.quantity}</span>
-              ))}
-              {o.items?.length > 3 && <span>+{o.items.length - 3} more</span>}
+              Showing {status} orders
             </div>
-
-            {o.status === 'pending' && (
-              <div className="mt-3 space-y-2">
-                <div className="flex gap-2">
-                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-green-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'confirmed')}>{t('Accept')}</button>
-                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-red-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'cancelled')}>{t('Reject')}</button>
-                </div>
-                <input value={rejectReason} onChange={e=>setRejectReason(e.target.value)} placeholder={t('Reason for rejection')} className="w-full border rounded p-2 text-sm" />
-              </div>
-            )}
-
-            {o.status === 'confirmed' && (
-              <div className="mt-3 flex gap-2">
-                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-blue-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'preparing')}>{t('Start Preparing')}</button>
-              </div>
-            )}
-
-            {o.status === 'preparing' && (
-              <div className="mt-3 flex gap-2">
-                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-indigo-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'ready')}>{t('Mark Ready')}</button>
-              </div>
-            )}
           </div>
-        )}
+        </motion.div>
 
         {/* Empty */}
         {!loading && orders.length === 0 && (
