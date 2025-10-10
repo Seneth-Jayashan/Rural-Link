@@ -5,6 +5,7 @@ const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 const { verifyEmailTemplate } = require('../emails/emailTemplates');
 require("dotenv").config();
+// Profile image upload logic removed
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -32,6 +33,10 @@ exports.register = async (req, res) => {
     }
 
     const userData = { firstName, lastName, email, password, role, phone };
+    // If a profile image was uploaded, save its relative path
+    if (req.file && req.file.filename) {
+      userData.profileImage = `/uplod/${req.file.filename}`;
+    }
     if (role === 'merchant') {
       Object.assign(userData, { businessName });
     } 
@@ -173,6 +178,24 @@ exports.updateProfile = async (req, res) => {
     res.json({ success: true, message: 'Profile updated successfully', user });
   } catch (error) {
     console.error('Update profile error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.updateProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file || !req.file.filename) {
+      return res.status(400).json({ success: false, message: 'No image uploaded' });
+    }
+    const imagePath = `/uplod/${req.file.filename}`;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { profileImage: imagePath },
+      { new: true }
+    ).select('-password');
+    return res.json({ success: true, message: 'Profile photo updated', user });
+  } catch (error) {
+    console.error('Update profile photo error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

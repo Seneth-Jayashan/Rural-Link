@@ -1,4 +1,5 @@
 const express = require('express');
+// removed static upload serving
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -19,6 +20,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const utilityRoutes = require('./routes/utilityRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -128,10 +130,16 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions))
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
+
+// Serve uploaded files statically
+const path = require('path');
+app.use('/uplod', express.static(path.join(__dirname, 'uplod')));
 
 // Basic rate limiter
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
@@ -145,6 +153,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/utils', utilityRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));
