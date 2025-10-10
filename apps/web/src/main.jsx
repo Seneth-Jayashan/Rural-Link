@@ -17,8 +17,12 @@ import DeliveryDashboard from './pages/deliver/Dashboard.jsx'
 import OrderTracking from './pages/common/OrderTracking.jsx'
 import Cart from './pages/common/Cart.jsx'
 import Checkout from './pages/common/Checkout.jsx'
+import Account from './pages/common/Account.jsx'
+import AccountEdit from './pages/common/AccountEdit.jsx'
+import Terms from './pages/common/Terms.jsx'
 import CustomerOrders from './pages/customer/Orders.jsx'
 import TrackAll from './pages/common/TrackAll.jsx'
+import MapDemo from './pages/common/MapDemo.jsx'
 import { LanguageProvider } from './shared/i18n/LanguageContext.jsx'
 import { ToastProvider } from './shared/ui/Toast.jsx'
 import { useAuth, AuthProvider } from './shared/auth/AuthContext.jsx'
@@ -85,6 +89,10 @@ const router = createBrowserRouter([
       // Chat/Call demo route removed
       { path: 'cart', element: <RequireRole role="customer"><Cart /></RequireRole> },
       { path: 'checkout', element: <RequireRole role="customer"><Checkout /></RequireRole> },
+      { path: 'account', element: <RequireAuth><Account /></RequireAuth> },
+      { path: 'account/edit', element: <RequireAuth><AccountEdit /></RequireAuth> },
+      { path: 'map-demo', element: <MapDemo /> },
+      { path: 'terms', element: <Terms /> },
     ],
   },
 ])

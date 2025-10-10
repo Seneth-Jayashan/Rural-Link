@@ -44,9 +44,13 @@ export default function Login() {
 
       // Show notification popup after login
       setShowPopup(true)
+      notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
+      if (u?.role === 'merchant') navigate('/merchant', { replace: true })
+      else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
+      else navigate('/', { replace: true })
     } catch (err) {
       setError(err.message)
-      notify({ type: 'error', title: 'Login failed', message: err.message })
+      notify({ type: 'error', title: t('Login failed'), message: err.message })
     } finally {
       setLoading(false)
     }

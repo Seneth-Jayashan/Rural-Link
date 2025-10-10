@@ -11,6 +11,10 @@ import {
   FiPhone,
   FiBriefcase,
   FiFileText,
+  FiEye,
+  FiEyeOff,
+  FiCamera,
+  FiX,
 } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useNavigate } from 'react-router-dom'
@@ -26,20 +30,62 @@ export default function Register() {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'customer',
     phone: '',
     businessName: '',
     businessLicense: '',
     taxId: '',
+    profilePic: null,
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [profilePicPreview, setProfilePicPreview] = useState(null)
 
   function update(k, v) {
     setForm(prev => ({ ...prev, [k]: v }))
+  }
+
+  function handleProfilePicChange(e) {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        notify({
+          type: 'error',
+          title: t('Validation Error'),
+          message: 'Please select an image smaller than 5MB.',
+        })
+        return
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        notify({
+          type: 'error',
+          title: t('Validation Error'),
+          message: 'Please select an image file.',
+        })
+        return
+      }
+
+      setForm(prev => ({ ...prev, profilePic: file }))
+      
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setProfilePicPreview(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  function removeProfilePic() {
+    setForm(prev => ({ ...prev, profilePic: null }))
+    setProfilePicPreview(null)
   }
 
   async function submit(e) {
@@ -47,20 +93,45 @@ export default function Register() {
     setLoading(true)
     setError('')
     setMessage('')
+
+    // Validate password confirmation
+    if (form.password !== form.confirmPassword) {
+      setError(t('Passwords do not match'))
+      notify({
+        type: 'error',
+        title: t('Validation Error'),
+        message: t('Passwords do not match'),
+      })
+      setLoading(false)
+      return
+    }
+
+    // Validate password strength
+    if (form.password.length < 6) {
+      setError(t('Password must be at least 6 characters long'))
+      notify({
+        type: 'error',
+        title: t('Validation Error'),
+        message: t('Password must be at least 6 characters long'),
+      })
+      setLoading(false)
+      return
+    }
+
     try {
       await registerUser(form)
-      setMessage('Registered successfully. Please verify your email.')
+      setMessage(t('Registered successfully. Please verify your email.'))
       notify({
         type: 'success',
-        title: 'Registration complete',
-        message: 'Check your email to verify your account.',
+        title: t('Registration complete'),
+        message: t('Check your email to verify your account.'),
       })
       setTimeout(() => navigate('/login'), 1500)
     } catch (err) {
       setError(err.message)
       notify({
         type: 'error',
-        title: 'Registration failed',
+        title: t('Registration failed'),
         message: err.message,
       })
     } finally {
@@ -88,6 +159,57 @@ export default function Register() {
           </div>
           <h1 className="text-2xl font-bold text-gray-800">{t('Create Account')}</h1>
           <p className="text-gray-500 text-sm mt-1">{t('Join us and start exploring')}</p>
+        </motion.div>
+
+        {/* Profile Picture Upload */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="flex flex-col items-center mb-6"
+        >
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-gray-100 border-4 border-orange-200 flex items-center justify-center overflow-hidden">
+              {profilePicPreview ? (
+                <img
+                  src={profilePicPreview}
+                  alt="Profile preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FiUser className="text-gray-400 text-3xl" />
+              )}
+            </div>
+            
+            <label
+              htmlFor="profilePic"
+              className="absolute -bottom-1 -right-1 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-orange-600 transition-colors shadow-lg"
+            >
+              <FiCamera className="text-white text-sm" />
+            </label>
+            
+            {profilePicPreview && (
+              <button
+                type="button"
+                onClick={removeProfilePic}
+                className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors shadow-lg"
+              >
+                <FiX className="text-white text-xs" />
+              </button>
+            )}
+          </div>
+          
+          <input
+            id="profilePic"
+            type="file"
+            accept="image/*"
+            onChange={handleProfilePicChange}
+            className="hidden"
+          />
+          
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            {t('Upload profile picture (optional)')}
+          </p>
         </motion.div>
 
         {/* Form */}
@@ -130,10 +252,35 @@ export default function Register() {
             <input
               className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
               placeholder={t('Password')}
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={form.password}
               onChange={e => update('password', e.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-orange-500 hover:text-orange-600 transition-colors"
+            >
+              {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+            </button>
+          </div>
+
+          <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+            <FiLock className="text-orange-500 text-lg" />
+            <input
+              className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
+              placeholder={t('Confirm Password')}
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={form.confirmPassword}
+              onChange={e => update('confirmPassword', e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="text-orange-500 hover:text-orange-600 transition-colors"
+            >
+              {showConfirmPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+            </button>
           </div>
 
           <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
