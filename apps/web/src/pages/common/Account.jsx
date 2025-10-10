@@ -211,9 +211,148 @@ export default function Account(){
                 {t('Edit')}
               </motion.button>
             </div>
-            <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }} onClick={()=> navigate('/account/edit')}
-              className="px-4 py-2 rounded-xl border border-orange-300 text-orange-700 font-semibold hover:bg-orange-50">
-              {t('Edit Account')}
+
+            <div className="space-y-4">
+              {/* Name */}
+              <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <UserIcon className="w-4 h-4 text-orange-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1">{t('Full Name')}</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{fullName}</p>
+                </div>
+              </div>
+
+              {/* Email - Fixed to stay on one line */}
+              <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Mail className="w-4 h-4 text-orange-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1">{t('Email')}</p>
+                  <p className="text-gray-900 font-medium text-lg truncate">{user?.email || '—'}</p>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <PhoneIcon className="w-4 h-4 text-orange-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1">{t('Phone')}</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{profile.phone || '—'}</p>
+                </div>
+              </div>
+
+              {/* Address */}
+              <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <MapPin className="w-4 h-4 text-orange-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1">{t('Address')}</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{profile.address || '—'}</p>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Settings */}
+          <motion.section 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6 space-y-4"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-orange-100 rounded-xl">
+                <Globe2 className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900">{t('Settings')}</h3>
+            </div>
+            
+            {/* Language */}
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Globe2 className="w-4 h-4 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-gray-900 font-medium">{t('Language')}</p>
+                  <p className="text-xs text-gray-500">{t('App language preference')}</p>
+                </div>
+              </div>
+              <select 
+                value={lang} 
+                onChange={(e)=> setLang(e.target.value)} 
+                className="px-4 py-2 border border-orange-200 rounded-xl bg-white text-sm focus:border-orange-300 focus:ring-2 focus:ring-orange-200 outline-none"
+              >
+                <option value="en">🇺🇸 English</option>
+                <option value="si">🇱🇰 සිංහල</option>
+                <option value="ta">🇱🇰 தமிழ்</option>
+              </select>
+            </div>
+
+            {/* Terms */}
+            <Link to="/terms" className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200 hover:bg-orange-100/50 transition-colors group">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
+                  <FileText className="w-4 h-4 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-gray-900 font-medium">{t('Terms and Conditions')}</p>
+                  <p className="text-xs text-gray-500">{t('Read our terms of service')}</p>
+                </div>
+              </div>
+              <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+            </Link>
+
+            {/* Privacy Policy */}
+            <Link to="/privacy" className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200 hover:bg-orange-100/50 transition-colors group">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
+                  <Shield className="w-4 h-4 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-gray-900 font-medium">{t('Privacy Policy')}</p>
+                  <p className="text-xs text-gray-500">{t('How we handle your data')}</p>
+                </div>
+              </div>
+              <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+            </Link>
+
+            {/* Help & Support */}
+            <Link to="/help" className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200 hover:bg-orange-100/50 transition-colors group">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
+                  <HelpCircle className="w-4 h-4 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-gray-900 font-medium">{t('Help & Support')}</p>
+                  <p className="text-xs text-gray-500">{t('Get help with the app')}</p>
+                </div>
+              </div>
+              <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+            </Link>
+          </motion.section>
+
+          {/* Logout */}
+          <motion.section 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6"
+          >
+            <motion.button 
+              whileHover={{ scale:1.02 }} 
+              whileTap={{ scale:0.98 }} 
+              onClick={logout}
+              className="w-full py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl font-semibold flex items-center justify-center gap-3 hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl"
+            >
+              <LogOut className="w-5 h-5" /> 
+              {t('Logout')}
             </motion.button>
           </motion.section>
         </motion.div>
