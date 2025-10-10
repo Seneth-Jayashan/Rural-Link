@@ -1,4 +1,5 @@
 const express = require('express');
+// removed static upload serving
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -133,6 +134,8 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
+
+// removed static uploads
 
 // Basic rate limiter
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });

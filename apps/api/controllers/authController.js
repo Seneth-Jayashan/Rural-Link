@@ -5,6 +5,7 @@ const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 const { verifyEmailTemplate } = require('../emails/emailTemplates');
 require("dotenv").config();
+// Profile image upload logic removed
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -176,6 +177,8 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+// Upload and serve profile image functionality removed
 
 exports.changePassword = async (req, res) => {
   try {

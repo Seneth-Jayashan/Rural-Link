@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../shared/i18n/LanguageContext.jsx";
 import { useAuth } from "../shared/auth/AuthContext.jsx";
 import { motion } from "framer-motion";
-import { Home, Store, Truck, PlusCircle, ShoppingCart } from "lucide-react";
+import { Home, Store, Truck, PlusCircle, ShoppingCart, User2 } from "lucide-react";
 
 export function AppShell() {
   const location = useLocation();
@@ -95,6 +95,12 @@ export function AppShell() {
                 label={t("Track")}
                 active={location.pathname.startsWith("/track")}
               />
+              <NavItem
+                to="/account"
+                icon={<User2 size={22} />}
+                label={t("Account")}
+                active={location.pathname.startsWith("/account")}
+              />
             </>
           )}
 
@@ -121,16 +127,30 @@ export function AppShell() {
                 label={t("Add")}
                 active={location.pathname === "/merchant/products/new"}
               />
+              <NavItem
+                to="/account"
+                icon={<User2 size={22} />}
+                label={t("Account")}
+                active={location.pathname.startsWith("/account")}
+              />
             </>
           )}
 
           {user.role === "deliver" && (
-            <NavItem
-              to="/deliver"
-              icon={<Truck size={22} />}
-              label={t("Deliver")}
-              active={location.pathname.startsWith("/deliver")}
-            />
+            <>
+              <NavItem
+                to="/deliver"
+                icon={<Truck size={22} />}
+                label={t("Deliver")}
+                active={location.pathname.startsWith("/deliver")}
+              />
+              <NavItem
+                to="/account"
+                icon={<User2 size={22} />}
+                label={t("Account")}
+                active={location.pathname.startsWith("/account")}
+              />
+            </>
           )}
         </motion.nav>
       )}
