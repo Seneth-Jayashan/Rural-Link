@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { get } from '../../shared/api.js'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiDownload, 
   FiFileText, 
@@ -8,7 +8,11 @@ import {
   FiRefreshCw,
   FiBarChart,
   FiTrendingUp,
-  FiDollarSign
+  FiDollarSign,
+  FiPieChart,
+  FiDatabase,
+  FiShoppingBag,
+  FiTruck
 } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
@@ -21,17 +25,18 @@ export default function Reports(){
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('monthly')
-  const [reportType, setReportType] = useState('overview')
+  const [refreshing, setRefreshing] = useState(false)
 
   async function loadAnalytics() {
     try {
-      setLoading(true)
+      setRefreshing(true)
       const data = await get(`/api/orders/merchant/analytics?period=${period}`)
       setAnalytics(data.data)
     } catch (err) {
       notify({ type: 'error', title: 'Failed to load data', message: err.message })
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -131,9 +136,10 @@ export default function Reports(){
 
   if (loading) {
     return (
-      <div className="p-3 pb-16">
-        <div className="flex items-center justify-center h-64">
-          <FiRefreshCw className="animate-spin text-2xl text-blue-600" />
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">{t('Loading...')}</p>
         </div>
       </div>
     )
@@ -142,136 +148,224 @@ export default function Reports(){
   const { overview, deliveries } = analytics || {}
 
   return (
-    <div className="p-3 pb-16">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{t('Reports')}</h1>
-        <div className="flex items-center gap-3">
-          <select 
-            value={period} 
-            onChange={(e) => setPeriod(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm"
-          >
-            <option value="daily">{t('Last 30 Days')}</option>
-            <option value="weekly">{t('Last 12 Weeks')}</option>
-            <option value="monthly">{t('Last 12 Months')}</option>
-            <option value="yearly">{t('Last 5 Years')}</option>
-          </select>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100">
+            <FiBarChart className="w-6 h-6 text-orange-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{t('Reports')}</h1>
+            <p className="text-gray-600 text-sm">{t('Export business insights and analytics')}</p>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Report Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Controls */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-4 mb-6"
+      >
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none">
+              <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 w-4 h-4" />
+              <select 
+                value={period} 
+                onChange={(e) => setPeriod(e.target.value)}
+                className="w-full border border-orange-200 rounded-2xl pl-10 pr-4 py-3 bg-white text-gray-700 focus:border-orange-300 focus:ring-2 focus:ring-orange-200 outline-none appearance-none"
+              >
+                <option value="daily">{t('Last 30 Days')}</option>
+                <option value="weekly">{t('Last 12 Weeks')}</option>
+                <option value="monthly">{t('Last 12 Months')}</option>
+                <option value="yearly">{t('Last 5 Years')}</option>
+              </select>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={loadAnalytics}
+              disabled={refreshing}
+              className="p-3 bg-orange-100 rounded-2xl border border-orange-200 disabled:opacity-50"
+            >
+              <FiRefreshCw className={`w-4 h-4 text-orange-600 ${refreshing ? 'animate-spin' : ''}`} />
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Report Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {/* Overview Report */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-lg p-6 border shadow-sm"
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-5 hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FiFileText className="text-blue-600" />
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-blue-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+              <FiFileText className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="text-lg font-semibold">{t('Overview Report')}</h3>
+            <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
           </div>
-          <p className="text-gray-600 text-sm mb-4">
-            {t('Basic metrics and key performance indicators')}
+          
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('Overview Report')}</h3>
+          <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+            {t('Key performance indicators and basic business metrics')}
           </p>
-          <button
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => generateReport('overview')}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl px-4 py-3 font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <FiDownload /> {t('Export PDF')}
-          </button>
+            <FiDownload className="w-4 h-4" />
+            {t('Export PDF')}
+          </motion.button>
         </motion.div>
 
+        {/* Detailed Report */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-lg p-6 border shadow-sm"
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-5 hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <FiBarChart className="text-green-600" />
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-green-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+              <FiPieChart className="w-6 h-6 text-green-600" />
             </div>
-            <h3 className="text-lg font-semibold">{t('Detailed Report')}</h3>
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
           </div>
-          <p className="text-gray-600 text-sm mb-4">
-            {t('Comprehensive data including orders, products, and trends')}
+          
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('Detailed Report')}</h3>
+          <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+            {t('Comprehensive analysis with orders, products, and trends')}
           </p>
-          <button
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => generateReport('detailed')}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl px-4 py-3 font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <FiDownload /> {t('Export PDF')}
-          </button>
+            <FiDownload className="w-4 h-4" />
+            {t('Export PDF')}
+          </motion.button>
         </motion.div>
 
+        {/* Financial Report */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-lg p-6 border shadow-sm"
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-5 hover:shadow-xl transition-all duration-300 group"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <FiDollarSign className="text-purple-600" />
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 bg-purple-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+              <FiDollarSign className="w-6 h-6 text-purple-600" />
             </div>
-            <h3 className="text-lg font-semibold">{t('Financial Report')}</h3>
+            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
           </div>
-          <p className="text-gray-600 text-sm mb-4">
+          
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('Financial Report')}</h3>
+          <p className="text-gray-600 text-sm mb-4 leading-relaxed">
             {t('Revenue analysis and financial performance metrics')}
           </p>
-          <button
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => generateReport('financial')}
-            className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-2xl px-4 py-3 font-semibold hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <FiDownload /> {t('Export PDF')}
-          </button>
+            <FiDownload className="w-4 h-4" />
+            {t('Export PDF')}
+          </motion.button>
         </motion.div>
       </div>
 
-      {/* CSV Export */}
-      <div className="bg-white rounded-lg p-6 border shadow-sm mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-orange-100 rounded-lg">
-            <FiTrendingUp className="text-orange-600" />
+      {/* CSV Export Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-5 mb-6 hover:shadow-xl transition-all duration-300 group"
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div className="p-3 bg-orange-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+            <FiDatabase className="w-6 h-6 text-orange-600" />
           </div>
-          <h3 className="text-lg font-semibold">{t('CSV Export')}</h3>
+          <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
         </div>
-        <p className="text-gray-600 text-sm mb-4">
-          {t('Export data in CSV format for spreadsheet analysis')}
+        
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('CSV Export')}</h3>
+        <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+          {t('Raw data in CSV format for advanced analysis in spreadsheets')}
         </p>
-        <button
-          onClick={exportCSV}
-          className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
-        >
-          <FiDownload /> {t('Export CSV')}
-        </button>
-      </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={exportCSV}
+            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl px-4 py-3 font-semibold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            <FiDownload className="w-4 h-4" />
+            {t('Export CSV')}
+          </motion.button>
+        </div>
+      </motion.div>
 
-      {/* Quick Stats */}
-      <div className="bg-white rounded-lg p-6 border shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">{t('Quick Statistics')}</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{formatLKR(overview?.totalRevenue || 0)}</p>
-            <p className="text-sm text-gray-600">{t('Total Revenue')}</p>
+      {/* Quick Stats - PROPER MOBILE FIX */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-5"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-orange-100 rounded-xl">
+            <FiTrendingUp className="w-5 h-5 text-orange-600" />
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{overview?.totalOrders || 0}</p>
-            <p className="text-sm text-gray-600">{t('Total Orders')}</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('Quick Statistics')}</h3>
+        </div>
+
+        {/* Proper 2x2 grid for mobile */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Total Revenue - Top Left */}
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
+            <p className="text-lg font-bold text-green-600">{formatLKR(overview?.totalRevenue || 0)}</p>
+            <p className="text-xs text-gray-600 mt-1">{t('Total Revenue')}</p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600">{deliveries?.totalDeliveries || 0}</p>
-            <p className="text-sm text-gray-600">{t('Deliveries')}</p>
+          
+          {/* Total Orders - Top Right */}
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
+            <p className="text-lg font-bold text-blue-600">{overview?.totalOrders || 0}</p>
+            <p className="text-xs text-gray-600 mt-1">{t('Total Orders')}</p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-orange-600">{formatLKR(overview?.averageOrderValue || 0)}</p>
-            <p className="text-sm text-gray-600">{t('Avg Order Value')}</p>
+          
+          {/* Deliveries - Bottom Left */}
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
+            <p className="text-lg font-bold text-purple-600">{deliveries?.totalDeliveries || 0}</p>
+            <p className="text-xs text-gray-600 mt-1">{t('Deliveries')}</p>
+          </div>
+          
+          {/* Avg Order Value - Bottom Right */}
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
+            <p className="text-lg font-bold text-orange-600">{formatLKR(overview?.averageOrderValue || 0)}</p>
+            <p className="text-xs text-gray-600 mt-1">{t('Avg Order Value')}</p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

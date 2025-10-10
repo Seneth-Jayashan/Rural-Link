@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { get, post } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle, FiMap, FiX } from 'react-icons/fi'
+import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle, FiMap, FiX, FiPackage, FiClock, FiNavigation } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import OrderChat from '../common/OrderChat.jsx'
 import LocationTracker from './LocationTracker.jsx'
@@ -15,6 +15,8 @@ export default function DeliveryDashboard(){
   const [assigned, setAssigned] = useState([])
   const [showMap, setShowMap] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [activeTab, setActiveTab] = useState('available')
+  const { notify } = useToast()
 
   async function load(){
     try{
@@ -28,8 +30,6 @@ export default function DeliveryDashboard(){
   }
   useEffect(()=>{ load() },[])
 
-
-  const { notify } = useToast()
   async function accept(order){
     await post(`/api/orders/${order._id}/accept`)
     notify({ type:'success', title:'Accepted', message:`Order ${order.orderNumber}` })
@@ -51,90 +51,310 @@ export default function DeliveryDashboard(){
     load()
   }
 
+  const getStatusColor = (status) => {
+    const statusColors = {
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      picked_up: 'bg-blue-100 text-blue-800 border-blue-200',
+      in_transit: 'bg-orange-100 text-orange-800 border-orange-200',
+      delivered: 'bg-green-100 text-green-800 border-green-200',
+      cancelled: 'bg-red-100 text-red-800 border-red-200'
+    }
+    return statusColors[status] || 'bg-gray-100 text-gray-800 border-gray-200'
+  }
+
+  const getStatusIcon = (status) => {
+    const statusIcons = {
+      pending: <FiClock className="w-4 h-4" />,
+      picked_up: <FiPackage className="w-4 h-4" />,
+      in_transit: <FiTruck className="w-4 h-4" />,
+      delivered: <FiCheckCircle className="w-4 h-4" />,
+    }
+    return statusIcons[status] || <FiPackage className="w-4 h-4" />
+  }
 
   return (
-    <div className="p-3 pb-16">
-      <h1 className="text-lg font-semibold mb-3">{t('Deliveries')}</h1>
-      <div className="space-y-2">
-        {available.map(o=> (
-          <motion.div key={o._id} className="border rounded p-2" initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}>
-            <div className="font-medium">Order {o.orderNumber}</div>
-            <div className="text-xs text-gray-500 flex items-center gap-2"><FiMapPin /> {t('Items')}: {o.items?.length||0}</div>
-            <div className="text-xs text-gray-700 mt-1">Order Total: <span className="font-medium">{formatLKR(o.total || 0)}</span></div>
-            <div className="mt-2 flex items-center gap-2">
-              <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-green-600 text-white rounded px-3 py-1" onClick={()=>accept(o)}><FiTruck /> {t('Accept')}</motion.button>
-              <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-red-600 text-white rounded px-3 py-1" onClick={()=>decline(o)}>
-                {t('Decline')}
-              </motion.button>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto mb-6"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100">
+            <FiTruck className="w-6 h-6 text-orange-600" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">Delivery Dashboard</h1>
+            <p className="text-gray-600 text-sm">Manage your delivery orders</p>
+          </div>
+        </div>
+      </motion.div>
 
-      <h2 className="text-lg font-semibold mt-6 mb-2">{t('My Deliveries')}</h2>
-      <div className="space-y-2">
-        {assigned.map(o=> (
-          <motion.div key={o._id} className="border rounded p-3" initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}>
-            <div className="flex items-center justify-between">
-              <div className="font-medium">Order {o.orderNumber}</div>
-              <div className="text-xs text-gray-600">{o.status.replace('_',' ')}</div>
-            </div>
-            <div className="mt-1 text-sm text-gray-700">
-              <div className="flex items-center gap-2"><FiUser /> {o.customer?.firstName} {o.customer?.lastName}</div>
-              <div className="flex items-center gap-2"><FiPhone /> {o.customer?.phone || t('N/A')}</div>
-              <div className="flex items-center gap-2"><FiMapPin /> {o.deliveryAddress?.street}, {o.deliveryAddress?.city}</div>
-            </div>
-            <div className="mt-1 text-xs text-gray-700">Order Total: <span className="font-medium">{formatLKR(o.total || 0)}</span></div>
-            <div className="mt-2 text-xs text-gray-600">Items: {o.items?.map((it,idx)=> `${it.product?.name || 'Item'} x${it.quantity}`).join(', ')}</div>
-            
-            {/* Map Button */}
-            <div className="mt-2">
-              <button
-                onClick={() => {
-                  setSelectedOrder(o)
-                  setShowMap(true)
-                }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-              >
-                <FiMap className="w-4 h-4" />
-                {t('View Map')}
-              </button>
-            </div>
-            
-            <div className="mt-3 flex items-center gap-2 flex-wrap">
-              {o.status === 'picked_up' && (
-                <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-blue-600 text-white rounded px-3 py-1" onClick={()=>startDelivery(o)}>
-                  <FiTruck /> {t('Start Delivery')}
-                </motion.button>
+      {/* Tab Navigation */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-1 mb-6 max-w-2xl mx-auto"
+      >
+        <div className="flex space-x-1">
+          <button
+            onClick={() => setActiveTab('available')}
+            className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${
+              activeTab === 'available'
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-orange-50/50'
+            }`}
+          >
+            Available ({available.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('assigned')}
+            className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${
+              activeTab === 'assigned'
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-orange-50/50'
+            }`}
+          >
+            My Deliveries ({assigned.length})
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Content */}
+      <div className="max-w-2xl mx-auto">
+        {/* Available Orders */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'available' && (
+            <motion.div
+              key="available"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
+            >
+              {available.map((o, index) => (
+                <motion.div
+                  key={o._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-4"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <h3 className="font-semibold text-gray-900">Order #{o.orderNumber}</h3>
+                      </div>
+                      <p className="text-sm text-gray-600">{o.items?.length || 0} items • {formatLKR(o.total || 0)}</p>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {o.deliveryAddress?.city || 'Location'}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center gap-1">
+                      <FiMapPin className="w-4 h-4" />
+                      <span>{o.deliveryAddress?.distance || '2.5'} km</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <FiClock className="w-4 h-4" />
+                      <span>{o.estimatedDeliveryTime || '15-20'} min</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => accept(o)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl py-3 font-semibold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl"
+                    >
+                      <FiTruck className="w-4 h-4" />
+                      Accept Order
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => decline(o)}
+                      className="px-4 py-3 bg-gradient-to-r from-orange-50/50 to-amber-50/50 text-gray-700 rounded-2xl font-medium border border-orange-200 hover:bg-orange-100 transition-all"
+                    >
+                      Decline
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
+              
+              {available.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-8 text-center"
+                >
+                  <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <FiPackage className="w-8 h-8 text-orange-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Available Orders</h3>
+                  <p className="text-gray-500 text-sm">New delivery requests will appear here</p>
+                </motion.div>
               )}
-              {o.status === 'in_transit' && (
-                <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-green-600 text-white rounded px-3 py-1" onClick={()=>completeDelivery(o)}>
-                  <FiCheckCircle /> {t('Mark Delivered')}
-                </motion.button>
+            </motion.div>
+          )}
+
+          {/* Assigned Orders */}
+          {activeTab === 'assigned' && (
+            <motion.div
+              key="assigned"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
+            >
+              {assigned.map((o, index) => (
+                <motion.div
+                  key={o._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-4"
+                >
+                  {/* Order Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`p-2 rounded-xl ${getStatusColor(o.status)}`}>
+                          {getStatusIcon(o.status)}
+                        </div>
+                        <h3 className="font-semibold text-gray-900">Order #{o.orderNumber}</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 capitalize">{o.status.replace('_', ' ')}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">{formatLKR(o.total || 0)}</p>
+                      <p className="text-xs text-gray-500">{o.items?.length || 0} items</p>
+                    </div>
+                  </div>
+
+                  {/* Customer Info */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                      <div className="p-1.5 bg-orange-100 rounded-lg">
+                        <FiUser className="w-3.5 h-3.5 text-orange-600" />
+                      </div>
+                      <span>{o.customer?.firstName} {o.customer?.lastName}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                      <div className="p-1.5 bg-orange-100 rounded-lg">
+                        <FiPhone className="w-3.5 h-3.5 text-orange-600" />
+                      </div>
+                      <span>{o.customer?.phone || t('N/A')}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                      <div className="p-1.5 bg-orange-100 rounded-lg">
+                        <FiMapPin className="w-3.5 h-3.5 text-orange-600" />
+                      </div>
+                      <span className="flex-1">{o.deliveryAddress?.street}, {o.deliveryAddress?.city}</span>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-1.5 bg-green-100 rounded-lg">
+                        <FiPackage className="w-3.5 h-3.5 text-green-600" />
+                      </div>
+                      <p className="text-sm font-medium text-gray-900">Items</p>
+                    </div>
+                    <p className="text-sm text-gray-700 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl p-3 border border-orange-200">
+                      {o.items?.map((it, idx) => `${it.product?.name || 'Item'} x${it.quantity}`).join(', ')}
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    {/* Map Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSelectedOrder(o)
+                        setShowMap(true)
+                      }}
+                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl py-3 font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                    >
+                      <FiNavigation className="w-4 h-4" />
+                      View Delivery Route
+                    </motion.button>
+
+                    {/* Status Actions */}
+                    <div className="flex gap-2">
+                      {o.status === 'picked_up' && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => startDelivery(o)}
+                          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl py-3 font-semibold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl"
+                        >
+                          <FiTruck className="w-4 h-4" />
+                          Start Delivery
+                        </motion.button>
+                      )}
+                      {o.status === 'in_transit' && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => completeDelivery(o)}
+                          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl py-3 font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl"
+                        >
+                          <FiCheckCircle className="w-4 h-4" />
+                          Mark Delivered
+                        </motion.button>
+                      )}
+                    </div>
+
+                    {/* Location Tracker & Chat */}
+                    {['picked_up','in_transit'].includes(o.status) && o.status !== 'delivered' && (
+                      <div className="space-y-4 pt-4 border-t border-orange-200">
+                        <LocationTracker 
+                          orderId={o._id} 
+                          onLocationUpdate={(location) => {
+                            console.log('Location updated:', location)
+                          }}
+                        />
+                        
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1.5 bg-purple-100 rounded-lg">
+                              <FiUser className="w-3.5 h-3.5 text-purple-600" />
+                            </div>
+                            <p className="font-medium text-gray-900">Chat with Customer</p>
+                          </div>
+                          <OrderChat orderId={o._id} meId={o.deliveryPerson} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+              
+              {assigned.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-8 text-center"
+                >
+                  <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <FiTruck className="w-8 h-8 text-orange-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Deliveries</h3>
+                  <p className="text-gray-500 text-sm">Accept delivery requests to get started</p>
+                </motion.div>
               )}
-            </div>
-            {['picked_up','in_transit'].includes(o.status) && o.status !== 'delivered' && (
-              <div className="mt-3 space-y-3">
-                {/* Location Tracker */}
-                <LocationTracker 
-                  orderId={o._id} 
-                  onLocationUpdate={(location) => {
-                    console.log('Location updated:', location)
-                  }}
-                />
-                
-                {/* Chat with Customer */}
-                <div>
-                  <div className="font-medium mb-1">{t('Chat with customer')}</div>
-                  <OrderChat orderId={o._id} meId={o.deliveryPerson} />
-                </div>
-              </div>
-            )}
-          </motion.div>
-        ))}
-        {assigned.length === 0 && (
-          <div className="text-gray-600 text-sm">{t('No assigned deliveries')}</div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Delivery Map Modal */}
@@ -150,25 +370,27 @@ export default function DeliveryDashboard(){
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden"
+              className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden border border-orange-100"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between p-4 border-b border-orange-100">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-xl">
                     <FiMap className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">{t('Delivery Map')}</h2>
+                    <h2 className="text-xl font-bold text-gray-900">Delivery Route</h2>
                     <p className="text-sm text-gray-600">Order #{selectedOrder.orderNumber}</p>
                   </div>
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowMap(false)}
-                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                  className="p-2 bg-orange-100 rounded-xl hover:bg-orange-200 transition-colors"
                 >
-                  <FiX className="w-5 h-5 text-gray-500" />
-                </button>
+                  <FiX className="w-5 h-5 text-orange-600" />
+                </motion.button>
               </div>
 
               {/* Map Content */}
@@ -195,9 +417,6 @@ export default function DeliveryDashboard(){
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   )
 }
-
-
