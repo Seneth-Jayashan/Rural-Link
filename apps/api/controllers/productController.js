@@ -249,7 +249,7 @@ exports.searchProducts = async (req, res) => {
     const { q, category, minPrice, maxPrice, sortBy = 'rating.average', sortOrder = 'desc', page = 1, limit = 20 } = req.query;
     const skip = (page - 1) * limit;
     
-    let query = { isActive: true };
+    let query = { isActive: true, stock: { $gt: 0 } };
     
     if (q) {
       query.$or = [
@@ -277,8 +277,7 @@ exports.searchProducts = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('merchant', 'businessName firstName lastName')
-      .select('-stock -minStock');
+      .populate('merchant', 'businessName firstName lastName');
     
     const total = await Product.countDocuments(query);
     

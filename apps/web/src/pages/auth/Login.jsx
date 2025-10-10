@@ -31,13 +31,13 @@ export default function Login() {
     try {
       const u = await login(email, password)
       if (u?.token) localStorage.setItem('token', u.token)
-      notify({ type: 'success', title: 'Welcome back', message: 'Login successful' })
+      notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
       if (u?.role === 'merchant') navigate('/merchant', { replace: true })
       else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
       else navigate('/', { replace: true })
     } catch (err) {
       setError(err.message)
-      notify({ type: 'error', title: 'Login failed', message: err.message })
+      notify({ type: 'error', title: t('Login failed'), message: err.message })
     } finally {
       setLoading(false)
     }

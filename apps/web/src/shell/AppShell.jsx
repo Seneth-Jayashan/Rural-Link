@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../shared/i18n/LanguageContext.jsx";
 import { useAuth } from "../shared/auth/AuthContext.jsx";
 import { motion } from "framer-motion";
-import { Home, Store, Truck, PlusCircle, ShoppingCart, User2 } from "lucide-react";
+import { Home, Store, Truck, PlusCircle, ShoppingCart, User2, FileText } from "lucide-react";
 
 export function AppShell() {
   const location = useLocation();
@@ -107,6 +107,12 @@ export function AppShell() {
           {user.role === "merchant" && (
             <>
               <NavItem
+                to="/merchant/dashboard"
+                icon={<Home size={22} />}
+                label={t("Dashboard")}
+                active={location.pathname === "/merchant" || location.pathname === "/merchant/dashboard"}
+              />
+              <NavItem
                 to="/merchant/orders"
                 icon={<ShoppingCart size={22} />}
                 label={t("Orders")}
@@ -126,6 +132,12 @@ export function AppShell() {
                 icon={<PlusCircle size={22} />}
                 label={t("Add")}
                 active={location.pathname === "/merchant/products/new"}
+              />
+              <NavItem
+                to="/merchant/reports"
+                icon={<FileText size={22} />}
+                label={t("Reports")}
+                active={location.pathname.startsWith("/merchant/reports")}
               />
               <NavItem
                 to="/account"

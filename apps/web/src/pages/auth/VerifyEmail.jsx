@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useNavigate } from 'react-router-dom'  // <== Import useNavigate
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 
 export default function VerifyEmail() {
   const { token, hint } = useParams()
@@ -11,6 +12,7 @@ export default function VerifyEmail() {
   const [message, setMessage] = useState('')
   const ranRef = useRef(false)
   const navigate = useNavigate() // <== Initialize navigate
+  const { t } = useI18n()
 
 
   useEffect(() => {
@@ -36,22 +38,22 @@ export default function VerifyEmail() {
 
         if (res.ok) {
           setStatus('success')
-          setMessage(data.message || 'Email verified successfully')
-          notify({ type: 'success', title: 'Verified', message: 'You can now log in' })
+          setMessage(data.message || t('Email verified successfully'))
+          notify({ type: 'success', title: t('Verified'), message: t('You can now log in') })
 
           setTimeout(() => {
             navigate('/login')
           }, 2500)
         } else {
           setStatus('error')
-          setMessage(data.message || 'Invalid or expired token')
-          notify({ type: 'error', title: 'Verification failed', message: data.message })
+          setMessage(data.message || t('Invalid or expired token'))
+          notify({ type: 'error', title: t('Verification failed'), message: data.message })
         }
       } catch (err) {
         console.error('❌ Verification failed:', err)
         setStatus('error')
-        setMessage(err.message || 'Something went wrong')
-        notify({ type: 'error', title: 'Verification failed', message: err.message })
+        setMessage(err.message || t('Something went wrong'))
+        notify({ type: 'error', title: t('Verification failed'), message: err.message })
       }
     }
 
@@ -65,7 +67,7 @@ export default function VerifyEmail() {
       {status === 'loading' && (
         <div className="flex flex-col items-center gap-3">
           <Spinner size={40} />
-          <div>Verifying your email…</div>
+          <div>{t('Verifying your email…')}</div>
         </div>
       )}
       {status !== 'loading' && (
@@ -78,7 +80,7 @@ export default function VerifyEmail() {
             {message}
           </div>
           <Link to="/login" className="btn-brand rounded px-4 py-2 inline-block">
-            Go to login
+            {t('Go to login')}
           </Link>
         </div>
       )}
