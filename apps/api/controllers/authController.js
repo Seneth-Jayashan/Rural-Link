@@ -286,6 +286,21 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+exports.updateFCMToken = async(req,res) => {
+  const token = req.body.token;
+  const {_id} = req.user;
+  try{
+    const user = await User.findByIdAndUpdate(_id, {fcmToken:token},{new:true});
+    if(!user){
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({success:true, message:'User updated successfully'});
+  }catch(error){
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
+
 exports.testEmail = async (req, res) => {
   try {
     const { email, type = 'test', data = {} } = req.body;
