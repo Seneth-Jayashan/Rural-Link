@@ -161,6 +161,47 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`API running on port ${PORT}`));
 
+// Server-level error and close logging
+server.on('error', (err) => {
+  console.error('HTTP server error:', err);
+});
+
+server.on('close', () => {
+  console.warn('HTTP server closed');
+});
+
+// Graceful shutdown and process-level error handlers
+const gracefulShutdown = async (signal) => {
+  try {
+    console.warn(`Received ${signal}. Shutting down gracefully...`);
+    server.close(() => {
+      console.log('HTTP server closed.');
+      process.exit(0);
+    });
+    // Force exit if close hangs
+    setTimeout(() => {
+      console.error('Force exiting after shutdown timeout.');
+      process.exit(1);
+    }, 10000).unref();
+  } catch (e) {
+    console.error('Error during graceful shutdown:', e);
+    process.exit(1);
+  }
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Promise Rejection:', reason);
+  gracefulShutdown('unhandledRejection');
+});
+
 module.exports = { app, server, io };
 
 
