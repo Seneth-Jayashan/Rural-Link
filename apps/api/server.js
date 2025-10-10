@@ -27,7 +27,7 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io for real-time order tracking
-const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:3001')
+const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:3001,https://www.rurallinksite.site,https://rurallinksite.site')
   .split(',')
   .map(o => o.trim())
   .filter(Boolean)
