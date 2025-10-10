@@ -275,7 +275,7 @@ export default function MerchantOrders() {
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-gray-900 text-sm">
-                            ${it.total?.toFixed?.(2) || (it.price * it.quantity).toFixed?.(2)}
+                            LKR {it.total?.toFixed?.(2) || (it.price * it.quantity).toFixed?.(2)}
                           </div>
                         </div>
                       </div>
@@ -287,7 +287,7 @@ export default function MerchantOrders() {
 
                   <div className="flex items-center justify-between p-3 bg-orange-50 rounded-2xl border border-orange-200 mb-3">
                     <span className="font-semibold text-gray-900 text-sm">Total</span>
-                    <span className="text-lg font-bold text-orange-600">${o.total?.toFixed?.(2) || o.total}</span>
+                    <span className="text-lg font-bold text-orange-600">LKR {o.total?.toFixed?.(2) || o.total}</span>
                   </div>
 
                   <div className="space-y-2">

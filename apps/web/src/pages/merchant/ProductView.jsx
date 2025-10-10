@@ -199,7 +199,7 @@ export default function ProductView(){
                     <FiDollarSign className="w-4 h-4 text-gray-400" />
                     <div className="text-sm text-gray-600">Price</div>
                   </div>
-                  <div className="text-xl font-bold text-orange-600">${product.price?.toFixed(2)}</div>
+                  <div className="text-xl font-bold text-orange-600">LKR {product.price?.toFixed(2)}</div>
                 </div>
 
                 {/* Stock */}

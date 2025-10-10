@@ -248,8 +248,7 @@ export default function ProductsList(){
                       </h3>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1 text-gray-600">
-                          <FiDollarSign className="w-4 h-4" />
-                          <span className="font-semibold text-gray-900 text-sm">${p.price?.toFixed(2)}</span>
+                          <span className="font-semibold text-gray-900 text-sm">LKR {p.price?.toFixed(2)}</span>
                         </div>
                         {p.category && (
                           <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
