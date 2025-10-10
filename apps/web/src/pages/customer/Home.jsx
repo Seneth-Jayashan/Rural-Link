@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { get, post } from "../../shared/api.js";
+import { get, post, getImageUrl } from "../../shared/api.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiSearch, FiPlus, FiShoppingBag, FiStar, FiTruck } from "react-icons/fi";
 import { useToast } from "../../shared/ui/Toast.jsx";
@@ -16,7 +16,7 @@ export default function CustomerHome() {
   const [error, setError] = useState("");
 
   const { notify } = useToast();
-  const { addItem } = useCart();
+  const { addItem, canAddProduct, currentMerchant } = useCart();
 
   useEffect(() => {
     let mounted = true;
@@ -202,7 +202,7 @@ export default function CustomerHome() {
                   <div className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50">
                     {Array.isArray(p.images) && p.images.length ? (
                       <motion.img
-                        src={p.images[0].url}
+                        src={getImageUrl(p.images[0].url)}
                         alt={p.images[0].alt || p.name}
                         className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
                         whileHover={{ scale: 1.1 }}
@@ -218,8 +218,11 @@ export default function CustomerHome() {
 
                     {/* Merchant Badge */}
                     {p?.merchant?.businessName && (
-                      <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                      <div className={`absolute top-3 left-3 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm ${
+                        canAddProduct(p) ? 'bg-black/70' : 'bg-red-500/80'
+                      }`}>
                         {p.merchant.businessName}
+                        {!canAddProduct(p) && ' (Different)'}
                       </div>
                     )}
 
@@ -256,18 +259,31 @@ export default function CustomerHome() {
                       <motion.button
                         whileHover={{ scale: 1.05, backgroundColor: "#ea580c" }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          addItem(p, 1);
-                          notify({
-                            type: "success",
-                            title: "Added to cart",
-                            message: p.name,
-                          });
+                        onClick={async () => {
+                          try {
+                            await addItem(p, 1);
+                            notify({
+                              type: "success",
+                              title: "Added to cart",
+                              message: p.name,
+                            });
+                          } catch (error) {
+                            notify({
+                              type: "error",
+                              title: "Cannot add to cart",
+                              message: error.message,
+                            });
+                          }
                         }}
-                        className="flex items-center gap-2 bg-orange-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+                        disabled={!canAddProduct(p)}
+                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 ${
+                          canAddProduct(p) 
+                            ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
                       >
                           <FiPlus className="w-4 h-4" />
-                          {t('Add')}
+                          {canAddProduct(p) ? t('Add') : 'Different Merchant'}
                       </motion.button>
                     </div>
                   </div>

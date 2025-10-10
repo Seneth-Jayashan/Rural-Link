@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
 
     const { 
       firstName, lastName, email, password, role = 'customer', phone, 
-      businessName 
+      businessName, address
     } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -33,6 +33,12 @@ exports.register = async (req, res) => {
     }
 
     const userData = { firstName, lastName, email, password, role, phone };
+    
+    // Add address if provided
+    if (address) {
+      userData.address = address;
+    }
+    
     // If a profile image was uploaded, save its relative path
     if (req.file && req.file.filename) {
       userData.profileImage = `/uplod/${req.file.filename}`;
@@ -187,7 +193,7 @@ exports.updateProfilePhoto = async (req, res) => {
     if (!req.file || !req.file.filename) {
       return res.status(400).json({ success: false, message: 'No image uploaded' });
     }
-    const imagePath = `/uplod/${req.file.filename}`;
+    const imagePath = `/uploads/${req.file.filename}`;
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { profileImage: imagePath },

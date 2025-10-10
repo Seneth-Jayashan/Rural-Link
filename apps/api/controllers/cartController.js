@@ -21,7 +21,13 @@ async function ensureCart(userId){
 exports.getCart = async (req, res) => {
   try{
     const cart = await ensureCart(req.user._id);
-    await cart.populate('items.product');
+    await cart.populate({
+      path: 'items.product',
+      populate: {
+        path: 'merchant',
+        select: 'businessName firstName lastName'
+      }
+    });
     return res.json({ success:true, cart: serialize(cart) })
   }catch(e){
     return res.status(500).json({ success:false, message:'Failed to fetch cart' })
@@ -45,7 +51,13 @@ exports.replaceCart = async (req, res) => {
     }
     cart.items = nextItems;
     await cart.save();
-    await cart.populate('items.product');
+    await cart.populate({
+      path: 'items.product',
+      populate: {
+        path: 'merchant',
+        select: 'businessName firstName lastName'
+      }
+    });
     return res.json({ success:true, cart: serialize(cart) })
   }catch(e){
     return res.status(500).json({ success:false, message:'Failed to update cart' })
@@ -67,7 +79,13 @@ exports.addItem = async (req, res) => {
       cart.items.push({ product: product._id, quantity: Math.max(1, Math.min(99, Number(quantity)||1)) })
     }
     await cart.save();
-    await cart.populate('items.product');
+    await cart.populate({
+      path: 'items.product',
+      populate: {
+        path: 'merchant',
+        select: 'businessName firstName lastName'
+      }
+    });
     return res.json({ success:true, cart: serialize(cart) })
   }catch(e){
     return res.status(500).json({ success:false, message:'Failed to add item' })
@@ -83,7 +101,13 @@ exports.updateItem = async (req, res) => {
     if(idx < 0) return res.status(404).json({ success:false, message:'Item not in cart' })
     cart.items[idx].quantity = Math.max(1, Math.min(99, Number(quantity)||1));
     await cart.save();
-    await cart.populate('items.product');
+    await cart.populate({
+      path: 'items.product',
+      populate: {
+        path: 'merchant',
+        select: 'businessName firstName lastName'
+      }
+    });
     return res.json({ success:true, cart: serialize(cart) })
   }catch(e){
     return res.status(500).json({ success:false, message:'Failed to update item' })
@@ -96,7 +120,13 @@ exports.removeItem = async (req, res) => {
     const cart = await ensureCart(req.user._id);
     cart.items = cart.items.filter(it=> String(it.product) !== String(productId));
     await cart.save();
-    await cart.populate('items.product');
+    await cart.populate({
+      path: 'items.product',
+      populate: {
+        path: 'merchant',
+        select: 'businessName firstName lastName'
+      }
+    });
     return res.json({ success:true, cart: serialize(cart) })
   }catch(e){
     return res.status(500).json({ success:false, message:'Failed to remove item' })
@@ -131,7 +161,13 @@ exports.merge = async (req, res) => {
     }
     cart.items = Array.from(map.entries()).map(([pid, q])=> ({ product: pid, quantity: q }));
     await cart.save();
-    await cart.populate('items.product');
+    await cart.populate({
+      path: 'items.product',
+      populate: {
+        path: 'merchant',
+        select: 'businessName firstName lastName'
+      }
+    });
     return res.json({ success:true, cart: serialize(cart) })
   }catch(e){
     return res.status(500).json({ success:false, message:'Failed to merge cart' })

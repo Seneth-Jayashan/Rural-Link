@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { get, post } from '../../shared/api.js'
+import { get, post, getImageUrl } from '../../shared/api.js'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -261,7 +261,7 @@ export default function MerchantOrders() {
                         <div className="flex items-center gap-3">
                           {it.product?.images?.[0]?.url ? (
                             <img
-                              src={it.product.images[0].url}
+                              src={getImageUrl(it.product.images[0].url)}
                               alt={it.product.name}
                               className="w-10 h-10 object-cover rounded-lg border"
                             />
@@ -275,7 +275,7 @@ export default function MerchantOrders() {
                         </div>
                         <div className="text-right">
                           <div className="font-semibold text-gray-900 text-sm">
-                            ${it.total?.toFixed?.(2) || (it.price * it.quantity).toFixed?.(2)}
+                            LKR {it.total?.toFixed?.(2) || (it.price * it.quantity).toFixed?.(2)}
                           </div>
                         </div>
                       </div>
@@ -287,7 +287,7 @@ export default function MerchantOrders() {
 
                   <div className="flex items-center justify-between p-3 bg-orange-50 rounded-2xl border border-orange-200 mb-3">
                     <span className="font-semibold text-gray-900 text-sm">Total</span>
-                    <span className="text-lg font-bold text-orange-600">${o.total?.toFixed?.(2) || o.total}</span>
+                    <span className="text-lg font-bold text-orange-600">LKR {o.total?.toFixed?.(2) || o.total}</span>
                   </div>
 
                   <div className="space-y-2">

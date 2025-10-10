@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { get } from '../../shared/api.js'
+import { get, getImageUrl } from '../../shared/api.js'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiEdit2, FiArrowLeft, FiPackage, FiTag, FiDollarSign, FiBox, FiActivity, FiFileText, FiShoppingBag, FiCalendar } from 'react-icons/fi'
@@ -141,7 +141,7 @@ export default function ProductView(){
             >
               {firstImg ? (
                 <img 
-                  src={firstImg.url} 
+                  src={getImageUrl(firstImg.url)} 
                   alt={firstImg.alt||product.name} 
                   className="w-full h-48 sm:h-64 object-cover"
                 />
@@ -190,11 +190,13 @@ export default function ProductView(){
                 <div className="text-xl font-bold text-orange-600">${product.price?.toFixed(2)}</div>
               </div>
 
-              {/* Stock */}
-              <div className="flex-shrink-0 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl p-4 border border-orange-200 min-w-[140px] snap-start">
-                <div className="flex items-center gap-2 mb-2">
-                  <FiBox className="w-4 h-4 text-orange-600" />
-                  <div className="text-sm text-gray-600">Stock</div>
+                {/* Price */}
+                <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FiDollarSign className="w-4 h-4 text-gray-400" />
+                    <div className="text-sm text-gray-600">Price</div>
+                  </div>
+                  <div className="text-xl font-bold text-orange-600">LKR {product.price?.toFixed(2)}</div>
                 </div>
                 <div className={`text-xl font-bold ${
                   product.stock > 10 ? 'text-green-600' : 
@@ -255,7 +257,7 @@ export default function ProductView(){
                       className="flex-shrink-0 w-32 h-32 rounded-2xl border border-orange-200 overflow-hidden bg-gray-100"
                     >
                       <img 
-                        src={image.url} 
+                        src={getImageUrl(image.url)} 
                         alt={image.alt || `${product.name} ${index + 2}`}
                         className="w-full h-full object-cover"
                       />

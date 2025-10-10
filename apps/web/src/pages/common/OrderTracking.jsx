@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
-import { get, post } from '../../shared/api.js'
+import { get, post, getImageUrl } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import OrderChat from './OrderChat.jsx'
 import DeliveryTrackingMap from '../../shared/ui/DeliveryTrackingMap.jsx'
@@ -295,7 +295,7 @@ export default function OrderTracking(){
                     <div className="flex items-center gap-3">
                       {it.product?.images?.[0]?.url ? (
                         <img
-                          src={it.product.images[0].url}
+                          src={getImageUrl(it.product.images[0].url)}
                           alt={it.product.name}
                           className="w-12 h-12 object-cover rounded-xl border"
                         />
@@ -488,7 +488,7 @@ export default function OrderTracking(){
                           <div className="flex items-center gap-3 mb-3">
                             {it.product?.images?.[0]?.url ? (
                               <img
-                                src={it.product.images[0].url}
+                                src={getImageUrl(it.product.images[0].url)}
                                 alt={it.product.name}
                                 className="w-12 h-12 object-cover rounded-xl border"
                               />

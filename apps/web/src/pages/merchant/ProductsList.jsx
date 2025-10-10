@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { get, del } from '../../shared/api.js'
+import { get, del, getImageUrl } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiPlus, FiTrash2, FiEdit2, FiPackage, FiSearch, FiFilter, FiBox, FiDollarSign, FiActivity } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
@@ -221,7 +221,7 @@ export default function ProductsList(){
                     >
                       {firstImg ? (
                         <img 
-                          src={firstImg.url} 
+                          src={getImageUrl(firstImg.url)} 
                           alt={firstImg.alt || p.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -248,8 +248,7 @@ export default function ProductsList(){
                       </h3>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1 text-gray-600">
-                          <FiDollarSign className="w-4 h-4" />
-                          <span className="font-semibold text-gray-900 text-sm">${p.price?.toFixed(2)}</span>
+                          <span className="font-semibold text-gray-900 text-sm">LKR {p.price?.toFixed(2)}</span>
                         </div>
                         {p.category && (
                           <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">

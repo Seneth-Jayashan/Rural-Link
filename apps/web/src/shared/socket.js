@@ -32,5 +32,16 @@ export function sendOrderMessage({ orderId, text, tempId }){
   getSocket().emit('orderMessage', { orderId, text, tempId })
 }
 
+export function joinDeliveryRoom(){
+  getSocket().emit('joinDeliveryRoom')
+}
+
+export function onOrderAccepted(cb){
+  const s = getSocket()
+  const handler = (data) => cb && cb(data)
+  s.on('orderAccepted', handler)
+  return () => s.off('orderAccepted', handler)
+}
+
 
 
