@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+// src/pages/Login.jsx
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { motion } from 'framer-motion'
 import { FiMail, FiLock } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
+import NotificationPopup from '../../components/NotificationPopup'
+import { requestNotificationPermission, listenForMessages, saveTokenToDatabase } from '../../notifications.js'
 
 export default function Login() {
   const { t } = useI18n()
@@ -12,29 +15,35 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { login, user } = useAuth()
+  const [showPopup, setShowPopup] = useState(false)
+  const [nextRoute, setNextRoute] = useState('/')
+  const { login } = useAuth()
   const { notify } = useToast()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'merchant') navigate('/merchant', { replace: true })
-      else if (user.role === 'deliver') navigate('/deliver', { replace: true })
-      else navigate('/', { replace: true })
-    }
-  }, [user, navigate])
-
+  // --- Handle login ---
   async function submit(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
     try {
       const u = await login(email, password)
+      if (!u) throw new Error('Login failed')
+
+      // Save token and user to localStorage
       if (u?.token) localStorage.setItem('token', u.token)
+      localStorage.setItem('user', JSON.stringify(u))
+
       notify({ type: 'success', title: 'Welcome back', message: 'Login successful' })
-      if (u?.role === 'merchant') navigate('/merchant', { replace: true })
-      else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
-      else navigate('/', { replace: true })
+
+      // Store intended navigation path
+      const rolePath =
+        u?.role === 'merchant' ? '/merchant' :
+        u?.role === 'deliver' ? '/deliver' : '/'
+      setNextRoute(rolePath)
+
+      // Show notification popup after login
+      setShowPopup(true)
     } catch (err) {
       setError(err.message)
       notify({ type: 'error', title: 'Login failed', message: err.message })
@@ -43,8 +52,33 @@ export default function Login() {
     }
   }
 
+  // --- Notification handlers ---
+  const handleAllowNotifications = async () => {
+    setShowPopup(false)
+    const token = await requestNotificationPermission()
+    if (token) {
+      const user = JSON.parse(localStorage.getItem('user'))
+      if (user?._id) saveTokenToDatabase(token, user._id)
+      listenForMessages()
+    }
+    navigate(nextRoute, { replace: true })
+  }
+
+  const handleDenyNotifications = () => {
+    setShowPopup(false)
+    navigate(nextRoute, { replace: true })
+  }
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-5 py-10 text-black">
+      {/* Notification popup */}
+      {showPopup && (
+        <NotificationPopup
+          onAllow={handleAllowNotifications}
+          onDeny={handleDenyNotifications}
+        />
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -75,6 +109,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              required
             />
           </div>
 
@@ -86,6 +121,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              required
             />
           </div>
 
@@ -110,10 +146,7 @@ export default function Login() {
 
         {/* Bottom Links */}
         <div className="flex flex-col items-center mt-5">
-          <a
-            href="/forgot-password"
-            className="text-sm text-orange-600 hover:underline"
-          >
+          <a href="/forgot-password" className="text-sm text-orange-600 hover:underline">
             {t('Forgot Password?')}
           </a>
           <p className="text-center text-sm text-gray-600 mt-2">
