@@ -12,7 +12,8 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh flex flex-col font-inter relative">
-      {/* Header */}
+
+    {/* Header */}
       {/* <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -56,24 +57,22 @@ export function AppShell() {
 
           <LanguageSwitcher />
         </nav>
-      </motion.header> */}
+      </motion.header> */}  
 
       {/* Main Content */}
       <main className="flex-1">
         <Outlet />
       </main>
 
-      {/* Bottom Navigation (with black gradient) */}
+      {/* Bottom Navigation */}
       {user && (
         <motion.nav
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
           className="fixed bottom-4 inset-x-4 
-            bg-gradient-to-r from-black/80 via-black/60 to-black/80
-            backdrop-blur-xl rounded-2xl py-3 
-            flex justify-around shadow-[0_4px_30px_rgba(0,0,0,0.6)]
-            border border-white/10"
+            bg-white/90 backdrop-blur-xl rounded-2xl py-3 
+            flex justify-around shadow-lg border border-orange-100"
         >
           {user.role === "customer" && (
             <>
@@ -164,12 +163,18 @@ function NavItem({ to, icon, label, active }) {
       to={to}
       className={`flex flex-col items-center gap-1 text-xs font-medium transition-all duration-200 ${
         active
-          ? "text-[#f97316] scale-110 drop-shadow-[0_0_8px_rgba(249,115,22,0.7)]"
-          : "text-gray-300 hover:text-[#f97316] hover:scale-105"
+          ? "text-orange-600 scale-110"
+          : "text-gray-600 hover:text-orange-500"
       }`}
     >
-      {icon}
-      <span className="tracking-wide">{label}</span>
+      <div className={`p-2 rounded-xl transition-all duration-200 ${
+        active 
+          ? "bg-orange-100 shadow-inner" 
+          : "bg-transparent"
+      }`}>
+        {icon}
+      </div>
+      <span className="font-semibold">{label}</span>
     </Link>
   );
 }
@@ -190,15 +195,15 @@ function LanguageSwitcher() {
       whileHover={{ scale: 1.05 }}
       value={lang}
       onChange={(e) => setLocalLang(e.target.value)}
-      className="bg-transparent text-white text-sm rounded-lg px-2 py-1 focus:outline-none cursor-pointer hover:text-[#f97316] transition-all duration-200"
+      className="bg-white/80 border border-orange-200 text-gray-700 text-sm rounded-xl px-3 py-2 focus:outline-none cursor-pointer focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all duration-200"
     >
-      <option value="en" className="bg-black text-white">
+      <option value="en" className="bg-white text-gray-900">
         EN
       </option>
-      <option value="si" className="bg-black text-white">
+      <option value="si" className="bg-white text-gray-900">
         SI
       </option>
-      <option value="ta" className="bg-black text-white">
+      <option value="ta" className="bg-white text-gray-900">
         TA
       </option>
     </motion.select>
