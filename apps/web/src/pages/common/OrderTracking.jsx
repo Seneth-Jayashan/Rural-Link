@@ -7,6 +7,7 @@ import { generateGhostText, generateSimpleGhostText, generateNextWord } from '..
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiPackage, FiTruck, FiCheck, FiStar, FiMessageSquare, FiClock, FiArrowLeft } from 'react-icons/fi'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function OrderTracking(){
   const { orderId } = useParams()
@@ -263,7 +264,7 @@ export default function OrderTracking(){
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-gray-600 mb-1">{t('Total Amount')}</div>
-                  <div className="text-lg font-bold text-orange-600">${order.total?.toFixed?.(2) || order.total}</div>
+                  <div className="text-lg font-bold text-orange-600">{formatLKR(order.total)}</div>
                 </div>
                 <div>
                   <div className="text-gray-600 mb-1">{t('Items')}</div>
@@ -305,8 +306,8 @@ export default function OrderTracking(){
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-gray-900">${it.total?.toFixed?.(2) || (it.price * it.quantity).toFixed?.(2)}</div>
-                      <div className="text-xs text-gray-500">${it.price?.toFixed(2)} each</div>
+                      <div className="font-semibold text-gray-900">{formatLKR(it.total ?? (it.price * it.quantity))}</div>
+                      <div className="text-xs text-gray-500">{formatLKR(it.price)} each</div>
                     </div>
                   </div>
                 ))}

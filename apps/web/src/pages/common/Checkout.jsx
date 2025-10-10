@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { FiMapPin, FiPhone, FiUser, FiCreditCard, FiMessageSquare, FiArrowLeft, FiCheck } from 'react-icons/fi'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function Checkout(){
   const { items, subtotal, clear } = useCart()
@@ -28,7 +29,7 @@ export default function Checkout(){
   const [saving, setSaving] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('cash')
 
-  const deliveryFee = useMemo(()=> subtotal > 50 ? 0 : 5, [subtotal])
+  const deliveryFee = useMemo(()=> subtotal > 5000 ? 0 : 500, [subtotal])
   const tax = useMemo(()=> subtotal * 0.1, [subtotal])
   const total = useMemo(()=> subtotal + deliveryFee + tax, [subtotal, deliveryFee, tax])
 
@@ -248,34 +249,34 @@ export default function Checkout(){
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">{t('Subtotal')} ({items.length} {t('items')})</span>
-              <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
+              <span className="font-medium text-gray-900">{formatLKR(subtotal)}</span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-gray-600">{t('Delivery')}</span>
               <span className={`font-medium ${deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                {deliveryFee === 0 ? t('FREE') : `$${deliveryFee.toFixed(2)}`}
+                {deliveryFee === 0 ? t('FREE') : formatLKR(deliveryFee)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-gray-600">{t('Tax')}</span>
-              <span className="font-medium text-gray-900">${tax.toFixed(2)}</span>
+              <span className="font-medium text-gray-900">{formatLKR(tax)}</span>
             </div>
             
             <div className="border-t border-gray-200 pt-3 mt-2">
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-gray-900 text-lg">{t('Total')}</span>
-                <span className="font-bold text-xl text-orange-600">${total.toFixed(2)}</span>
+                <span className="font-bold text-xl text-orange-600">{formatLKR(total)}</span>
               </div>
               
-              {subtotal < 50 && (
+              {subtotal < 5000 && (
                 <motion.p 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="text-sm text-orange-600 mt-3 text-center bg-orange-50 py-2 rounded-xl border border-orange-200"
                 >
-                  🚚 {t('Add')} <span className="font-semibold">${(50 - subtotal).toFixed(2)}</span> {t('more for free delivery!')}
+                  🚚 {t('Add')} <span className="font-semibold">{formatLKR(5000 - subtotal)}</span> {t('more for free delivery!')}
                 </motion.p>
               )}
             </div>
@@ -302,7 +303,7 @@ export default function Checkout(){
           ) : (
             <>
               <FiCheck className="w-5 h-5" />
-              {t('Place Order')} - ${total.toFixed(2)}
+              {t('Place Order')} - {formatLKR(total)}
             </>
           )}
         </motion.button>

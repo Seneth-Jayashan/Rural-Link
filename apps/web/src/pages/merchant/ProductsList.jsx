@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function ProductsList(){
   const { t } = useI18n()
@@ -63,7 +64,7 @@ export default function ProductsList(){
                   )}
                   <div>
                     <button className="font-medium text-left hover:underline" onClick={()=>navigate(`/merchant/products/${p._id}`)}>{p.name}</button>
-                    <div className="text-xs text-gray-500">{t('Stock')}: {p.stock} • ${p.price}</div>
+                    <div className="text-xs text-gray-500">{t('Stock')}: {p.stock} • {formatLKR(p.price)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
