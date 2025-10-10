@@ -5,8 +5,10 @@ import { FiSearch, FiPlus, FiShoppingBag, FiStar, FiTruck } from "react-icons/fi
 import { useToast } from "../../shared/ui/Toast.jsx";
 import { Spinner } from "../../shared/ui/Spinner.jsx";
 import { useCart } from "../../shared/CartContext.jsx";
+import { useI18n } from "../../shared/i18n/LanguageContext.jsx";
 
 export default function CustomerHome() {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,18 +45,18 @@ export default function CustomerHome() {
       if (res.offline) {
         notify({
           type: "info",
-          title: "Offline",
-          message: "Order queued and will sync later",
+          title: t("Offline"),
+          message: t("Order queued and will sync later"),
         });
       } else {
         notify({
           type: "success",
-          title: "Order placed",
+          title: t("Order placed"),
           message: `${product.name}`,
         });
       }
     } catch (err) {
-      notify({ type: "error", title: "Failed", message: err.message });
+      notify({ type: "error", title: t("Failed"), message: err.message });
     }
   }
 
@@ -71,8 +73,8 @@ export default function CustomerHome() {
             <FiShoppingBag className="w-6 h-6 text-orange-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Discover Products</h1>
-            <p className="text-gray-600 text-sm mt-1">Find amazing items for your needs</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('Discover Products')}</h1>
+            <p className="text-gray-600 text-sm mt-1">{t('Find amazing items for your needs')}</p>
           </div>
         </div>
 
@@ -87,7 +89,7 @@ export default function CustomerHome() {
             <FiSearch className="text-orange-400 text-lg" />
             <input
               type="text"
-              placeholder="Search products, brands, categories..."
+              placeholder={t('Search products, brands, categories...')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="flex-1 outline-none text-gray-700 placeholder-gray-400 text-sm bg-transparent"
@@ -104,18 +106,18 @@ export default function CustomerHome() {
         >
           <div className="text-center p-3 bg-white/80 rounded-xl border border-orange-100">
             <FiTruck className="w-5 h-5 text-orange-500 mx-auto mb-2" />
-            <div className="text-xs text-gray-600">Free Delivery</div>
-            <div className="text-xs font-semibold text-orange-600">Over $50</div>
+            <div className="text-xs text-gray-600">{t('Free Delivery')}</div>
+            <div className="text-xs font-semibold text-orange-600">{t('Over $50')}</div>
           </div>
           <div className="text-center p-3 bg-white/80 rounded-xl border border-orange-100">
             <FiStar className="w-5 h-5 text-orange-500 mx-auto mb-2" />
-            <div className="text-xs text-gray-600">Premium</div>
-            <div className="text-xs font-semibold text-orange-600">Quality</div>
+            <div className="text-xs text-gray-600">{t('Premium')}</div>
+            <div className="text-xs font-semibold text-orange-600">{t('Quality')}</div>
           </div>
           <div className="text-center p-3 bg-white/80 rounded-xl border border-orange-100">
             <div className="w-5 h-5 text-orange-500 mx-auto mb-2">🛡️</div>
-            <div className="text-xs text-gray-600">Secure</div>
-            <div className="text-xs font-semibold text-orange-600">Payment</div>
+            <div className="text-xs text-gray-600">{t('Secure')}</div>
+            <div className="text-xs font-semibold text-orange-600">{t('Payment')}</div>
           </div>
         </motion.div>
       </motion.div>
@@ -129,7 +131,7 @@ export default function CustomerHome() {
         >
           <div className="text-center">
             <Spinner size={48} className="text-orange-500" />
-            <p className="text-gray-500 text-sm mt-3">Finding amazing products...</p>
+            <p className="text-gray-500 text-sm mt-3">{t('Finding amazing products...')}</p>
           </div>
         </motion.div>
       )}
@@ -143,7 +145,7 @@ export default function CustomerHome() {
         >
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 max-w-md mx-auto">
             <div className="text-red-500 text-lg mb-2">⚠️</div>
-            <div className="text-red-600 font-medium mb-1">Something went wrong</div>
+            <div className="text-red-600 font-medium mb-1">{t('Something went wrong')}</div>
             <div className="text-red-500 text-sm">{error}</div>
           </div>
         </motion.div>
@@ -164,6 +166,7 @@ export default function CustomerHome() {
                 className="flex items-center justify-between mb-6"
               >
                 <h2 className="text-xl font-semibold text-gray-900">
+                  {/* Minimal: leave count message as-is or could add new keys */}
                   Found {products.length} product{products.length !== 1 ? 's' : ''}
                 </h2>
                 {q && (
@@ -171,7 +174,7 @@ export default function CustomerHome() {
                     onClick={() => setQ("")}
                     className="text-sm text-orange-600 hover:text-orange-700 font-medium"
                   >
-                    Clear search
+                    {t('Clear search')}
                   </button>
                 )}
               </motion.div>
@@ -247,8 +250,8 @@ export default function CustomerHome() {
                         }}
                         className="flex items-center gap-2 bg-orange-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300"
                       >
-                        <FiPlus className="w-4 h-4" />
-                        Add
+                          <FiPlus className="w-4 h-4" />
+                          {t('Add')}
                       </motion.button>
                     </div>
                   </div>
@@ -273,16 +276,16 @@ export default function CustomerHome() {
             <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <FiSearch className="w-8 h-8 text-orange-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('No products found')}</h3>
             <p className="text-gray-500 text-sm mb-4">
-              {q ? `No results for "${q}"` : "We couldn't find any products at the moment"}
+              {q ? `${t('No results for')} "${q}"` : t("We couldn't find any products at the moment")}
             </p>
             {q && (
               <button
                 onClick={() => setQ("")}
                 className="px-6 py-2 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
               >
-                Clear Search
+                {t('Clear Search')}
               </button>
             )}
           </div>

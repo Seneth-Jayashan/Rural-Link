@@ -57,7 +57,6 @@ export default function Register() {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         notify({
           type: 'error',
-          title: 'File too large',
           message: 'Please select an image smaller than 5MB.',
         })
         return
@@ -96,11 +95,11 @@ export default function Register() {
 
     // Validate password confirmation
     if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match')
+      setError(t('Passwords do not match'))
       notify({
         type: 'error',
-        title: 'Validation Error',
-        message: 'Passwords do not match',
+        title: t('Validation Error'),
+        message: t('Passwords do not match'),
       })
       setLoading(false)
       return
@@ -108,11 +107,11 @@ export default function Register() {
 
     // Validate password strength
     if (form.password.length < 6) {
-      setError('Password must be at least 6 characters long')
+      setError(t('Password must be at least 6 characters long'))
       notify({
         type: 'error',
-        title: 'Validation Error',
-        message: 'Password must be at least 6 characters long',
+        title: t('Validation Error'),
+        message: t('Password must be at least 6 characters long'),
       })
       setLoading(false)
       return
@@ -120,18 +119,17 @@ export default function Register() {
 
     try {
       await registerUser(form)
-      setMessage('Registered successfully. Please verify your email.')
       notify({
         type: 'success',
-        title: 'Registration complete',
-        message: 'Check your email to verify your account.',
+        title: t('Registration complete'),
+        message: t('Check your email to verify your account.'),
       })
       setTimeout(() => navigate('/login'), 1500)
     } catch (err) {
       setError(err.message)
       notify({
         type: 'error',
-        title: 'Registration failed',
+        title: t('Registration failed'),
         message: err.message,
       })
     } finally {
