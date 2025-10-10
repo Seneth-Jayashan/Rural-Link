@@ -22,7 +22,12 @@ export default function CustomerHome() {
     let mounted = true;
     setLoading(true);
     get(`/api/products/search?q=${encodeURIComponent(q)}`)
-      .then((d) => mounted && setProducts(d.data || []))
+      .then((d) => {
+        if (mounted) {
+          // Backend now filters out products with 0 stock, so we can use the data directly
+          setProducts(d.data || []);
+        }
+      })
       .catch((e) => mounted && setError(e.message))
       .finally(() => mounted && setLoading(false));
     return () => {
@@ -217,6 +222,13 @@ export default function CustomerHome() {
                         {p.merchant.businessName}
                       </div>
                     )}
+
+                    {/* Stock Status Badge - Only show for low stock items */}
+                    {p.stock <= 5 && p.stock > 0 && (
+                      <div className="absolute top-3 right-3 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                        {p.stock <= 3 ? 'Low Stock' : 'Limited'}
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
@@ -224,6 +236,13 @@ export default function CustomerHome() {
                     <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm leading-tight mb-2">
                       {p.name}
                     </h3>
+
+                    {/* Stock Information - Only show for low stock items */}
+                    {p.stock <= 5 && p.stock > 0 && (
+                      <div className="text-xs text-yellow-600 font-medium mb-2">
+                        Only {p.stock} left in stock
+                      </div>
+                    )}
 
                     {/* Price & Add Button */}
                     <div className="flex items-center justify-between mt-4">
