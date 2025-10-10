@@ -8,16 +8,24 @@ export function CartProvider({ children }){
   const [items, setItems] = useState([])
   const { user } = useAuth()
 
+  // Load guest cart from localStorage when there is no authenticated user
   useEffect(()=>{
-    try{
-      const saved = localStorage.getItem('cart')
-      if(saved){ setItems(JSON.parse(saved)) }
-    }catch{}
-  },[])
+    if(!user){
+      try{
+        const saved = localStorage.getItem('cart')
+        setItems(saved ? JSON.parse(saved) : [])
+      }catch{
+        setItems([])
+      }
+    }
+  },[user])
 
+  // Persist cart only for guests; never persist authenticated users' carts to localStorage
   useEffect(()=>{
-    try{ localStorage.setItem('cart', JSON.stringify(items)) }catch{}
-  },[items])
+    if(!user){
+      try{ localStorage.setItem('cart', JSON.stringify(items)) }catch{}
+    }
+  },[items, user])
 
   // Sync with backend when authenticated
   useEffect(()=>{

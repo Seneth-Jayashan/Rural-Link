@@ -7,6 +7,22 @@ const connectDB = async () => {
       useUnifiedTopology: true,
     });
     console.log('✅ Connected to MongoDB');
+    const conn = mongoose.connection;
+    conn.on('error', (err) => {
+      console.error('Mongo connection error event:', err);
+    });
+    conn.on('disconnected', () => {
+      console.warn('Mongo connection disconnected');
+    });
+    conn.on('reconnected', () => {
+      console.log('Mongo connection reconnected');
+    });
+    conn.on('connecting', () => {
+      console.log('Mongo connection connecting...');
+    });
+    conn.on('connected', () => {
+      console.log('Mongo connection connected');
+    });
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
     process.exit(1); 

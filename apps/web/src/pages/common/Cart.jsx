@@ -3,12 +3,15 @@ import { useCart } from '../../shared/CartContext.jsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiTrash2, FiMinus, FiPlus, FiArrowRight, FiShoppingBag } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function Cart() {
   const { items, updateQty, removeItem, clear, subtotal } = useCart()
   const navigate = useNavigate()
+  const { t } = useI18n()
 
-  const deliveryFee = useMemo(() => subtotal > 50 ? 0 : 5, [subtotal])
+  const deliveryFee = useMemo(() => subtotal > 5000 ? 0 : 500, [subtotal])
   const tax = useMemo(() => subtotal * 0.1, [subtotal])
   const total = useMemo(() => subtotal + deliveryFee + tax, [subtotal, deliveryFee, tax])
 
@@ -24,9 +27,9 @@ export default function Cart() {
           <div className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100">
             <FiShoppingBag className="w-6 h-6 text-orange-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Your Cart</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('Your Cart')}</h1>
         </div>
-        <p className="text-gray-600 text-sm">{items.length} item{items.length !== 1 ? 's' : ''} in your cart</p>
+        <p className="text-gray-600 text-sm">{items.length} {items.length !== 1 ? t('items') : t('item')} {t('in your cart')}</p>
       </motion.div>
 
       {items.length === 0 ? (
@@ -38,15 +41,15 @@ export default function Cart() {
           <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-amber-100 rounded-3xl flex items-center justify-center shadow-lg border border-orange-200 mb-6">
             <FiShoppingBag className="w-10 h-10 text-orange-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Your cart feels lonely</h3>
-          <p className="text-gray-500 text-sm mb-6">Add some amazing products to get started</p>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('Your cart feels lonely')}</h3>
+          <p className="text-gray-500 text-sm mb-6">{t('Add some amazing products to get started')}</p>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="px-6 py-3 bg-orange-500 text-white rounded-xl font-medium shadow-lg hover:bg-orange-600 hover:shadow-xl transition-all"
             onClick={() => navigate('/')}
           >
-            Start Shopping
+            {t('Start Shopping')}
           </motion.button>
         </motion.div>
       ) : (
@@ -82,7 +85,7 @@ export default function Cart() {
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
-                    <p className="text-orange-600 font-semibold text-lg">${product.price}</p>
+                    <p className="text-orange-600 font-semibold text-lg">{formatLKR(product.price)}</p>
                   </div>
 
                   {/* Quantity Controls */}
@@ -127,25 +130,25 @@ export default function Cart() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-md border border-orange-100 p-6 space-y-3"
           >
-            <h3 className="font-semibold text-gray-900 mb-2 text-lg border-b border-gray-200 pb-2">Order Summary</h3>
+            <h3 className="font-semibold text-gray-900 mb-2 text-lg border-b border-gray-200 pb-2">{t('Order Summary')}</h3>
             
             <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
+              <span className="text-gray-600">{t('Subtotal')}</span>
+              <span className="font-medium text-gray-900">{formatLKR(subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Delivery</span>
+              <span className="text-gray-600">{t('Delivery')}</span>
               <span className={`font-medium ${deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
+                {deliveryFee === 0 ? t('FREE') : formatLKR(deliveryFee)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Tax</span>
-              <span className="font-medium text-gray-900">${tax.toFixed(2)}</span>
+              <span className="text-gray-600">{t('Tax')}</span>
+              <span className="font-medium text-gray-900">{formatLKR(tax)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-gray-200">
-              <span className="font-semibold text-gray-900">Total</span>
-              <span className="font-bold text-orange-600">${total.toFixed(2)}</span>
+              <span className="font-semibold text-gray-900">{t('Total')}</span>
+              <span className="font-bold text-orange-600">{formatLKR(total)}</span>
             </div>
           </motion.div>
 
@@ -161,7 +164,7 @@ export default function Cart() {
               className="flex-1 px-6 py-3 border-2 border-orange-300 text-orange-700 font-semibold rounded-xl hover:border-orange-400 transition-all shadow-sm"
               onClick={clear}
             >
-              Clear Cart
+              {t('Clear Cart')}
             </motion.button>
 
             <motion.button
@@ -170,7 +173,7 @@ export default function Cart() {
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all shadow-md"
               onClick={() => navigate('/checkout')}
             >
-              Proceed to Checkout <FiArrowRight className="w-4 h-4" />
+              {t('Proceed to Checkout')} <FiArrowRight className="w-4 h-4" />
             </motion.button>
           </motion.div>
         </div>

@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { get } from '../../shared/api.js'
 import { getSocket, authenticate, joinOrder, onOrderMessage, sendOrderMessage } from '../../shared/socket.js'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 
 export default function OrderChat({ orderId, meId }){
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const listRef = useRef(null)
+  const { t } = useI18n()
 
   useEffect(()=>{ getSocket(); authenticate() },[])
 
@@ -68,15 +70,15 @@ export default function OrderChat({ orderId, meId }){
 
   return (
     <div className="border rounded p-2">
-      <div className="font-medium mb-1">Chat</div>
+      <div className="font-medium mb-1">{t('Chat')}</div>
       <div ref={listRef} className="h-40 overflow-auto border p-2 space-y-1 bg-white">
         {loading ? (
           <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-sm">Loading messages...</div>
+            <div className="text-sm">{t('Loading messages...')}</div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-sm">No messages yet</div>
+            <div className="text-sm">{t('No messages yet')}</div>
           </div>
         ) : (
           messages.map((m)=>{
@@ -103,9 +105,9 @@ export default function OrderChat({ orderId, meId }){
           value={input} 
           onChange={(e)=>setInput(e.target.value)} 
           onKeyPress={(e)=> e.key === 'Enter' && send()}
-          placeholder="Type a message" 
+          placeholder={t('Type a message')} 
         />
-        <button className="bg-blue-600 text-white px-3 py-1" onClick={send}>Send</button>
+        <button className="bg-blue-600 text-white px-3 py-1" onClick={send}>{t('Send')}</button>
       </div>
     </div>
   )
