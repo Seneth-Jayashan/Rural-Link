@@ -141,8 +141,17 @@ app.use(cookieParser());
 const path = require('path');
 app.use('/uplod', express.static(path.join(__dirname, 'uplod')));
 
-// Basic rate limiter
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+// Basic rate limiter (JSON responses + relaxed limit)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+  handler: (req, res /*, next, options*/) => {
+    res.status(429).json({ success: false, message: 'Too many requests, please try again later.' })
+  }
+});
 app.use('/api/', limiter);
 
 // API Routes
