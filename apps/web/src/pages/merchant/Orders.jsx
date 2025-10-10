@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { get, post } from '../../shared/api.js'
 import { useToast } from '../../shared/ui/Toast.jsx'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 
 export default function MerchantOrders(){
   const { notify } = useToast()
+  const { t } = useI18n()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('pending')
@@ -45,21 +47,21 @@ export default function MerchantOrders(){
   return (
     <div className="p-3 pb-16">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-lg font-semibold text-black">Orders</h1>
+        <h1 className="text-lg font-semibold text-black">{t('Orders')}</h1>
         <select className="border rounded p-2 text-sm" value={status} onChange={e=>{ setPage(1); setStatus(e.target.value) }}>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="preparing">Preparing</option>
-          <option value="ready">Ready</option>
-          <option value="cancelled">Cancelled</option>
-          <option value="delivered">Delivered</option>
+          <option value="pending">{t('Pending')}</option>
+          <option value="confirmed">{t('Confirmed')}</option>
+          <option value="preparing">{t('Preparing')}</option>
+          <option value="ready">{t('Ready')}</option>
+          <option value="cancelled">{t('Cancelled')}</option>
+          <option value="delivered">{t('Delivered')}</option>
         </select>
       </div>
 
       {loading && <div>Loading...</div>}
 
       {!loading && orders.length === 0 && (
-        <div className="text-gray-600">No orders</div>
+        <div className="text-gray-600">{t('No orders')}</div>
       )}
 
       <div className="space-y-3">
@@ -82,22 +84,22 @@ export default function MerchantOrders(){
             {o.status === 'pending' && (
               <div className="mt-3 space-y-2">
                 <div className="flex gap-2">
-                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-green-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'confirmed')}>Accept</button>
-                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-red-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'cancelled')}>Reject</button>
+                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-green-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'confirmed')}>{t('Accept')}</button>
+                  <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-red-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'cancelled')}>{t('Reject')}</button>
                 </div>
-                <input value={rejectReason} onChange={e=>setRejectReason(e.target.value)} placeholder="Reason for rejection" className="w-full border rounded p-2 text-sm" />
+                <input value={rejectReason} onChange={e=>setRejectReason(e.target.value)} placeholder={t('Reason for rejection')} className="w-full border rounded p-2 text-sm" />
               </div>
             )}
 
             {o.status === 'confirmed' && (
               <div className="mt-3 flex gap-2">
-                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-blue-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'preparing')}>Start Preparing</button>
+                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-blue-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'preparing')}>{t('Start Preparing')}</button>
               </div>
             )}
 
             {o.status === 'preparing' && (
               <div className="mt-3 flex gap-2">
-                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-indigo-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'ready')}>Mark Ready</button>
+                <button disabled={busyId===o._id} className="px-3 py-2 rounded bg-indigo-600 text-white text-sm" onClick={()=>updateStatus(o._id, 'ready')}>{t('Mark Ready')}</button>
               </div>
             )}
           </div>

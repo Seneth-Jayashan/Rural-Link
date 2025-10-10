@@ -4,8 +4,10 @@ import { motion } from 'framer-motion'
 import { FiPlus, FiImage, FiX } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useNavigate } from 'react-router-dom'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 
 export default function ProductCreate(){
+  const { t } = useI18n()
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('')
@@ -62,51 +64,51 @@ export default function ProductCreate(){
 
   return (
     <div className="p-3 pb-16">
-      <h1 className="text-lg font-semibold mb-3 text-black">Add Product</h1>
+      <h1 className="text-lg font-semibold mb-3 text-black">{t('Add Product')}</h1>
 
       <form onSubmit={addProduct} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-black mb-1">Name</label>
-            <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Product name" value={name} onChange={e=>setName(e.target.value)} />
+            <label className="block text-sm font-medium text-black mb-1">{t('Name')}</label>
+            <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder={t('Product name')} value={name} onChange={e=>setName(e.target.value)} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black mb-1">Category</label>
+            <label className="block text-sm font-medium text-black mb-1">{t('Category')}</label>
             <select className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black focus:outline-none focus:ring-2 focus:ring-orange-400" value={category} onChange={e=>setCategory(e.target.value)}>
-              <option value="food">Food</option>
-              <option value="groceries">Groceries</option>
-              <option value="pharmacy">Pharmacy</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="books">Books</option>
-              <option value="other">Other</option>
+              <option value="food">{t('Food')}</option>
+              <option value="groceries">{t('Groceries')}</option>
+              <option value="pharmacy">{t('Pharmacy')}</option>
+              <option value="electronics">{t('Electronics')}</option>
+              <option value="clothing">{t('Clothing')}</option>
+              <option value="books">{t('Books')}</option>
+              <option value="other">{t('Other')}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3 col-span-2">
             <div>
-              <label className="block text-sm font-medium text-black mb-1">Price</label>
-              <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="0.00" inputMode="decimal" value={price} onChange={e=>setPrice(e.target.value)} />
+              <label className="block text-sm font-medium text-black mb-1">{t('Price')}</label>
+              <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder={t('0.00')} inputMode="decimal" value={price} onChange={e=>setPrice(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-black mb-1">Stock</label>
-              <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="0" inputMode="numeric" value={stock} onChange={e=>setStock(e.target.value)} />
+              <label className="block text-sm font-medium text-black mb-1">{t('Stock')}</label>
+              <input className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder={t('0')} inputMode="numeric" value={stock} onChange={e=>setStock(e.target.value)} />
             </div>
           </div>
 
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-black mb-1">Description</label>
-            <textarea rows={4} className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Describe the product" value={desc} onChange={e=>setDesc(e.target.value)} />
+            <label className="block text-sm font-medium text-black mb-1">{t('Description')}</label>
+            <textarea rows={4} className="w-full border border-gray-300 rounded-lg p-3 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder={t('Describe the product')} value={desc} onChange={e=>setDesc(e.target.value)} />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-black mb-2">Product Photo</label>
+          <label className="block text-sm font-medium text-black mb-2">{t('Product Photo')}</label>
           {!imageDataUrl ? (
             <button type="button" onClick={onPickImage} className="w-full border-2 border-dashed border-gray-300 hover:border-orange-400 rounded-xl p-6 bg-white text-gray-600 flex flex-col items-center justify-center gap-2 transition">
               <FiImage className="text-black" />
-              <span className="text-sm">Tap to upload image (PNG, JPG, WEBP, max 2MB)</span>
+              <span className="text-sm">{t('Tap to upload image (PNG, JPG, WEBP, max 2MB)')}</span>
             </button>
           ) : (
             <div className="relative">
@@ -121,7 +123,7 @@ export default function ProductCreate(){
         </div>
 
         <motion.button whileTap={{ scale:0.98 }} disabled={saving || !name || !price || !stock} className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-xl p-3 font-semibold disabled:opacity-60">
-          <FiPlus /> {saving ? 'Saving...' : 'Add Product'}
+          <FiPlus /> {saving ? t('Saving...') : t('Add Product')}
         </motion.button>
       </form>
     </div>

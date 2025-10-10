@@ -4,8 +4,10 @@ import { motion } from 'framer-motion'
 import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import OrderChat from '../common/OrderChat.jsx'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 
 export default function DeliveryDashboard(){
+  const { t } = useI18n()
   const [available, setAvailable] = useState([])
   const [assigned, setAssigned] = useState([])
 
@@ -47,23 +49,23 @@ export default function DeliveryDashboard(){
 
   return (
     <div className="p-3 pb-16">
-      <h1 className="text-lg font-semibold mb-3">Deliveries</h1>
+      <h1 className="text-lg font-semibold mb-3">{t('Deliveries')}</h1>
       <div className="space-y-2">
         {available.map(o=> (
           <motion.div key={o._id} className="border rounded p-2" initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}>
             <div className="font-medium">Order {o.orderNumber}</div>
-            <div className="text-xs text-gray-500 flex items-center gap-2"><FiMapPin /> Items: {o.items?.length||0}</div>
+            <div className="text-xs text-gray-500 flex items-center gap-2"><FiMapPin /> {t('Items')}: {o.items?.length||0}</div>
             <div className="mt-2 flex items-center gap-2">
-              <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-green-600 text-white rounded px-3 py-1" onClick={()=>accept(o)}><FiTruck /> Accept</motion.button>
+              <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-green-600 text-white rounded px-3 py-1" onClick={()=>accept(o)}><FiTruck /> {t('Accept')}</motion.button>
               <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-red-600 text-white rounded px-3 py-1" onClick={()=>decline(o)}>
-                Decline
+                {t('Decline')}
               </motion.button>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <h2 className="text-lg font-semibold mt-6 mb-2">My Deliveries</h2>
+      <h2 className="text-lg font-semibold mt-6 mb-2">{t('My Deliveries')}</h2>
       <div className="space-y-2">
         {assigned.map(o=> (
           <motion.div key={o._id} className="border rounded p-3" initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}>
@@ -73,32 +75,32 @@ export default function DeliveryDashboard(){
             </div>
             <div className="mt-1 text-sm text-gray-700">
               <div className="flex items-center gap-2"><FiUser /> {o.customer?.firstName} {o.customer?.lastName}</div>
-              <div className="flex items-center gap-2"><FiPhone /> {o.customer?.phone || 'N/A'}</div>
+              <div className="flex items-center gap-2"><FiPhone /> {o.customer?.phone || t('N/A')}</div>
               <div className="flex items-center gap-2"><FiMapPin /> {o.deliveryAddress?.street}, {o.deliveryAddress?.city}</div>
             </div>
             <div className="mt-2 text-xs text-gray-600">Items: {o.items?.map((it,idx)=> `${it.product?.name || 'Item'} x${it.quantity}`).join(', ')}</div>
             <div className="mt-3 flex items-center gap-2 flex-wrap">
               {o.status === 'picked_up' && (
                 <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-blue-600 text-white rounded px-3 py-1" onClick={()=>startDelivery(o)}>
-                  <FiTruck /> Start Delivery
+                  <FiTruck /> {t('Start Delivery')}
                 </motion.button>
               )}
               {o.status === 'in_transit' && (
                 <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-green-600 text-white rounded px-3 py-1" onClick={()=>completeDelivery(o)}>
-                  <FiCheckCircle /> Mark Delivered
+                  <FiCheckCircle /> {t('Mark Delivered')}
                 </motion.button>
               )}
             </div>
             {['picked_up','in_transit'].includes(o.status) && o.status !== 'delivered' && (
               <div className="mt-3">
-                <div className="font-medium mb-1">Chat with customer</div>
+                <div className="font-medium mb-1">{t('Chat with customer')}</div>
                 <OrderChat orderId={o._id} meId={o.deliveryPerson} />
               </div>
             )}
           </motion.div>
         ))}
         {assigned.length === 0 && (
-          <div className="text-gray-600 text-sm">No assigned deliveries</div>
+          <div className="text-gray-600 text-sm">{t('No assigned deliveries')}</div>
         )}
       </div>
 

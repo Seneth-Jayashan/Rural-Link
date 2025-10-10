@@ -4,6 +4,7 @@ import { Spinner } from '../../shared/ui/Spinner.jsx'
 import { getSocket, authenticate, onOrderMessage } from '../../shared/socket.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiPackage, FiTruck, FiCheck, FiMessageSquare, FiClock, FiShoppingBag, FiUser } from 'react-icons/fi'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 
 function Timeline({ status, history }){
   const steps = [
@@ -67,6 +68,7 @@ function Timeline({ status, history }){
 }
 
 export default function TrackAll(){
+  const { t } = useI18n()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -138,7 +140,7 @@ export default function TrackAll(){
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4">
       <div className="max-w-4xl mx-auto text-center py-12">
         <Spinner size={48} className="text-orange-500 mx-auto mb-4" />
-        <p className="text-gray-600">Loading your orders...</p>
+        <p className="text-gray-600">{t('Loading your orders...')}</p>
       </div>
     </div>
   )
@@ -171,8 +173,8 @@ export default function TrackAll(){
             <FiShoppingBag className="w-6 h-6 text-orange-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Your Orders</h1>
-            <p className="text-gray-600 text-sm mt-1">Track all your orders in one place</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('Your Orders')}</h1>
+            <p className="text-gray-600 text-sm mt-1">{t('Track all your orders in one place')}</p>
           </div>
         </div>
       </motion.div>
@@ -187,13 +189,13 @@ export default function TrackAll(){
             <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <FiPackage className="w-8 h-8 text-orange-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
-            <p className="text-gray-500 text-sm mb-4">Your order history will appear here</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('No orders yet')}</h3>
+            <p className="text-gray-500 text-sm mb-4">{t('Your order history will appear here')}</p>
             <a 
               href="/"
               className="inline-block px-6 py-2 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors"
             >
-              Start Shopping
+              {t('Start Shopping')}
             </a>
           </motion.div>
         )}
@@ -224,15 +226,15 @@ export default function TrackAll(){
                 {/* Order Summary */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="text-center p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
-                    <div className="text-gray-600 text-sm mb-1">Total Amount</div>
+                    <div className="text-gray-600 text-sm mb-1">{t('Total Amount')}</div>
                     <div className="text-lg font-bold text-orange-600">${o.total?.toFixed?.(2) || o.total}</div>
                   </div>
                   <div className="text-center p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
-                    <div className="text-gray-600 text-sm mb-1">Items</div>
+                    <div className="text-gray-600 text-sm mb-1">{t('Items')}</div>
                     <div className="text-lg font-bold text-gray-900">{o.items?.length || 0}</div>
                   </div>
                   <div className="text-center p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
-                    <div className="text-gray-600 text-sm mb-1">Order Status</div>
+                    <div className="text-gray-600 text-sm mb-1">{t('Order Status')}</div>
                     <div className="text-lg font-bold text-gray-900 capitalize">{o.status.replace('_', ' ')}</div>
                   </div>
                 </div>
@@ -245,7 +247,7 @@ export default function TrackAll(){
                     </div>
                     <div>
                       <div className="font-medium text-gray-900 text-sm">
-                        Courier: {o.deliveryPerson?.firstName} {o.deliveryPerson?.lastName}
+                        {t('Courier')}: {o.deliveryPerson?.firstName} {o.deliveryPerson?.lastName}
                       </div>
                       {o.deliveryPerson?.phone && (
                         <div className="text-xs text-gray-600">{o.deliveryPerson.phone}</div>
@@ -260,7 +262,7 @@ export default function TrackAll(){
                     <div className="p-2 bg-orange-100 rounded-xl">
                       <FiClock className="w-4 h-4 text-orange-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">Order Progress</h3>
+                    <h3 className="font-semibold text-gray-900">{t('Order Progress')}</h3>
                   </div>
                   <Timeline status={o.status} history={o.trackingHistory} />
                 </div>
@@ -276,7 +278,7 @@ export default function TrackAll(){
                       className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors shadow-md hover:shadow-lg"
                     >
                       <FiCheck className="w-4 h-4" />
-                      Leave Review
+                      {t('Leave Review')}
                     </motion.a>
                   )}
 
@@ -294,7 +296,7 @@ export default function TrackAll(){
                       }`}
                     >
                       <FiMessageSquare className="w-4 h-4" />
-                      View Chat
+                      {t('View Chat')}
                       {newMessages[o._id] && (
                         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg">
                           {newMessages[o._id]}
@@ -311,14 +313,14 @@ export default function TrackAll(){
                     className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
                   >
                     <FiPackage className="w-4 h-4" />
-                    View Details
+                    {t('View Details')}
                   </motion.a>
                 </div>
 
                 {/* Order Items Preview */}
                 {o.items && o.items.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h4 className="font-medium text-gray-900 text-sm mb-2">Items in this order:</h4>
+                    <h4 className="font-medium text-gray-900 text-sm mb-2">{t('Items in this order:')}</h4>
                     <div className="flex flex-wrap gap-2">
                       {o.items.slice(0, 3).map((item, idx) => (
                         <div key={idx} className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-xl border border-gray-200">
@@ -339,7 +341,7 @@ export default function TrackAll(){
                       {o.items.length > 3 && (
                         <div className="px-3 py-1 bg-gray-100 rounded-xl border border-gray-300">
                           <span className="text-xs text-gray-600 font-medium">
-                            +{o.items.length - 3} more
+                            +{o.items.length - 3} {t('more')}
                           </span>
                         </div>
                       )}
