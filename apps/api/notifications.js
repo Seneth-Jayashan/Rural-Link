@@ -1,5 +1,6 @@
 // server/notifications.js
-const admin = require('./firebaseAdmin')
+// Use 'import' since firebaseAdmin.js uses 'export default admin;'
+import admin from './firebaseAdmin.js';
 
 /**
  * Send push notification to a user
@@ -8,21 +9,19 @@ const admin = require('./firebaseAdmin')
  * @param {string} body - Notification body
  * @param {object} data - Optional additional data
  */
-async function sendNotification(token, title, body, data = {}) {
-  if (!token) return
+export async function sendNotification(token, title, body, data = {}) {
+  if (!token) return;
 
   const message = {
     token,
     notification: { title, body },
     data: { ...data },
-  }
+  };
 
   try {
-    const response = await admin.messaging().send(message)
-    console.log('Notification sent:', response)
+    const response = await admin.messaging().send(message);
+    console.log('Notification sent:', response);
   } catch (error) {
-    console.error('Error sending notification:', error)
+    console.error('Error sending notification:', error);
   }
 }
-
-module.exports = { sendNotification }
