@@ -1,9 +1,11 @@
-// server/firebaseAdmin.js
+require('dotenv').config()
 const admin = require('firebase-admin')
-const serviceAccount = require('./serviceAccountKey.json') // your Firebase service account JSON
+
+// Convert the literal \n in private_key to actual newlines
+const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON.replace(/\\n/g, '\n')
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(JSON.parse(serviceAccountJson))
 })
 
 module.exports = admin
