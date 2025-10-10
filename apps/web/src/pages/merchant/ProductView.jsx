@@ -23,9 +23,7 @@ export default function ProductView(){
     load()
   },[id])
 
-  const firstImg = Array.isArray(product?.images) && product.images.length ? product.images[0] : null
-
-  const firstImg = Array.isArray(product.images) && product.images.length ? product.images[0] : null
+const firstImg = Array.isArray(product.images) && product.images.length ? product.images[0] : null
 
   if(loading) return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4">
