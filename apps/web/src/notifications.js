@@ -33,3 +33,17 @@ export function listenForMessages() {
     new Notification(title, { body });
   });
 }
+
+// Save token to backend
+export async function saveTokenToDatabase(token, userId) {
+  try {
+    await fetch("/api/auth/update-fcm-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, userId }),
+    });
+    console.log("Token saved to database.");
+  } catch (err) {
+    console.error("Error saving token:", err);
+  }
+}

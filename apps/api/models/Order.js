@@ -96,6 +96,7 @@ const orderSchema = new mongoose.Schema({
       latitude: Number,
       longitude: Number
     },
+    fullAddress: String,
     instructions: String
   },
   estimatedDeliveryTime: Date,

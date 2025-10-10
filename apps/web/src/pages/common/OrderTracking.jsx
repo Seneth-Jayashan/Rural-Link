@@ -3,13 +3,17 @@ import { useParams, useLocation } from 'react-router-dom'
 import { get, post } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import OrderChat from './OrderChat.jsx'
+import DeliveryTrackingMap from '../../shared/ui/DeliveryTrackingMap.jsx'
 import { generateGhostText, generateSimpleGhostText, generateNextWord } from '../../shared/huggingFaceApi.js'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiPackage, FiTruck, FiCheck, FiStar, FiMessageSquare, FiClock, FiArrowLeft } from 'react-icons/fi'
+import { FiPackage, FiTruck, FiCheck, FiStar, FiMessageSquare, FiClock, FiArrowLeft, FiMap } from 'react-icons/fi'
+import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function OrderTracking(){
   const { orderId } = useParams()
   const location = useLocation()
+  const { t } = useI18n()
   const [order, setOrder] = useState(null)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -19,6 +23,7 @@ export default function OrderTracking(){
   const [ghostText, setGhostText] = useState({}) // productId -> ghost text
   const [generatingGhost, setGeneratingGhost] = useState({}) // productId -> loading state
   const [typingTimeout, setTypingTimeout] = useState({}) // productId -> timeout ID
+  const [showTrackingMap, setShowTrackingMap] = useState(false)
 
   useEffect(()=>{
     const path = orderId === 'last' ? '/api/orders/last' : `/api/orders/${orderId}`
@@ -211,8 +216,8 @@ export default function OrderTracking(){
             <FiArrowLeft className="w-5 h-5 text-orange-600" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Order Tracking</h1>
-            <p className="text-gray-600 text-sm mt-1">Track your order in real-time</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('Order Tracking')}</h1>
+            <p className="text-gray-600 text-sm mt-1">{t('Track your order in real-time')}</p>
           </div>
         </div>
       </motion.div>
@@ -250,8 +255,8 @@ export default function OrderTracking(){
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Order #{order.orderNumber}</h2>
-                  <p className="text-gray-600 text-sm">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
+                  <h2 className="text-xl font-bold text-gray-900">{t('Order')} #{order.orderNumber}</h2>
+                  <p className="text-gray-600 text-sm">{t('Placed on')} {new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className={`px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(order.status)}`}>
                   {order.status.replace('_', ' ').toUpperCase()}
@@ -260,11 +265,11 @@ export default function OrderTracking(){
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <div className="text-gray-600 mb-1">Total Amount</div>
-                  <div className="text-lg font-bold text-orange-600">${order.total?.toFixed?.(2) || order.total}</div>
+                  <div className="text-gray-600 mb-1">{t('Total Amount')}</div>
+                  <div className="text-lg font-bold text-orange-600">{formatLKR(order.total)}</div>
                 </div>
                 <div>
-                  <div className="text-gray-600 mb-1">Items</div>
+                  <div className="text-gray-600 mb-1">{t('Items')}</div>
                   <div className="font-medium text-gray-900">{order.items?.length || 0} items</div>
                 </div>
               </div>
@@ -281,7 +286,7 @@ export default function OrderTracking(){
                 <div className="p-2 bg-orange-100 rounded-xl">
                   <FiPackage className="w-4 h-4 text-orange-600" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Order Items</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{t('Order Items')}</h2>
               </div>
 
               <div className="space-y-3">
@@ -303,8 +308,8 @@ export default function OrderTracking(){
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-gray-900">${it.total?.toFixed?.(2) || (it.price * it.quantity).toFixed?.(2)}</div>
-                      <div className="text-xs text-gray-500">${it.price?.toFixed(2)} each</div>
+                      <div className="font-semibold text-gray-900">{formatLKR(it.total ?? (it.price * it.quantity))}</div>
+                      <div className="text-xs text-gray-500">{formatLKR(it.price)} each</div>
                     </div>
                   </div>
                 ))}
@@ -322,7 +327,7 @@ export default function OrderTracking(){
                 <div className="p-2 bg-orange-100 rounded-xl">
                   <FiClock className="w-4 h-4 text-orange-600" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Order Progress</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{t('Order Progress')}</h2>
               </div>
 
               {/* Progress Steps */}
@@ -387,19 +392,70 @@ export default function OrderTracking(){
               })()}
             </motion.div>
 
-            {/* Chat Section */}
-            {order.deliveryPerson?._id && ['picked_up','in_transit'].includes(order.status) && order.status !== 'delivered' && (
+            {/* Delivery Tracking Map */}
+            {order.deliveryAddress?.coordinates && ['picked_up','in_transit'].includes(order.status) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
                 className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6"
               >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-orange-100 rounded-xl">
+                      <FiMap className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('Live Delivery Tracking')}</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowTrackingMap(!showTrackingMap)}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors flex items-center gap-2"
+                  >
+                    <FiMap className="w-4 h-4" />
+                    {showTrackingMap ? t('Hide Map') : t('Show Map')}
+                  </button>
+                </div>
+                
+                {showTrackingMap && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4"
+                  >
+                    <DeliveryTrackingMap
+                      orderId={order._id}
+                      customerLocation={{
+                        latitude: order.deliveryAddress.coordinates.latitude,
+                        longitude: order.deliveryAddress.coordinates.longitude,
+                        address: order.deliveryAddress.fullAddress || `${order.deliveryAddress.street}, ${order.deliveryAddress.city}`
+                      }}
+                      restaurantLocation={{
+                        latitude: order.merchant?.location?.latitude || 6.9271,
+                        longitude: order.merchant?.location?.longitude || 79.8612,
+                        name: order.merchant?.businessName || 'Restaurant'
+                      }}
+                      deliveryPerson={order.deliveryPerson}
+                      status={order.status}
+                    />
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Chat Section */}
+            {order.deliveryPerson?._id && ['picked_up','in_transit'].includes(order.status) && order.status !== 'delivered' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6"
+              >
                 <div className="flex items-center gap-2 mb-4">
                   <div className="p-2 bg-orange-100 rounded-xl">
                     <FiMessageSquare className="w-4 h-4 text-orange-600" />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900">Chat with Courier</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('Chat with Courier')}</h2>
                 </div>
                 <OrderChat orderId={order._id} meId={order.customer?._id} />
               </motion.div>
@@ -421,7 +477,7 @@ export default function OrderTracking(){
                     <div className="p-2 bg-orange-100 rounded-xl">
                       <FiStar className="w-4 h-4 text-orange-600" />
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Rate Your Products</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">{t('Rate Your Products')}</h2>
                   </div>
 
                   <div className="space-y-4">
@@ -446,7 +502,7 @@ export default function OrderTracking(){
                             <div className="space-y-3">
                               {/* Rating Stars */}
                               <div className="flex items-center gap-1">
-                                <span className="text-sm text-gray-600 mr-2">Rating:</span>
+                              <span className="text-sm text-gray-600 mr-2">{t('Rating:')}</span>
                                 {[1,2,3,4,5].map(st=> (
                                   <motion.button
                                     key={st}
@@ -471,7 +527,7 @@ export default function OrderTracking(){
                                   <textarea 
                                     className="w-full border border-gray-200 rounded-2xl p-3 text-sm bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none resize-none"
                                     rows={3}
-                                    placeholder="Share your experience with this product... (optional)"
+                                    placeholder={t('Share your experience with this product... (optional)')}
                                     value={productReviews[pid]?.comment||''}
                                     onChange={(e)=> handleProductTextChange(pid, it.product?.name || 'product', e.target.value)}
                                     onKeyDown={(e)=> handleKeyPress(e, pid, true)}
@@ -504,7 +560,7 @@ export default function OrderTracking(){
                                       className="px-3 py-1.5 text-xs bg-orange-100 text-orange-700 rounded-full border border-orange-300 hover:bg-orange-200 active:bg-orange-300 transition-colors"
                                       onClick={() => acceptWordSuggestion(pid, true)}
                                     >
-                                      ✓ Accept "{ghostText[pid]}"
+                                      ✓ {t('Accept')} "{ghostText[pid]}"
                                     </motion.button>
                                     <motion.button 
                                       whileHover={{ scale: 1.05 }}
@@ -513,7 +569,7 @@ export default function OrderTracking(){
                                       className="px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full border border-gray-300 hover:bg-gray-200 active:bg-gray-300 transition-colors"
                                       onClick={() => setGhostText(prev => ({ ...prev, [pid]: null }))}
                                     >
-                                      ✕ Dismiss
+                                      ✕ {t('Dismiss')}
                                     </motion.button>
                                   </div>
                                 )}
@@ -561,7 +617,7 @@ export default function OrderTracking(){
                                     onClick={() => setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: ghostText[pid] }}))}
                                   >
                                     <FiCheck className="w-4 h-4" />
-                                    Use Full Suggestion
+                                    {t('Use Full Suggestion')}
                                   </motion.button>
                                 )}
                               </div>
@@ -597,7 +653,7 @@ export default function OrderTracking(){
                                     Submitting...
                                   </div>
                                 ) : (
-                                  'Submit Review'
+                                  t('Submit Review')
                                 )}
                               </motion.button>
                             </div>
@@ -606,8 +662,8 @@ export default function OrderTracking(){
                               <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <FiCheck className="w-6 h-6" />
                               </div>
-                              <div className="text-green-700 font-medium">Thank you for your review!</div>
-                              <div className="text-green-600 text-sm">Your feedback helps us improve</div>
+                              <div className="text-green-700 font-medium">{t('Thank you for your review!')}</div>
+                              <div className="text-green-600 text-sm">{t('Your feedback helps us improve')}</div>
                             </div>
                           )}
                         </div>
@@ -628,14 +684,14 @@ export default function OrderTracking(){
                       <div className="p-2 bg-orange-100 rounded-xl">
                         <FiTruck className="w-4 h-4 text-orange-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Rate Your Delivery</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('Rate Your Delivery')}</h2>
                     </div>
 
                     {!reviewed['delivery'] ? (
                       <div className="space-y-4">
                         {/* Driver Rating */}
                         <div className="flex items-center gap-1">
-                          <span className="text-sm text-gray-600 mr-2">Driver Rating:</span>
+                          <span className="text-sm text-gray-600 mr-2">{t('Driver Rating:')}</span>
                           {[1,2,3,4,5].map(st=> (
                             <motion.button
                               key={st}
@@ -657,10 +713,10 @@ export default function OrderTracking(){
                         {/* Driver Comment */}
                         <div className="relative">
                           <div className="relative">
-                            <textarea 
+                          <textarea 
                               className="w-full border border-gray-200 rounded-2xl p-3 text-sm bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none resize-none"
                               rows={3}
-                              placeholder="How was your delivery experience? (optional)"
+                            placeholder={t('How was your delivery experience? (optional)')}
                               value={driverReview.comment}
                               onChange={(e)=> handleDeliveryTextChange(e.target.value)}
                               onKeyDown={(e)=> handleKeyPress(e, 'delivery', false)}
@@ -693,7 +749,7 @@ export default function OrderTracking(){
                                 className="px-3 py-1.5 text-xs bg-orange-100 text-orange-700 rounded-full border border-orange-300 hover:bg-orange-200 active:bg-orange-300 transition-colors"
                                 onClick={() => acceptWordSuggestion('delivery', false)}
                               >
-                                ✓ Accept "{ghostText['delivery']}"
+                                ✓ {t('Accept')} "{ghostText['delivery']}"
                               </motion.button>
                               <motion.button 
                                 whileHover={{ scale: 1.05 }}
@@ -702,7 +758,7 @@ export default function OrderTracking(){
                                 className="px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full border border-gray-300 hover:bg-gray-200 active:bg-gray-300 transition-colors"
                                 onClick={() => setGhostText(prev => ({ ...prev, 'delivery': null }))}
                               >
-                                ✕ Dismiss
+                                ✕ {t('Dismiss')}
                               </motion.button>
                             </div>
                           )}
@@ -750,7 +806,7 @@ export default function OrderTracking(){
                               onClick={() => setDriverReview(prev=> ({...prev, comment: ghostText['delivery']}))}
                             >
                               <FiCheck className="w-4 h-4" />
-                              Use Full Suggestion
+                              {t('Use Full Suggestion')}
                             </motion.button>
                           )}
                         </div>
@@ -786,7 +842,7 @@ export default function OrderTracking(){
                               Submitting...
                             </div>
                           ) : (
-                            'Submit Driver Review'
+                              t('Submit Driver Review')
                           )}
                         </motion.button>
                       </div>
@@ -795,8 +851,8 @@ export default function OrderTracking(){
                         <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
                           <FiCheck className="w-6 h-6" />
                         </div>
-                        <div className="text-green-700 font-medium">Thank you for your driver review!</div>
-                        <div className="text-green-600 text-sm">Your feedback helps improve our service</div>
+                        <div className="text-green-700 font-medium">{t('Thank you for your driver review!')}</div>
+                        <div className="text-green-600 text-sm">{t('Your feedback helps improve our service')}</div>
                       </div>
                     )}
                   </motion.div>

@@ -12,9 +12,8 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh flex flex-col font-inter relative">
-
-    {/* Header */}
-      {/* <motion.header
+      {/* Header */}
+      <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -57,10 +56,10 @@ export function AppShell() {
 
           <LanguageSwitcher />
         </nav>
-      </motion.header> */}  
+      </motion.header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 pt-16 pb-20">
         <Outlet />
       </main>
 
