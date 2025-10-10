@@ -11,6 +11,7 @@ export default function ProductView(){
   const { t } = useI18n()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
   useEffect(()=>{
@@ -18,6 +19,8 @@ export default function ProductView(){
       try{
         const d = await get(`/api/products/${id}`)
         setProduct(d.data)
+      }catch(e){
+        setError(e.message || 'Failed to load product')
       }finally{
         setLoading(false)
       }
@@ -28,7 +31,15 @@ export default function ProductView(){
   if(loading) return <div className="p-3">{t('Loading...')}</div>
   if(!product) return <div className="p-3">{t('Not found')}</div>
 
-  const firstImg = Array.isArray(product.images) && product.images.length ? product.images[0] : null
+  const getStatusColor = (status) => {
+    const statusColors = {
+      active: 'bg-green-100 text-green-800 border-green-200',
+      inactive: 'bg-red-100 text-red-800 border-red-200',
+      draft: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      archived: 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+    return statusColors[status] || 'bg-gray-100 text-gray-800 border-gray-200'
+  }
 
   return (
     <div className="p-3 pb-16">
@@ -36,6 +47,8 @@ export default function ProductView(){
         <h1 className="text-lg font-semibold text-black">{t('Product Details')}</h1>
         <button className="flex items-center gap-2 text-blue-600" onClick={()=>navigate(`/merchant/products/${product._id}/edit`)}><FiEdit2 /> {t('Edit')}</button>
       </div>
+    </div>
+  )
 
       <div className="space-y-3">
         {firstImg && (
@@ -64,14 +77,22 @@ export default function ProductView(){
             <div className="text-sm text-gray-500">{t('Status')}</div>
             <div className="text-base text-black">{product.status||'active'}</div>
           </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={()=>navigate(`/merchant/products/${product._id}/edit`)}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            <FiEdit2 className="w-4 h-4" />
+            Edit
+          </motion.button>
         </div>
         {product.description && (
           <div>
             <div className="text-sm text-gray-500">{t('Description')}</div>
             <div className="text-base text-black whitespace-pre-wrap">{product.description}</div>
           </div>
-        )}
-      </div>
+        </motion.div>
 
       <div className="mt-6">
         <motion.button whileTap={{ scale:0.98 }} onClick={()=>navigate(`/merchant/products/${product._id}/edit`)} className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white rounded-xl p-3 font-semibold">
@@ -81,5 +102,3 @@ export default function ProductView(){
     </div>
   )
 }
-
-
