@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
-import { get, put } from '../../shared/api.js'
+import { get, put, post, API_BASE } from '../../shared/api.js'
 import { motion } from 'framer-motion'
-import { User as UserIcon, Globe2, LogOut, FileText } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { User as UserIcon, Globe2, LogOut, FileText, Phone as PhoneIcon, Pencil as PencilIcon } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Account(){
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const { lang, setLang, t } = useI18n()
   const [profile, setProfile] = useState({ firstName:'', lastName:'', phone:'', address:'', profileImage:'' })
   const [loading, setLoading] = useState(true)
@@ -15,6 +16,9 @@ export default function Account(){
   const [message, setMessage] = useState('')
   const [editing, setEditing] = useState(false)
   const [photoUrl, setPhotoUrl] = useState('')
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState('')
+  const [photoBust, setPhotoBust] = useState(0)
 
   useEffect(()=>{
     let cancelled = false
@@ -30,7 +34,7 @@ export default function Account(){
             address: res.user.address || '',
             profileImage: res.user.profileImage || ''
           })
-          setPhotoUrl('')
+          setPhotoUrl(res.user.profileImage ? `${API_BASE}${res.user.profileImage}` : '')
         }
       }catch{}
       setLoading(false)
@@ -42,6 +46,35 @@ export default function Account(){
   const fullName = useMemo(()=> `${profile.firstName} ${profile.lastName}`.trim() || user?.email || '—', [profile, user])
 
   const onChange = (e)=> setProfile(p=> ({ ...p, [e.target.name]: e.target.value }))
+
+  const onPhotoChange = (e)=>{
+    const file = e.target.files?.[0]
+    if(!file) return
+    if(file.size > 5 * 1024 * 1024) { setMessage(t('Image too large (max 5MB)')); return }
+    if(!file.type.startsWith('image/')) { setMessage(t('Please select an image file')); return }
+    setPhotoFile(file)
+    setPhotoPreview(URL.createObjectURL(file))
+  }
+
+  const onUploadPhoto = async ()=>{
+    if(!photoFile) return
+    setSaving(true)
+    setMessage('')
+    try{
+      const fd = new FormData()
+      fd.append('profilePic', photoFile)
+      const res = await post('/api/auth/profile/photo', fd)
+      if(res?.success && res.user?.profileImage){
+        setProfile(p=> ({ ...p, profileImage: res.user.profileImage }))
+        setPhotoUrl(`${API_BASE}${res.user.profileImage}`)
+        setPhotoPreview('')
+        setPhotoFile(null)
+        setPhotoBust(v=> v+1)
+        setMessage(t('Profile photo updated'))
+      }
+    }catch(e){ setMessage(e.message || t('Failed to upload')) }
+    setSaving(false)
+  }
 
   // removed photo fetching logic
 
@@ -66,43 +99,32 @@ export default function Account(){
         {/* Compact Profile Card with Avatar, Name and Edit */}
         <section className="bg-white rounded-2xl shadow-md border border-orange-100 p-6 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-orange-100 border border-orange-200 flex items-center justify-center">
-              {photoUrl ? (
-                <img key={photoBust} src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
+            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-orange-100 border border-orange-200 flex items-center justify-center">
+              {(photoPreview || photoUrl) ? (
+                <img key={photoBust} src={photoPreview || photoUrl} alt={fullName} className="w-full h-full object-cover" onError={()=>{ setPhotoPreview(''); setPhotoUrl('') }} />
               ) : (
                 <UserIcon className="w-8 h-8 text-orange-500" />
+              )}
+              {editing && (
+                <>
+                  <input id="accountPhoto" type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
+                  <label htmlFor="accountPhoto" className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-md flex items-center justify-center cursor-pointer">
+                    <PencilIcon className="w-3.5 h-3.5" />
+                  </label>
+                </>
               )}
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-gray-900">{fullName}</h2>
               <p className="text-gray-500 text-sm">{user?.email}</p>
             </div>
-            <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }} onClick={()=> setEditing(v=> !v)}
+            <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }} onClick={()=> navigate('/account/edit')}
               className="px-4 py-2 rounded-xl border border-orange-300 text-orange-700 font-semibold hover:bg-orange-50">
-              {editing ? t('Close') : t('Edit')}
+              {t('Edit')}
             </motion.button>
           </div>
 
-          {editing && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('First Name')}</label>
-                <input name="firstName" value={profile.firstName} onChange={onChange} className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-orange-400 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">{t('Last Name')}</label>
-                <input name="lastName" value={profile.lastName} onChange={onChange} className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-orange-400 outline-none" />
-              </div>
-              {/* Photo change removed */}
-              {message && <div className="sm:col-span-2 text-sm text-green-600">{message}</div>}
-              <div className="sm:col-span-2">
-                <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }} onClick={onSave} disabled={saving}
-                  className="px-5 py-2 bg-orange-500 text-white rounded-xl font-semibold shadow-md hover:bg-orange-600 disabled:opacity-50">
-                  {saving ? t('Saving...') : t('Save Changes')}
-                </motion.button>
-              </div>
-            </div>
-          )}
+          {/* Editing moved to /account/edit */}
         </section>
 
         {/* Language & Legal */}

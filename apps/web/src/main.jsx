@@ -18,6 +18,7 @@ import OrderTracking from './pages/common/OrderTracking.jsx'
 import Cart from './pages/common/Cart.jsx'
 import Checkout from './pages/common/Checkout.jsx'
 import Account from './pages/common/Account.jsx'
+import AccountEdit from './pages/common/AccountEdit.jsx'
 import Terms from './pages/common/Terms.jsx'
 import CustomerOrders from './pages/customer/Orders.jsx'
 import TrackAll from './pages/common/TrackAll.jsx'
@@ -88,6 +89,7 @@ const router = createBrowserRouter([
       { path: 'cart', element: <RequireRole role="customer"><Cart /></RequireRole> },
       { path: 'checkout', element: <RequireRole role="customer"><Checkout /></RequireRole> },
       { path: 'account', element: <RequireAuth><Account /></RequireAuth> },
+      { path: 'account/edit', element: <RequireAuth><AccountEdit /></RequireAuth> },
       { path: 'terms', element: <Terms /> },
     ],
   },

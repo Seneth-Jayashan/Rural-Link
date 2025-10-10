@@ -130,12 +130,16 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions))
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
-// removed static uploads
+// Serve uploaded files statically
+const path = require('path');
+app.use('/uplod', express.static(path.join(__dirname, 'uplod')));
 
 // Basic rate limiter
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
