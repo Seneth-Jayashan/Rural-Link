@@ -50,7 +50,6 @@ export default function ProductsList(){
 
   const getStatusColor = (status) => {
     const statusColors = {
-      active: 'bg-green-100 text-green-800 border-green-200',
       inactive: 'bg-red-100 text-red-800 border-red-200',
       draft: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       archived: 'bg-gray-100 text-gray-800 border-gray-200'
@@ -84,7 +83,7 @@ export default function ProductsList(){
       </motion.div>
 
       <div className="max-w-6xl mx-auto">
-        {/* Stats Cards - Horizontal scroll for mobile */}
+        {/* Stats Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -96,15 +95,7 @@ export default function ProductsList(){
               <div className="text-xl font-bold text-orange-600">{products.length}</div>
               <div className="text-xs text-gray-600">Total</div>
             </div>
-            
-            {/* Active Products */}
-            <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100 p-4 text-center min-w-[120px]">
-              <div className="text-xl font-bold text-green-600">
-                {products.filter(p => p.status === 'active').length}
-              </div>
-              <div className="text-xs text-gray-600">Active</div>
-            </div>
-            
+
             {/* In Stock */}
             <div className="flex-shrink-0 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100 p-4 text-center min-w-[120px]">
               <div className="text-xl font-bold text-blue-600">
@@ -156,7 +147,6 @@ export default function ProductsList(){
                   className="border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none appearance-none"
                 >
                   <option value="all">All Status</option>
-                  <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                   <option value="draft">Draft</option>
                   <option value="archived">Archived</option>
@@ -257,12 +247,14 @@ export default function ProductsList(){
                       )}
                       
                       {/* Status Badge */}
-                      <div className="absolute top-3 right-3">
-                        <div className={`px-2 py-1 rounded-full border text-xs font-medium flex items-center gap-1 ${getStatusColor(p.status)}`}>
-                          <FiActivity className="w-3 h-3" />
-                          {p.status || 'active'}
+                      {p.status && (
+                        <div className="absolute top-3 right-3">
+                          <div className={`px-2 py-1 rounded-full border text-xs font-medium flex items-center gap-1 ${getStatusColor(p.status)}`}>
+                            <FiActivity className="w-3 h-3" />
+                            {p.status}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Stock Badge */}
                       <div className="absolute top-3 left-3">

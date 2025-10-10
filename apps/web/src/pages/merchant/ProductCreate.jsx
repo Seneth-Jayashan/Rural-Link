@@ -1,11 +1,15 @@
 import { useRef, useState } from 'react'
 import { post } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiPlus, FiImage, FiX, FiArrowLeft, FiDollarSign, FiPackage, FiTag, FiFileText, FiBox } from 'react-icons/fi'
+import {
+  FiPlus, FiImage, FiX, FiArrowLeft, FiDollarSign,
+  FiPackage, FiTag, FiFileText, FiBox,
+  FiShoppingBag, FiCpu, FiBook, FiShoppingCart, FiHeart, FiChevronDown
+} from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useNavigate } from 'react-router-dom'
 
-export default function ProductCreate(){
+export default function ProductCreate() {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('')
@@ -14,53 +18,65 @@ export default function ProductCreate(){
   const [saving, setSaving] = useState(false)
   const [imageDataUrl, setImageDataUrl] = useState('')
   const [imageError, setImageError] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
   const fileInputRef = useRef(null)
   const { notify } = useToast()
   const navigate = useNavigate()
 
-  function onPickImage(){
+  const categories = [
+    { id: 'food', name: 'Food', icon: <FiShoppingBag className="w-4 h-4 text-orange-600" /> },
+    { id: 'groceries', name: 'Groceries', icon: <FiShoppingCart className="w-4 h-4 text-green-600" /> },
+    { id: 'pharmacy', name: 'Pharmacy', icon: <FiHeart className="w-4 h-4 text-pink-600" /> },
+    { id: 'electronics', name: 'Electronics', icon: <FiCpu className="w-4 h-4 text-blue-600" /> },
+    { id: 'clothing', name: 'Clothing', icon: <FiPackage className="w-4 h-4 text-purple-600" /> },
+    { id: 'books', name: 'Books', icon: <FiBook className="w-4 h-4 text-amber-600" /> },
+    { id: 'other', name: 'Other', icon: <FiBox className="w-4 h-4 text-gray-600" /> }
+  ]
+
+  function onPickImage() {
     fileInputRef.current?.click()
   }
 
-  function onFileChange(e){
+  function onFileChange(e) {
     setImageError('')
     const file = e.target.files?.[0]
-    if(!file) return
+    if (!file) return
     const isImage = /^image\/(png|jpe?g|webp|gif)$/i.test(file.type)
-    if(!isImage){ setImageError('Please select a valid image file'); return }
+    if (!isImage) { setImageError('Please select a valid image file'); return }
     const maxBytes = 2 * 1024 * 1024
-    if(file.size > maxBytes){ setImageError('Image must be under 2MB'); return }
+    if (file.size > maxBytes) { setImageError('Image must be under 2MB'); return }
     const reader = new FileReader()
-    reader.onload = () => setImageDataUrl(String(reader.result||''))
+    reader.onload = () => setImageDataUrl(String(reader.result || ''))
     reader.readAsDataURL(file)
   }
 
-  function removeImage(){
+  function removeImage() {
     setImageDataUrl('')
-    if(fileInputRef.current) fileInputRef.current.value = ''
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  async function addProduct(e){
+  async function addProduct(e) {
     e.preventDefault()
-    try{
+    try {
       setSaving(true)
       const payload = {
         name,
         description: desc,
         category,
-        price: parseFloat(price||0),
-        stock: parseInt(stock||0),
+        price: parseFloat(price || 0),
+        stock: parseInt(stock || 0),
         images: imageDataUrl ? [{ url: imageDataUrl, alt: name }] : []
       }
       await post('/api/products', payload)
-      notify({ type:'success', title:'Product Created', message: 'Your product has been added successfully!' })
+      notify({ type: 'success', title: 'Product Created', message: 'Your product has been added successfully!' })
       navigate('/merchant/products')
-    }catch(err){
-      notify({ type:'error', title:'Create Failed', message: err.message })
-    }finally{ setSaving(false) }
+    } catch (err) {
+      notify({ type: 'error', title: 'Create Failed', message: err.message })
+    } finally { setSaving(false) }
   }
 
   const isFormValid = name && price && stock
+  const selectedCategory = categories.find(c => c.id === category)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
@@ -71,7 +87,7 @@ export default function ProductCreate(){
         className="max-w-2xl mx-auto mb-6"
       >
         <div className="flex items-center gap-3 mb-2">
-          <button 
+          <button
             onClick={() => navigate('/merchant/products')}
             className="p-2 bg-white rounded-2xl shadow-lg border border-orange-100 hover:shadow-xl transition-all"
           >
@@ -99,7 +115,7 @@ export default function ProductCreate(){
               </div>
               <h2 className="text-lg font-semibold text-gray-900">Product Image</h2>
             </div>
-            
+
             <AnimatePresence>
               {!imageDataUrl ? (
                 <motion.button
@@ -127,10 +143,10 @@ export default function ProductCreate(){
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="relative group"
                 >
-                  <img 
-                    src={imageDataUrl} 
-                    alt="Preview" 
-                    className="w-full h-64 object-cover rounded-2xl border-2 border-orange-200 shadow-md group-hover:shadow-lg transition-all" 
+                  <img
+                    src={imageDataUrl}
+                    alt="Preview"
+                    className="w-full h-64 object-cover rounded-2xl border-2 border-orange-200 shadow-md group-hover:shadow-lg transition-all"
                   />
                   <motion.button
                     type="button"
@@ -147,7 +163,7 @@ export default function ProductCreate(){
                 </motion.div>
               )}
             </AnimatePresence>
-            
+
             {imageError && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -173,35 +189,58 @@ export default function ProductCreate(){
               {/* Product Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
-                <input 
+                <input
                   className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400"
                   placeholder="Enter product name"
-                  value={name} 
-                  onChange={e=>setName(e.target.value)} 
+                  value={name}
+                  onChange={e => setName(e.target.value)}
                 />
               </div>
 
               {/* Category and Details Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Category */}
-                <div>
+                {/* Category (custom dropdown) */}
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                  <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="w-full flex items-center justify-between border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all relative"
+                  >
+                    <div className="flex items-center gap-2 text-gray-700">
+                      {selectedCategory?.icon}
+                      <span>{selectedCategory?.name}</span>
+                    </div>
+                    <FiChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
                     <FiTag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <select 
-                      className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none appearance-none"
-                      value={category} 
-                      onChange={e=>setCategory(e.target.value)}
-                    >
-                      <option value="food">🍕 Food</option>
-                      <option value="groceries">🛒 Groceries</option>
-                      <option value="pharmacy">💊 Pharmacy</option>
-                      <option value="electronics">📱 Electronics</option>
-                      <option value="clothing">👕 Clothing</option>
-                      <option value="books">📚 Books</option>
-                      <option value="other">📦 Other</option>
-                    </select>
-                  </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {showDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="absolute z-20 mt-2 w-full bg-white border border-orange-100 rounded-2xl shadow-lg overflow-hidden"
+                      >
+                        {categories.map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => {
+                              setCategory(c.id)
+                              setShowDropdown(false)
+                            }}
+                            className={`w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-orange-50 transition-colors ${c.id === category ? 'bg-orange-100/60' : ''
+                              }`}
+                          >
+                            {c.icon}
+                            <span className="text-gray-700">{c.name}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Price */}
@@ -209,12 +248,12 @@ export default function ProductCreate(){
                   <label className="block text-sm font-medium text-gray-700 mb-2">Price *</label>
                   <div className="relative">
                     <FiDollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input 
+                    <input
                       className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400"
                       placeholder="0.00"
-                      inputMode="decimal" 
-                      value={price} 
-                      onChange={e=>setPrice(e.target.value)} 
+                      inputMode="decimal"
+                      value={price}
+                      onChange={e => setPrice(e.target.value)}
                     />
                   </div>
                 </div>
@@ -224,12 +263,12 @@ export default function ProductCreate(){
                   <label className="block text-sm font-medium text-gray-700 mb-2">Stock *</label>
                   <div className="relative">
                     <FiBox className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input 
+                    <input
                       className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400"
                       placeholder="0"
-                      inputMode="numeric" 
-                      value={stock} 
-                      onChange={e=>setStock(e.target.value)} 
+                      inputMode="numeric"
+                      value={stock}
+                      onChange={e => setStock(e.target.value)}
                     />
                   </div>
                 </div>
@@ -245,13 +284,13 @@ export default function ProductCreate(){
               </div>
               <h2 className="text-lg font-semibold text-gray-900">Description</h2>
             </div>
-            
-            <textarea 
-              rows={4} 
+
+            <textarea
+              rows={4}
               className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none placeholder-gray-400 resize-none"
               placeholder="Describe your product features, benefits, and details..."
-              value={desc} 
-              onChange={e=>setDesc(e.target.value)} 
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
             />
             <div className="text-xs text-gray-500 mt-2">
               Optional but recommended for better customer understanding
@@ -259,16 +298,15 @@ export default function ProductCreate(){
           </div>
 
           {/* Submit Button */}
-          <motion.button 
+          <motion.button
             whileHover={{ scale: isFormValid && !saving ? 1.02 : 1 }}
             whileTap={{ scale: isFormValid && !saving ? 0.98 : 1 }}
             disabled={saving || !isFormValid}
             type="submit"
-            className={`w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-semibold text-lg shadow-lg transition-all ${
-              isFormValid && !saving
-                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:shadow-xl hover:from-orange-600 hover:to-amber-600'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-semibold text-lg shadow-lg transition-all ${isFormValid && !saving
+              ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:shadow-xl hover:from-orange-600 hover:to-amber-600'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
           >
             {saving ? (
               <>
