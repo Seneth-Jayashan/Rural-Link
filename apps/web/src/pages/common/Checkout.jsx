@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { post } from '../../shared/api.js'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../shared/ui/Toast.jsx'
-import { FiMapPin, FiPhone, FiUser, FiCreditCard, FiMessageSquare, FiArrowLeft, FiCheck } from 'react-icons/fi'
+import { FiMapPin, FiPhone, FiUser, FiCreditCard, FiMessageSquare, FiArrowLeft, FiCheck, FiMap } from 'react-icons/fi'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { formatLKR } from '../../shared/currency.js'
+import MapLocationSelector from '../../shared/ui/MapLocationSelector.jsx'
 
 export default function Checkout(){
   const { items, subtotal, clear } = useCart()
@@ -25,6 +26,9 @@ export default function Checkout(){
     zipCode: user?.address?.zipCode || '',
     country: user?.address?.country || ''
   })
+  const [coordinates, setCoordinates] = useState(null)
+  const [selectedAddress, setSelectedAddress] = useState('')
+  const [showMapSelector, setShowMapSelector] = useState(false)
   const [instructions, setInstructions] = useState('')
   const [saving, setSaving] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('cash')
@@ -33,7 +37,7 @@ export default function Checkout(){
   const tax = useMemo(()=> subtotal * 0.1, [subtotal])
   const total = useMemo(()=> subtotal + deliveryFee + tax, [subtotal, deliveryFee, tax])
 
-  const isFormValid = address.street && address.city && address.state && address.zipCode && address.country && name && phone
+  const isFormValid = (coordinates || (address.street && address.city && address.state && address.zipCode && address.country)) && name && phone
 
   async function placeOrder(){
     try{
@@ -44,7 +48,14 @@ export default function Checkout(){
       setSaving(true)
       const payload = {
         items: items.map(it => ({ product: it.product._id, quantity: it.quantity })),
-        deliveryAddress: address,
+        deliveryAddress: coordinates ? {
+          ...address,
+          coordinates: {
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude
+          },
+          fullAddress: selectedAddress
+        } : address,
         paymentMethod,
         specialInstructions: instructions,
         contact: { name, phone }
@@ -131,12 +142,39 @@ export default function Checkout(){
           transition={{ delay: 0.2 }}
           className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 bg-orange-100 rounded-xl">
-              <FiMapPin className="w-4 h-4 text-orange-600" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-orange-100 rounded-xl">
+                <FiMapPin className="w-4 h-4 text-orange-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">{t('Delivery Address')}</h2>
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">{t('Delivery Address')}</h2>
+            <button
+              onClick={() => setShowMapSelector(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors"
+            >
+              <FiMap className="w-4 h-4" />
+              {t('Select on Map')}
+            </button>
           </div>
+
+          {/* Selected Location Display */}
+          {coordinates && selectedAddress && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 bg-green-50 border border-green-200 rounded-2xl"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-sm font-medium text-green-800">{t('Location Selected')}</span>
+              </div>
+              <div className="text-sm text-green-700">{selectedAddress}</div>
+              <div className="text-xs text-green-600 mt-1">
+                {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
+              </div>
+            </motion.div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
@@ -318,6 +356,20 @@ export default function Checkout(){
           {items.length} {items.length !== 1 ? t('items') : t('item')} {t('in your order')}
         </motion.div>
       </div>
+
+      {/* Map Location Selector */}
+      <AnimatePresence>
+        {showMapSelector && (
+          <MapLocationSelector
+            onLocationSelect={(location, address) => {
+              setCoordinates(location)
+              setSelectedAddress(address)
+              setShowMapSelector(false)
+            }}
+            onClose={() => setShowMapSelector(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

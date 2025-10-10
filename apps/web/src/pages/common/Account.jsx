@@ -120,7 +120,7 @@ export default function Account(){
             </div>
             <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }} onClick={()=> navigate('/account/edit')}
               className="px-4 py-2 rounded-xl border border-orange-300 text-orange-700 font-semibold hover:bg-orange-50">
-              {t('Edit')}
+              {t('Edit Account')}
             </motion.button>
           </div>
 
