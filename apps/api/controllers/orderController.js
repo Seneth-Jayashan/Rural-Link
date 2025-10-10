@@ -392,6 +392,18 @@ exports.acceptDelivery = async (req, res) => {
       type: 'delivery',
       data: { orderId: order._id }
     });
+
+    // Notify all other delivery drivers that this order is no longer available
+    try {
+      const { emitToDeliveryDrivers } = require('../services/realtime');
+      emitToDeliveryDrivers('orderAccepted', {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        acceptedBy: req.user._id
+      });
+    } catch (error) {
+      console.error('Real-time notification error:', error);
+    }
     
     res.json({
       success: true,

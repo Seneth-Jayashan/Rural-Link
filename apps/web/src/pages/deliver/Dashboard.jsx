@@ -8,6 +8,7 @@ import LocationTracker from './LocationTracker.jsx'
 import DeliveryMap from '../../shared/ui/DeliveryMap.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { formatLKR } from '../../shared/currency.js'
+import { joinDeliveryRoom, onOrderAccepted } from '../../shared/socket.js'
 
 export default function DeliveryDashboard(){
   const { t } = useI18n()
@@ -26,14 +27,41 @@ export default function DeliveryDashboard(){
       setAssigned(mine.data||[])
     }catch{}
   }
-  useEffect(()=>{ load() },[])
+  useEffect(()=>{ 
+    load()
+    // Join delivery room for real-time updates
+    joinDeliveryRoom()
+    
+    // Listen for order acceptance events
+    const unsubscribe = onOrderAccepted((data) => {
+      // Remove the accepted order from available list
+      setAvailable(prev => prev.filter(order => order._id !== data.orderId))
+      // Show notification to other drivers
+      notify({ 
+        type: 'info', 
+        title: 'Order Accepted', 
+        message: `Order ${data.orderNumber} was accepted by another driver` 
+      })
+    })
+    
+    return () => {
+      unsubscribe()
+    }
+  },[])
 
 
   const { notify } = useToast()
   async function accept(order){
-    await post(`/api/orders/${order._id}/accept`)
-    notify({ type:'success', title:'Accepted', message:`Order ${order.orderNumber}` })
-    load()
+    try {
+      await post(`/api/orders/${order._id}/accept`)
+      notify({ type:'success', title:'Accepted', message:`Order ${order.orderNumber}` })
+      // Remove from available list immediately
+      setAvailable(prev => prev.filter(o => o._id !== order._id))
+      // Add to assigned list
+      setAssigned(prev => [...prev, { ...order, deliveryPerson: 'current_user', status: 'picked_up' }])
+    } catch (error) {
+      notify({ type:'error', title:'Error', message:'Failed to accept order' })
+    }
   }
   async function decline(order){
     await post(`/api/orders/${order._id}/decline`, { reason:'Not available' })

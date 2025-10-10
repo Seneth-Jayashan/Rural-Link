@@ -10,6 +10,12 @@ function emitToOrder(orderId, event, payload) {
   }
 }
 
-module.exports = { setRealtime, emitToOrder };
+function emitToDeliveryDrivers(event, payload) {
+  if (ioInstance) {
+    ioInstance.to('delivery_drivers').emit(event, payload);
+  }
+}
+
+module.exports = { setRealtime, emitToOrder, emitToDeliveryDrivers };
 
 

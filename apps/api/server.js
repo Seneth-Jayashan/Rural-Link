@@ -75,6 +75,24 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Join delivery drivers room for real-time order updates
+  socket.on('joinDeliveryRoom', () => {
+    try {
+      if (!socket.data.user) return socket.emit('auth:required');
+      if (socket.data.user.role !== 'deliver') return socket.emit('auth:error', 'Not a delivery driver');
+      socket.join('delivery_drivers');
+      socket.emit('delivery:joined');
+    } catch {
+      socket.emit('delivery:error', 'Failed to join delivery room');
+    }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    // Clean up any delivery driver specific data if needed
+    console.log('Socket disconnected:', socket.data.user?.role);
+  });
+
   // Lightweight chat messages scoped to order room
   socket.on('orderMessage', async ({ orderId, text, tempId }) => {
     try {
