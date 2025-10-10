@@ -5,6 +5,7 @@ import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle } from 'react-icons/f
 import { useToast } from '../../shared/ui/Toast.jsx'
 import OrderChat from '../common/OrderChat.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function DeliveryDashboard(){
   const { t } = useI18n()
@@ -55,6 +56,7 @@ export default function DeliveryDashboard(){
           <motion.div key={o._id} className="border rounded p-2" initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}>
             <div className="font-medium">Order {o.orderNumber}</div>
             <div className="text-xs text-gray-500 flex items-center gap-2"><FiMapPin /> {t('Items')}: {o.items?.length||0}</div>
+            <div className="text-xs text-gray-700 mt-1">Order Total: <span className="font-medium">{formatLKR(o.total || 0)}</span></div>
             <div className="mt-2 flex items-center gap-2">
               <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-green-600 text-white rounded px-3 py-1" onClick={()=>accept(o)}><FiTruck /> {t('Accept')}</motion.button>
               <motion.button whileTap={{ scale:0.98 }} className="flex items-center gap-2 bg-red-600 text-white rounded px-3 py-1" onClick={()=>decline(o)}>
@@ -78,6 +80,7 @@ export default function DeliveryDashboard(){
               <div className="flex items-center gap-2"><FiPhone /> {o.customer?.phone || t('N/A')}</div>
               <div className="flex items-center gap-2"><FiMapPin /> {o.deliveryAddress?.street}, {o.deliveryAddress?.city}</div>
             </div>
+            <div className="mt-1 text-xs text-gray-700">Order Total: <span className="font-medium">{formatLKR(o.total || 0)}</span></div>
             <div className="mt-2 text-xs text-gray-600">Items: {o.items?.map((it,idx)=> `${it.product?.name || 'Item'} x${it.quantity}`).join(', ')}</div>
             <div className="mt-3 flex items-center gap-2 flex-wrap">
               {o.status === 'picked_up' && (

@@ -5,6 +5,7 @@ import { getSocket, authenticate, onOrderMessage } from '../../shared/socket.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiPackage, FiTruck, FiCheck, FiMessageSquare, FiClock, FiShoppingBag, FiUser } from 'react-icons/fi'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 function Timeline({ status, history }){
   const steps = [
@@ -227,7 +228,7 @@ export default function TrackAll(){
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="text-center p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
                     <div className="text-gray-600 text-sm mb-1">{t('Total Amount')}</div>
-                    <div className="text-lg font-bold text-orange-600">${o.total?.toFixed?.(2) || o.total}</div>
+                    <div className="text-lg font-bold text-orange-600">{formatLKR(o.total)}</div>
                   </div>
                   <div className="text-center p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
                     <div className="text-gray-600 text-sm mb-1">{t('Items')}</div>

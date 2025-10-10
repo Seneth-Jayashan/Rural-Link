@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { get } from '../../shared/api.js'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function CustomerOrders(){
   const { t } = useI18n()
@@ -42,7 +43,7 @@ export default function CustomerOrders(){
               <div className="text-xs text-gray-600">{(o.status||'').replace('_',' ')}</div>
             </div>
             <div className="mt-1 text-sm text-gray-700 flex flex-wrap gap-x-4 gap-y-1">
-              <div>{t('Total')}: ${o.total?.toFixed?.(2) || o.total}</div>
+              <div>{t('Total')}: {formatLKR(o.total)}</div>
               <div>{t('Items')}: {o.items?.length || 0}</div>
               {o.deliveryPerson && (
                 <div>{t('Courier')}: {o.deliveryPerson?.firstName} {o.deliveryPerson?.lastName}</div>

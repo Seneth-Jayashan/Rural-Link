@@ -6,6 +6,7 @@ import { useToast } from "../../shared/ui/Toast.jsx";
 import { Spinner } from "../../shared/ui/Spinner.jsx";
 import { useCart } from "../../shared/CartContext.jsx";
 import { useI18n } from "../../shared/i18n/LanguageContext.jsx";
+import { formatLKR } from "../../shared/currency.js";
 
 export default function CustomerHome() {
   const { t } = useI18n();
@@ -107,7 +108,7 @@ export default function CustomerHome() {
           <div className="text-center p-3 bg-white/80 rounded-xl border border-orange-100">
             <FiTruck className="w-5 h-5 text-orange-500 mx-auto mb-2" />
             <div className="text-xs text-gray-600">{t('Free Delivery')}</div>
-            <div className="text-xs font-semibold text-orange-600">{t('Over $50')}</div>
+            <div className="text-xs font-semibold text-orange-600">{t('Over Rs 5000')}</div>
           </div>
           <div className="text-center p-3 bg-white/80 rounded-xl border border-orange-100">
             <FiStar className="w-5 h-5 text-orange-500 mx-auto mb-2" />
@@ -227,13 +228,9 @@ export default function CustomerHome() {
                     {/* Price & Add Button */}
                     <div className="flex items-center justify-between mt-4">
                       <div className="flex flex-col">
-                        <span className="text-lg font-bold text-orange-600">
-                          ${p.price.toFixed(2)}
-                        </span>
+                        <span className="text-lg font-bold text-orange-600">{formatLKR(p.price)}</span>
                         {p.originalPrice && p.originalPrice > p.price && (
-                          <span className="text-xs text-gray-400 line-through">
-                            ${p.originalPrice.toFixed(2)}
-                          </span>
+                          <span className="text-xs text-gray-400 line-through">{formatLKR(p.originalPrice)}</span>
                         )}
                       </div>
 

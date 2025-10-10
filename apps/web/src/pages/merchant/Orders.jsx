@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { get, post } from '../../shared/api.js'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function MerchantOrders(){
   const { notify } = useToast()
@@ -72,7 +73,7 @@ export default function MerchantOrders(){
                 <div className="font-semibold text-black">{o.orderNumber}</div>
                 <div className="text-xs text-gray-600">{new Date(o.createdAt).toLocaleString()}</div>
               </div>
-              <div className="text-sm font-medium text-black">${o.total?.toFixed?.(2) || o.total}</div>
+              <div className="text-sm font-medium text-black">{formatLKR(o.total)}</div>
             </div>
             <div className="mt-2 text-sm text-gray-700">
               {o.items?.slice(0,3).map((it, idx)=> (

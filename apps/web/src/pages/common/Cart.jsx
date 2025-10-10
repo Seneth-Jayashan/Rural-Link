@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiTrash2, FiMinus, FiPlus, FiArrowRight, FiShoppingBag } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function Cart() {
   const { items, updateQty, removeItem, clear, subtotal } = useCart()
   const navigate = useNavigate()
   const { t } = useI18n()
 
-  const deliveryFee = useMemo(() => subtotal > 50 ? 0 : 5, [subtotal])
+  const deliveryFee = useMemo(() => subtotal > 5000 ? 0 : 500, [subtotal])
   const tax = useMemo(() => subtotal * 0.1, [subtotal])
   const total = useMemo(() => subtotal + deliveryFee + tax, [subtotal, deliveryFee, tax])
 
@@ -84,7 +85,7 @@ export default function Cart() {
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
-                    <p className="text-orange-600 font-semibold text-lg">${product.price}</p>
+                    <p className="text-orange-600 font-semibold text-lg">{formatLKR(product.price)}</p>
                   </div>
 
                   {/* Quantity Controls */}
@@ -133,21 +134,21 @@ export default function Cart() {
             
             <div className="flex justify-between">
               <span className="text-gray-600">{t('Subtotal')}</span>
-              <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
+              <span className="font-medium text-gray-900">{formatLKR(subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t('Delivery')}</span>
               <span className={`font-medium ${deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                {deliveryFee === 0 ? t('FREE') : `$${deliveryFee.toFixed(2)}`}
+                {deliveryFee === 0 ? t('FREE') : formatLKR(deliveryFee)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t('Tax')}</span>
-              <span className="font-medium text-gray-900">${tax.toFixed(2)}</span>
+              <span className="font-medium text-gray-900">{formatLKR(tax)}</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-gray-200">
               <span className="font-semibold text-gray-900">{t('Total')}</span>
-              <span className="font-bold text-orange-600">${total.toFixed(2)}</span>
+              <span className="font-bold text-orange-600">{formatLKR(total)}</span>
             </div>
           </motion.div>
 

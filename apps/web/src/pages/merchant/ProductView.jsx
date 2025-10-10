@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiEdit2 } from 'react-icons/fi'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
+import { formatLKR } from '../../shared/currency.js'
 
 export default function ProductView(){
   const { id } = useParams()
@@ -51,7 +52,7 @@ export default function ProductView(){
           </div>
           <div>
             <div className="text-sm text-gray-500">{t('Price')}</div>
-            <div className="text-base text-black">${product.price}</div>
+            <div className="text-base text-black">{formatLKR(product.price)}</div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
