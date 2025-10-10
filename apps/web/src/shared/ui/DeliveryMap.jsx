@@ -18,20 +18,20 @@ const createCustomIcon = (color = '#ef4444', icon = '📍') => L.divIcon({
   className: 'custom-marker',
   html: `<div style="
     background-color: ${color};
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
-    border: 3px solid white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 10px;
     color: white;
   ">${icon}</div>`,
-  iconSize: [30, 30],
-  iconAnchor: [15, 30]
+  iconSize: [24, 24],
+  iconAnchor: [12, 24]
 })
 
 const deliveryIcon = createCustomIcon('#10b981', '🚚')
@@ -187,46 +187,46 @@ export default function DeliveryMap({
   }
 
   return (
-    <div className="w-full h-full bg-white rounded-2xl overflow-hidden shadow-lg">
+    <div className="w-full h-full bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-xl">
-            <FiTruck className="w-5 h-5 text-blue-600" />
+      <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-blue-100 rounded-lg">
+            <FiTruck className="w-4 h-4 text-blue-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{t('Delivery Map')}</h3>
-            <div className="text-sm text-gray-600">
+            <h3 className="font-semibold text-gray-900 text-sm">{t('Delivery Map')}</h3>
+            <div className="text-xs text-gray-600">
               {isTracking ? t('Live tracking active') : t('Manual location updates')}
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={getCurrentLocation}
             disabled={isGettingLocation}
-            className="p-2 hover:bg-blue-100 rounded-xl transition-colors disabled:opacity-50"
+            className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50"
             title={t('Get current location')}
           >
             {isGettingLocation ? (
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             ) : (
-              <FiNavigation className="w-4 h-4 text-blue-600" />
+              <FiNavigation className="w-3 h-3 text-blue-600" />
             )}
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="p-2 hover:bg-blue-100 rounded-xl transition-colors"
+            className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors"
             title={t('Refresh')}
           >
-            <FiRefreshCw className="w-4 h-4 text-blue-600" />
+            <FiRefreshCw className="w-3 h-3 text-blue-600" />
           </button>
         </div>
       </div>
 
       {/* Map */}
-      <div className="relative h-96">
+      <div className="relative flex-1 min-h-0">
         <MapContainer
           center={getMapCenter()}
           zoom={13}
@@ -321,16 +321,16 @@ export default function DeliveryMap({
       </div>
 
       {/* Status and Info */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="p-3 border-t border-gray-200 bg-gray-50">
+        <div className="grid grid-cols-2 gap-3">
           {/* Current Location Status */}
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 rounded-xl">
-              <FiTarget className="w-4 h-4 text-blue-600" />
+            <div className="p-1.5 bg-blue-100 rounded-lg">
+              <FiTarget className="w-3 h-3 text-blue-600" />
             </div>
             <div>
-              <div className="text-sm font-medium text-gray-900">{t('Your Location')}</div>
-              <div className="text-sm text-gray-600">
+              <div className="text-xs font-medium text-gray-900">{t('Your Location')}</div>
+              <div className="text-xs text-gray-600">
                 {currentLocation ? t('Location found') : t('Location not set')}
               </div>
             </div>
@@ -338,14 +338,14 @@ export default function DeliveryMap({
 
           {/* Distance/Time */}
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-green-100 rounded-xl">
-              <FiNavigation className="w-4 h-4 text-green-600" />
+            <div className="p-1.5 bg-green-100 rounded-lg">
+              <FiNavigation className="w-3 h-3 text-green-600" />
             </div>
             <div>
-              <div className="text-sm font-medium text-gray-900">
+              <div className="text-xs font-medium text-gray-900">
                 {route ? getDistance() : '-- km'}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-xs text-gray-600">
                 {route ? getEstimatedTime() : '-- min'}
               </div>
             </div>
@@ -357,25 +357,25 @@ export default function DeliveryMap({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200"
+            className="mt-3 p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <FiNavigation className="w-5 h-5 text-green-600" />
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <FiNavigation className="w-3 h-3 text-green-600" />
               </div>
               <div>
-                <div className="font-semibold text-gray-900">{t('Route to Customer')}</div>
-                <div className="text-sm text-gray-600">{t('Optimal path calculated')}</div>
+                <div className="font-semibold text-gray-900 text-sm">{t('Route to Customer')}</div>
+                <div className="text-xs text-gray-600">{t('Optimal path calculated')}</div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-3">
+            <div className="grid grid-cols-2 gap-3 mb-2">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{getDistance()}</div>
-                <div className="text-sm text-gray-600">{t('Distance')}</div>
+                <div className="text-lg font-bold text-green-600">{getDistance()}</div>
+                <div className="text-xs text-gray-600">{t('Distance')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{getEstimatedTime()}</div>
-                <div className="text-sm text-gray-600">{t('Estimated Time')}</div>
+                <div className="text-lg font-bold text-blue-600">{getEstimatedTime()}</div>
+                <div className="text-xs text-gray-600">{t('Estimated Time')}</div>
               </div>
             </div>
             
@@ -387,9 +387,9 @@ export default function DeliveryMap({
                   window.open(url, '_blank')
                 }
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
             >
-              <FiNavigation className="w-4 h-4" />
+              <FiNavigation className="w-3 h-3" />
               {t('Open in Navigation')}
             </button>
           </motion.div>
@@ -400,16 +400,16 @@ export default function DeliveryMap({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-3 bg-white rounded-xl border border-gray-200"
+            className="mt-3 p-2 bg-white rounded-lg border border-gray-200"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <FiMapPin className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                <FiMapPin className="w-3 h-3 text-blue-600" />
               </div>
               <div className="flex-1">
-                <div className="font-medium text-gray-900">{t('Current Position')}</div>
-                <div className="text-sm text-gray-600">
-                  {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
+                <div className="font-medium text-gray-900 text-sm">{t('Current Position')}</div>
+                <div className="text-xs text-gray-600">
+                  {currentLocation.latitude.toFixed(4)}, {currentLocation.longitude.toFixed(4)}
                 </div>
                 {currentLocation.accuracy && (
                   <div className="text-xs text-gray-500 mt-1">
