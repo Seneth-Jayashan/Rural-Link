@@ -28,7 +28,21 @@ export function AuthProvider({ children }){
   },[])
 
   const register = useCallback(async (payload)=>{
-    const res = await fetch(`${BASE}/api/auth/register`,{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify(payload) })
+    const formData = new FormData()
+    Object.entries(payload).forEach(([key, value])=>{
+      if (value === undefined || value === null) return
+      if (key === 'profilePic') {
+        if (value instanceof File) formData.append('profilePic', value)
+      } else {
+        formData.append(key, value)
+      }
+    })
+
+    const res = await fetch(`${BASE}/api/auth/register`,{
+      method:'POST',
+      credentials:'include',
+      body: formData
+    })
     const data = await res.json()
     if(!res.ok) throw new Error(data.message || 'Registration failed')
     return true
