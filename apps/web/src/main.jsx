@@ -21,6 +21,8 @@ import Checkout from './pages/common/Checkout.jsx'
 import Account from './pages/common/Account.jsx'
 import AccountEdit from './pages/common/AccountEdit.jsx'
 import Terms from './pages/common/Terms.jsx'
+import Privacy from './pages/common/Privacy.jsx'
+import Help from './pages/common/Help.jsx'
 import CustomerOrders from './pages/customer/Orders.jsx'
 import TrackAll from './pages/common/TrackAll.jsx'
 import MapDemo from './pages/common/MapDemo.jsx'
@@ -96,6 +98,8 @@ const router = createBrowserRouter([
       { path: 'account/edit', element: <RequireAuth><AccountEdit /></RequireAuth> },
       { path: 'map-demo', element: <MapDemo /> },
       { path: 'terms', element: <Terms /> },
+      { path: 'privacy', element: <Privacy /> },
+      { path: 'help', element: <Help /> },
     ],
   },
 ])
