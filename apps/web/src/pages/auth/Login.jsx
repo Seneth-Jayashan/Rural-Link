@@ -5,7 +5,7 @@ import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { motion } from 'framer-motion'
 import { FiMail, FiLock } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
-import { requestNotificationPermission , saveFCMToken} from '../../notifications.js'
+import { requestNotificationPermission, saveFCMToken } from '../../notifications.js'
 
 export default function Login() {
   const { t } = useI18n()
@@ -16,6 +16,30 @@ export default function Login() {
   const { login, user } = useAuth()
   const { notify } = useToast()
   const navigate = useNavigate()
+
+  // 🔹 Store the FCM token from web or native
+  const [fcmToken, setFcmToken] = useState(null)
+
+  useEffect(() => {
+    // ✅ 1. Check if we’re inside Android WebView and waiting for native token
+    window.onAppTokenReceived = (token) => {
+      console.log('🔥 FCM Token received from Android:', token)
+      setFcmToken(token)
+    }
+
+    // ✅ 2. Otherwise, get browser FCM token
+    ;(async () => {
+      try {
+        const webToken = await requestNotificationPermission()
+        if (webToken) {
+          console.log('🌐 Web FCM Token:', webToken)
+          setFcmToken(webToken)
+        }
+      } catch (err) {
+        console.warn('FCM token request failed:', err)
+      }
+    })()
+  }, [])
 
   useEffect(() => {
     if (user) {
@@ -29,16 +53,19 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError('')
+
     try {
-      let token = sessionStorage.getItem('FCM-Token')
-      if (!token) {
-        notify({ type: 'error', title: 'Need Notification Permission', message: 'Please allow notifications before logging in' })
-        token = await requestNotificationPermission()
-        if (!token) return
-      }
-      await saveFCMToken(token)
       const u = await login(email, password)
       if (u?.token) localStorage.setItem('token', u.token)
+
+      // ✅ Save FCM token only after successful login
+      if (fcmToken) {
+        await saveFCMToken(fcmToken)
+        console.log('✅ FCM token saved successfully')
+      } else {
+        console.warn('⚠️ No FCM token available to save')
+      }
+
       notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
 
       if (u?.role === 'merchant') navigate('/merchant', { replace: true })
@@ -51,7 +78,6 @@ export default function Login() {
       setLoading(false)
     }
   }
-
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-5 py-10 text-black">
@@ -84,7 +110,7 @@ export default function Login() {
               placeholder={t('Email')}
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
@@ -95,7 +121,7 @@ export default function Login() {
               placeholder={t('Password')}
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
@@ -120,10 +146,7 @@ export default function Login() {
 
         {/* Bottom Links */}
         <div className="flex flex-col items-center mt-5">
-          <a
-            href="/forgot-password"
-            className="text-sm text-orange-600 hover:underline"
-          >
+          <a href="/forgot-password" className="text-sm text-orange-600 hover:underline">
             {t('Forgot Password?')}
           </a>
           <p className="text-center text-sm text-gray-600 mt-2">
