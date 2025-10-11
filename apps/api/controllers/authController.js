@@ -155,7 +155,13 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  res.cookie('token', '', { expires: new Date(0), httpOnly: true });
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    expires: new Date(0)
+  };
+  res.cookie('token', '', options);
   res.json({ success: true, message: 'Logged out successfully' });
 };
 
