@@ -10,7 +10,19 @@ export default function AccountEdit(){
   const navigate = useNavigate()
   const { user } = useAuth()
   const { t } = useI18n()
-  const [profile, setProfile] = useState({ firstName:'', lastName:'', phone:'', address:'', profileImage:'' })
+  const [profile, setProfile] = useState({ 
+    firstName:'', 
+    lastName:'', 
+    phone:'', 
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: 'Sri Lanka',
+    }, 
+    profileImage:'' 
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -30,7 +42,13 @@ export default function AccountEdit(){
             firstName: res.user.firstName || '',
             lastName: res.user.lastName || '',
             phone: res.user.phone || '',
-            address: res.user.address || '',
+            address: res.user.address || {
+              street: '',
+              city: '',
+              state: '',
+              zipCode: '',
+              country: 'Sri Lanka',
+            },
             profileImage: res.user.profileImage || ''
           })
           setPhotoUrl(res.user.profileImage ? `${API_BASE}${res.user.profileImage}` : '')
@@ -44,7 +62,21 @@ export default function AccountEdit(){
 
   const fullName = useMemo(()=> `${profile.firstName} ${profile.lastName}`.trim() || user?.email || '—', [profile, user])
 
-  const onChange = (e)=> setProfile(p=> ({ ...p, [e.target.name]: e.target.value }))
+  const onChange = (e) => {
+    const { name, value } = e.target
+    if (name.startsWith('address.')) {
+      const addressField = name.split('.')[1]
+      setProfile(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [addressField]: value
+        }
+      }))
+    } else {
+      setProfile(prev => ({ ...prev, [name]: value }))
+    }
+  }
 
   const onPhotoChange = (e)=>{
     const file = e.target.files?.[0]
@@ -244,21 +276,94 @@ export default function AccountEdit(){
                 <p className="mt-1 text-xs text-gray-500">{t('Include country code if applicable')}</p>
               </div>
 
-              {/* Address */}
+              {/* Address Section */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('Address')}</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
-                  <textarea
-                    name="address"
-                    value={profile.address}
-                    onChange={onChange}
-                    rows={3}
-                    placeholder={t('Enter your complete address')}
-                    className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none resize-none"
-                  />
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-green-100 rounded-xl">
+                    <MapPin className="w-4 h-4 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('Address Information')}</h3>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">{t('Your address helps with accurate deliveries')}</p>
+                
+                <div className="space-y-4">
+                  {/* Street Address */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('Street Address')}</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        name="address.street"
+                        value={profile.address.street}
+                        onChange={onChange}
+                        placeholder={t('Enter street address')}
+                        className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* City and State */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('City')}</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          name="address.city"
+                          value={profile.address.city}
+                          onChange={onChange}
+                          placeholder={t('Enter city')}
+                          className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('State/Province')}</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          name="address.state"
+                          value={profile.address.state}
+                          onChange={onChange}
+                          placeholder={t('Enter state/province')}
+                          className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Zip Code and Country */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('Postal Code')}</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          name="address.zipCode"
+                          value={profile.address.zipCode}
+                          onChange={onChange}
+                          placeholder={t('Enter postal code')}
+                          className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('Country')}</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          name="address.country"
+                          value={profile.address.country}
+                          onChange={onChange}
+                          placeholder={t('Enter country')}
+                          className="w-full border border-gray-200 rounded-2xl pl-10 pr-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">{t('Your address helps with accurate deliveries')}</p>
               </div>
             </div>
           </div>

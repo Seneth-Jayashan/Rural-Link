@@ -33,6 +33,13 @@ export function AuthProvider({ children }){
       if (value === undefined || value === null) return
       if (key === 'profilePic') {
         if (value instanceof File) formData.append('profilePic', value)
+      } else if (key === 'address' && typeof value === 'object') {
+        // Handle nested address object by flattening it
+        Object.entries(value).forEach(([addrKey, addrValue]) => {
+          if (addrValue !== undefined && addrValue !== null) {
+            formData.append(`address.${addrKey}`, addrValue)
+          }
+        })
       } else {
         formData.append(key, value)
       }
