@@ -8,19 +8,28 @@ export function AuthProvider({ children }){
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const init = useCallback(async ()=>{
-    try{
+  const init = useCallback(async ()=> {
+    try {
       const token = localStorage.getItem('token')
       if (token) {
         const res = await fetch(`${BASE}/api/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         const data = await res.json()
-        if(res.ok){ setUser(data.user) } else { setUser(null) }
+        if (res.ok) {
+          setUser(data.user)
+        } else {
+          localStorage.removeItem('token')  // 👈 token invalid
+          setUser(null)
+        }
       }
-    }catch{ setUser(null) }
+    } catch {
+      localStorage.removeItem('token')
+      setUser(null)
+    }
     setLoading(false)
-  },[])
+  }, [])
+
 
   useEffect(()=>{ init() },[init])
 
@@ -54,10 +63,20 @@ export function AuthProvider({ children }){
     return true
   },[])
 
-  const logout = useCallback(async ()=>{
-    try{ await fetch(`${BASE}/api/auth/logout`, { method:'POST', credentials:'include' }) }catch{}
-    setUser(null)
-  },[])
+  const logout = useCallback(async ()=> {
+    try {
+      await fetch(`${BASE}/api/auth/logout`, { 
+        method: 'POST', 
+        credentials: 'include' 
+      })
+    } catch (e) {
+      console.warn('Logout request failed:', e)
+    } finally {
+      localStorage.removeItem('token')  // 👈 clear saved token
+      setUser(null)
+    }
+  }, [])
+
 
   const value = useMemo(()=>({ user, loading, init, login, register, logout }), [user, loading, init, login, register, logout])
 
