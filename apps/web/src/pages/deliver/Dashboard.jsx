@@ -25,8 +25,9 @@ export default function DeliveryDashboard(){
         get('/api/orders/available'),
         get('/api/orders/deliver')
       ])
-      setAvailable(a.data||[])
-      setAssigned(mine.data||[])
+      const sortDesc = (arr=[]) => [...arr].sort((x,y)=> new Date(y.createdAt||0) - new Date(x.createdAt||0))
+      setAvailable(sortDesc(a.data||[]))
+      setAssigned(sortDesc(mine.data||[]))
     }catch{}
   }
   useEffect(()=>{ 
@@ -58,7 +59,12 @@ export default function DeliveryDashboard(){
       // Remove from available list immediately
       setAvailable(prev => prev.filter(o => o._id !== order._id))
       // Add to assigned list
-      setAssigned(prev => [...prev, { ...order, deliveryPerson: 'current_user', status: 'picked_up' }])
+      const accepted = { ...order, deliveryPerson: 'current_user', status: 'picked_up' }
+      setAssigned(prev => [accepted, ...prev])
+      // Directly open My Deliveries for this order and show map
+      setActiveTab('assigned')
+      setSelectedOrder(accepted)
+      setShowMap(true)
     } catch (error) {
       notify({ type:'error', title:'Error', message:'Failed to accept order' })
     }
