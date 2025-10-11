@@ -291,11 +291,14 @@ exports.searchProducts = async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
     
-    const products = await Product.find(query)
+    const productsRaw = await Product.find(query)
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('merchant', 'businessName firstName lastName');
+      .populate('merchant', 'businessName firstName lastName isActive');
+
+    // Exclude products where merchant is missing or inactive
+    const products = productsRaw.filter(p => p.merchant && p.merchant.isActive !== false);
     
     const total = await Product.countDocuments(query);
     
