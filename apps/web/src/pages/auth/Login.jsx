@@ -17,31 +17,58 @@ export default function Login() {
   const { notify } = useToast()
   const navigate = useNavigate()
 
-  // 🔹 Store the FCM token from web or native
   const [fcmToken, setFcmToken] = useState(null)
 
-  useEffect(() => {
-    // ✅ 1. Check if we’re inside Android WebView and waiting for native token
-    window.onAppTokenReceived = (token) => {
-      console.log('🔥 FCM Token received from Android:', token)
-      notify({ type: 'success', title:'New FCM Token Found', message: 'Saved Your FCM Token' })
-      setFcmToken(token)
-    }
+  // 🔹 Helper to wait for Android WebView token
+  function getNativeFCMToken(timeout = 5000) {
+    return new Promise((resolve) => {
+      let resolved = false
 
-    // ✅ 2. Otherwise, get browser FCM token
-    ;(async () => {
-      try {
-        const webToken = await requestNotificationPermission()
-        if (webToken) {
-          console.log('🌐 Web FCM Token:', webToken)
-          setFcmToken(webToken)
+      window.onAppTokenReceived = (token) => {
+        if (!resolved) {
+          resolved = true
+          resolve(token)
         }
-      } catch (err) {
-        console.warn('FCM token request failed:', err)
+      }
+
+      // Fallback: timeout
+      setTimeout(() => {
+        if (!resolved) {
+          resolved = true
+          resolve(null)
+        }
+      }, timeout)
+    })
+  }
+
+  // 🔹 Fetch FCM token (WebView or Web)
+  useEffect(() => {
+    ;(async () => {
+      let token = null
+
+      // 1️⃣ Try native Android WebView token
+      token = await getNativeFCMToken()
+
+      // 2️⃣ If not available, fallback to Web FCM
+      if (!token) {
+        try {
+          token = await requestNotificationPermission()
+        } catch (err) {
+          console.warn('Web FCM token request failed:', err)
+        }
+      }
+
+      if (token) {
+        console.log('✅ FCM Token ready:', token)
+        setFcmToken(token)
+        notify({ type: 'success', title: 'FCM Token Ready', message: 'Token is ready to be saved' })
+      } else {
+        console.warn('⚠️ FCM token not available')
       }
     })()
   }, [])
 
+  // 🔹 Redirect after login
   useEffect(() => {
     if (user) {
       if (user.role === 'merchant') navigate('/merchant', { replace: true })
@@ -50,48 +77,45 @@ export default function Login() {
     }
   }, [user, navigate])
 
-async function submit(e) {
-  e.preventDefault()
-  setLoading(true)
-  setError('')
+  async function submit(e) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
 
-  try {
-    const u = await login(email, password)
-    if (u?.token) localStorage.setItem('token', u.token)
+    try {
+      const u = await login(email, password)
+      if (u?.token) localStorage.setItem('token', u.token)
 
-    // Wait until fcmToken is ready
-    if (!fcmToken) {
-      console.log('⏳ Waiting for FCM token...')
-      // Wait max 3 seconds
-      const start = Date.now()
-      while (!fcmToken && Date.now() - start < 3000) {
-        await new Promise(r => setTimeout(r, 100))
+      // Wait until fcmToken is available (max 3s)
+      if (!fcmToken) {
+        console.log('⏳ Waiting for FCM token...')
+        const start = Date.now()
+        while (!fcmToken && Date.now() - start < 3000) {
+          await new Promise(r => setTimeout(r, 100))
+        }
       }
+
+      if (fcmToken) {
+        await saveFCMToken(fcmToken)
+        console.log('✅ FCM token saved successfully')
+      } else {
+        console.warn('⚠️ No FCM token available to save')
+        notify({ type: 'error', title:'FCM Token Missing', message: 'Refresh Your App' })
+      }
+
+      notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
+
+      if (u?.role === 'merchant') navigate('/merchant', { replace: true })
+      else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
+      else navigate('/', { replace: true })
+
+    } catch (err) {
+      setError(err.message)
+      notify({ type: 'error', title: t('Login failed'), message: err.message })
+    } finally {
+      setLoading(false)
     }
-
-    if (fcmToken) {
-      await saveFCMToken(fcmToken)
-      console.log('✅ FCM token saved successfully')
-    } else {
-      console.warn('⚠️ No FCM token available to save')
-      notify({ type: 'error', title:'FCM Token Missing', message: 'Refresh Your App' })
-    }
-
-    notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
-
-    if (u?.role === 'merchant') navigate('/merchant', { replace: true })
-    else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
-    else navigate('/', { replace: true })
-
-  } catch (err) {
-    setError(err.message)
-    notify({ type: 'error', title: t('Login failed'), message: err.message })
-  } finally {
-    setLoading(false)
   }
-}
-
-
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-5 py-10 text-black">
       <motion.div
