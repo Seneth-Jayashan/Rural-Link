@@ -235,6 +235,7 @@ export default function Privacy() {
               <div className="space-y-2 text-sm">
                 <p><span className="font-semibold">{t('Email:')}</span> privacy@rurallink.com</p>
                 <p><span className="font-semibold">{t('Phone:')}</span> +94 11 234 5678</p>
+                <p><span className="font-semibold">{t('Whatsapp:')}</span> +94 70 234 5678</p>
                 <p><span className="font-semibold">{t('Address:')}</span> 123 Main Street, Colombo, Sri Lanka</p>
               </div>
             </div>

@@ -20,6 +20,7 @@ import {
   Settings
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { IoLogoWhatsapp } from "react-icons/io";
 
 export default function Help() {
   const { t } = useI18n()
@@ -46,7 +47,7 @@ export default function Help() {
     {
       id: 4,
       question: t('Can I cancel my order?'),
-      answer: t('Yes, you can cancel your order if it hasn\'t been prepared yet. Go to your order history, select the order, and click "Cancel Order". Refunds are processed within 3-5 business days.')
+      answer: t('No, You cannot cancel an order once it has been placed. However, you can refuse the delivery when the delivery person arrives. Please note that refusing a delivery may incur a fee.')
     },
     {
       id: 5,
@@ -340,6 +341,16 @@ export default function Help() {
                 <div>
                   <p className="font-semibold text-gray-900">{t('Phone')}</p>
                   <p className="text-gray-600 text-sm">+94 11 234 5678</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-xl">
+                  <IoLogoWhatsapp className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{t('Whatsapp')}</p>
+                  <p className="text-gray-600 text-sm">+94 70 234 5678</p>
                 </div>
               </div>
               
