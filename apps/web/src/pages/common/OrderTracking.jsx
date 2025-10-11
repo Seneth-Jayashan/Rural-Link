@@ -298,10 +298,16 @@ export default function OrderTracking(){
                           src={getImageUrl(it.product.images[0].url)}
                           alt={it.product.name}
                           className="w-12 h-12 object-cover rounded-xl border"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
                         />
-                      ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border border-orange-200" />
-                      )}
+                      ) : null}
+                      <div 
+                        className="w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border border-orange-200"
+                        style={{ display: it.product?.images?.[0]?.url ? 'none' : 'block' }}
+                      />
                       <div>
                         <div className="font-medium text-gray-900 text-sm">{it.product?.name || 'Item'}</div>
                         <div className="text-xs text-gray-500">Qty: {it.quantity}</div>
@@ -491,10 +497,16 @@ export default function OrderTracking(){
                                 src={getImageUrl(it.product.images[0].url)}
                                 alt={it.product.name}
                                 className="w-12 h-12 object-cover rounded-xl border"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'block';
+                                }}
                               />
-                            ) : (
-                              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border border-orange-200" />
-                            )}
+                            ) : null}
+                            <div 
+                              className="w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border border-orange-200"
+                              style={{ display: it.product?.images?.[0]?.url ? 'none' : 'block' }}
+                            />
                             <div className="font-medium text-gray-900">{it.product?.name || 'Item'}</div>
                           </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { get, uploadFormData, del } from "../../shared/api.js";
+import { get, uploadFormData, del, getImageUrl } from "../../shared/api.js";
 import { motion } from "framer-motion";
 import { FiSave, FiTrash2, FiImage, FiX, FiDollarSign, FiBox } from 'react-icons/fi'
 import { useToast } from "../../shared/ui/Toast.jsx";
@@ -35,7 +35,7 @@ export default function ProductEdit() {
         setCategory(p?.category || "food");
         const firstImg =
           Array.isArray(p?.images) && p.images.length ? p.images[0] : null;
-        setExistingImageUrl(firstImg?.url || "");
+        setExistingImageUrl(firstImg?.url ? getImageUrl(firstImg.url) : "");
       } catch (err) {
         notify({
           type: "error",

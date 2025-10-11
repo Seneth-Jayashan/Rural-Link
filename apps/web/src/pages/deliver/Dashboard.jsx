@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { get, post } from '../../shared/api.js'
+import { get, post, getImageUrl } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle, FiMap, FiX, FiPackage, FiClock, FiNavigation } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
@@ -295,9 +295,35 @@ export default function DeliveryDashboard(){
                       </div>
                       <p className="text-sm font-medium text-gray-900">Items</p>
                     </div>
-                    <p className="text-sm text-gray-700 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl p-3 border border-orange-200">
-                      {o.items?.map((it, idx) => `${it.product?.name || 'Item'} x${it.quantity}`).join(', ')}
-                    </p>
+                    <div className="space-y-2">
+                      {o.items?.map((it, idx) => (
+                        <div key={idx} className="flex items-center gap-3 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl p-3 border border-orange-200">
+                          {it.product?.images?.[0]?.url ? (
+                            <img
+                              src={getImageUrl(it.product.images[0].url)}
+                              alt={it.product.name}
+                              className="w-10 h-10 object-cover rounded-xl border border-orange-200"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'block';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="w-10 h-10 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border border-orange-200"
+                            style={{ display: it.product?.images?.[0]?.url ? 'none' : 'block' }}
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{it.product?.name || 'Item'}</p>
+                            <p className="text-xs text-gray-600">Qty: {it.quantity}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-gray-900">{formatLKR(it.total ?? (it.price * it.quantity))}</p>
+                            <p className="text-xs text-gray-500">{formatLKR(it.price)} each</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
