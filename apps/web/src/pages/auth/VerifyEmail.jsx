@@ -33,12 +33,7 @@ export default function VerifyEmail() {
           // Wait 2 seconds, then open the app
           setTimeout(() => {
             // Try to open the Android app via deep link
-            window.location.href = `rurallink://login`
-
-            // Fallback: navigate to login on web after 2 more seconds
-            setTimeout(() => {
-              navigate('/login')
-            }, 2000)
+            window.location.href = `rurallink://login`      
           }, 2000)
         } else {
           setStatus('error')
