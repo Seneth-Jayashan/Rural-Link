@@ -231,6 +231,32 @@ export default function DeliveryMap({
     return `${(route.distance / 1000).toFixed(1)} km`
   }
 
+  const openNativeNavigation = () => {
+    const destination = routeTo === 'shop' ? (shopLocation || restaurantLocation) : customerLocation
+    if (!destination) return
+    const lat = destination.latitude
+    const lng = destination.longitude
+    const ua = navigator.userAgent || ''
+    const googleWeb = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+
+    if (/Android/i.test(ua)) {
+      const androidDeepLink = `google.navigation:q=${lat},${lng}`
+      window.location.href = androidDeepLink
+      setTimeout(() => { window.location.href = googleWeb }, 500)
+      return
+    }
+
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      const iosGoogle = `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`
+      const iosApple = `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`
+      window.location.href = iosGoogle
+      setTimeout(() => { window.location.href = iosApple }, 500)
+      return
+    }
+
+    window.open(googleWeb, '_blank')
+  }
+
   return (
     <div className="w-full h-full bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col">
       {/* Header */}
@@ -445,13 +471,7 @@ export default function DeliveryMap({
             
             {/* Navigation Button */}
             <button
-              onClick={() => {
-                const destination = routeTo === 'shop' ? (shopLocation || restaurantLocation) : customerLocation
-                if (destination) {
-                  const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}`
-                  window.open(url, '_blank')
-                }
-              }}
+              onClick={openNativeNavigation}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
             >
               <FiNavigation className="w-3 h-3" />
