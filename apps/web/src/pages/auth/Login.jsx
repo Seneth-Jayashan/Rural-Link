@@ -41,32 +41,29 @@ export default function Login() {
     })
   }
 
-  // 🔹 Fetch FCM token (WebView or Web)
-  useEffect(() => {
-    ;(async () => {
-      let token = null
+useEffect(() => {
+  if (window.Android?.flushQueuedToken) {
+    window.Android.flushQueuedToken()
+  }
 
-      // 1️⃣ Try native Android WebView token
-      token = await getNativeFCMToken()
+  // Define the callback for native token
+  window.onAppTokenReceived = (token) => {
+    console.log('🔥 FCM Token received from Android:', token)
+    setFcmToken(token)
+    notify({ type: 'success', title:'New FCM Token Found', message: 'Saved Your FCM Token' })
+  }
 
-      // 2️⃣ If not available, fallback to Web FCM
-      if (!token) {
-        try {
-          token = await requestNotificationPermission()
-        } catch (err) {
-          console.warn('Web FCM token request failed:', err)
-        }
-      }
+  // fallback to web FCM token
+  ;(async () => {
+    try {
+      const webToken = await requestNotificationPermission()
+      if (webToken) setFcmToken(webToken)
+    } catch (err) {
+      console.warn('Web FCM token request failed:', err)
+    }
+  })()
+}, [])
 
-      if (token) {
-        console.log('✅ FCM Token ready:', token)
-        setFcmToken(token)
-        notify({ type: 'success', title: 'FCM Token Ready', message: 'Token is ready to be saved' })
-      } else {
-        console.warn('⚠️ FCM token not available')
-      }
-    })()
-  }, [])
 
   // 🔹 Redirect after login
   useEffect(() => {
