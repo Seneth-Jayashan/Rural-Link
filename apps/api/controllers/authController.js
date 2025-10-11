@@ -62,10 +62,12 @@ exports.register = async (req, res) => {
     const user = await User.create(userData);
 
     const verifyUrl = `rurallink://verify-email/${encodeURIComponent(rawToken)}/${tokenHint}`;
+    const webFallback = `https://rurallinksite.site/verify-email/${encodeURIComponent(rawToken)}/${tokenHint}`;
+
     await sendEmail({
       to: user.email,
       subject: 'Verify your email',
-      html: verifyEmailTemplate(verifyUrl, user.firstName)
+      html: verifyEmailTemplate(verifyUrl, webFallback, firstName)
     });
 
     res.status(201).json({

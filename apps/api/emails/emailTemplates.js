@@ -26,20 +26,21 @@ const emailLayout = (subject, bodyContent) => `
 // ---------------------
 // User Account Templates
 // ---------------------
-const verifyEmailTemplate = (verifyUrl, firstName) => `
+const verifyEmailTemplate = (verifyUrl, webFallback, firstName) => `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <h2>Hello ${firstName},</h2>
     <p>Thank you for registering on our platform. Please verify your email by clicking the button below:</p>
     <p>
       <a href="${verifyUrl}" 
-         style="display: inline-block; padding: 10px 20px; color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px;">
+         style="display:inline-block;padding:10px 20px;color:#fff;background-color:#007bff;text-decoration:none;border-radius:5px;">
          Verify Email
       </a>
     </p>
-    <p>If you did not create an account, you can safely ignore this email.</p>
+    <p>If you’re using the RuralLink web, you can also <a href="${webFallback}">verify directly in the web</a>.</p>
     <p>Regards,<br/>Rural Link Team</p>
   </div>
-`;
+`
+;
 
 const forgotPasswordTemplate = (resetUrl, firstName) => `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
