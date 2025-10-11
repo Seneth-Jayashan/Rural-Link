@@ -18,6 +18,9 @@ export default function DeliveryDashboard(){
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [activeTab, setActiveTab] = useState('available')
   const { notify } = useToast()
+  const [dismissedIds, setDismissedIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('driver_dismissed_orders') || '[]') } catch { return [] }
+  })
 
   async function load(){
     try{
@@ -26,7 +29,8 @@ export default function DeliveryDashboard(){
         get('/api/orders/deliver')
       ])
       const sortDesc = (arr=[]) => [...arr].sort((x,y)=> new Date(y.createdAt||0) - new Date(x.createdAt||0))
-      setAvailable(sortDesc(a.data||[]))
+      const dismissedSet = new Set(dismissedIds)
+      setAvailable((sortDesc(a.data||[])).filter(o => !dismissedSet.has(o._id)))
       setAssigned(sortDesc(mine.data||[]))
     }catch{}
   }
@@ -70,9 +74,14 @@ export default function DeliveryDashboard(){
     }
   }
   async function decline(order){
-    await post(`/api/orders/${order._id}/decline`, { reason:'Not available' })
-    notify({ type:'success', title:'Declined', message:`Order ${order.orderNumber}` })
-    load()
+    // Client-side only: hide for this driver by persisting in localStorage
+    setAvailable(prev => prev.filter(o => o._id !== order._id))
+    setDismissedIds(prev => {
+      const next = Array.from(new Set([...(prev||[]), order._id]))
+      try { localStorage.setItem('driver_dismissed_orders', JSON.stringify(next)) } catch {}
+      return next
+    })
+    notify({ type:'success', title:'Hidden', message:`Order ${order.orderNumber} removed from your list` })
   }
   async function startDelivery(order){
     await post(`/api/orders/${order._id}/delivery-status`, { status:'in_transit' })
