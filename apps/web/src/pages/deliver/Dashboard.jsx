@@ -456,11 +456,40 @@ export default function DeliveryDashboard(){
                     longitude: selectedOrder.deliveryAddress?.coordinates?.longitude || 79.8612,
                     address: selectedOrder.deliveryAddress?.fullAddress || `${selectedOrder.deliveryAddress?.street}, ${selectedOrder.deliveryAddress?.city}`
                   }}
-                  restaurantLocation={{
-                    latitude: selectedOrder.merchant?.location?.latitude || 6.9147,
-                    longitude: selectedOrder.merchant?.location?.longitude || 79.8730,
-                    name: selectedOrder.merchant?.businessName || 'Restaurant'
-                  }}
+                  shopLocation={(() => {
+                    const sl = selectedOrder.shopLocation
+                    let lat = sl?.coordinates?.latitude ?? sl?.latitude
+                    let lng = sl?.coordinates?.longitude ?? sl?.longitude
+                    let businessName = sl?.businessName
+                    let fullAddress = sl?.fullAddress
+
+                    if (lat == null || lng == null) {
+                      const msl = selectedOrder.merchant?.shopLocation
+                      lat = msl?.coordinates?.latitude ?? msl?.latitude
+                      lng = msl?.coordinates?.longitude ?? msl?.longitude
+                      businessName = businessName || selectedOrder.merchant?.businessName
+                      fullAddress = fullAddress || msl?.fullAddress || ''
+                    }
+
+                    if (lat == null || lng == null) return null
+                    return {
+                      latitude: lat,
+                      longitude: lng,
+                      businessName,
+                      fullAddress
+                    }
+                  })()}
+                  restaurantLocation={(() => {
+                    const msl = selectedOrder.merchant?.shopLocation
+                    const lat = msl?.coordinates?.latitude ?? msl?.latitude ?? 6.9147
+                    const lng = msl?.coordinates?.longitude ?? msl?.longitude ?? 79.8730
+                    return {
+                      latitude: lat,
+                      longitude: lng,
+                      name: selectedOrder.merchant?.businessName || 'Restaurant'
+                    }
+                  })()}
+                  routeTo={selectedOrder.status === 'in_transit' ? 'customer' : 'shop'}
                   onLocationUpdate={(location) => {
                     console.log('Location updated:', location)
                   }}

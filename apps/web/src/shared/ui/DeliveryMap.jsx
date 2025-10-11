@@ -41,21 +41,28 @@ const restaurantIcon = createCustomIcon('#f59e0b', '🍽️')
 const currentLocationIcon = createCustomIcon('#3b82f6', '📍')
 
 // Map component that handles location updates
-function MapUpdater({ currentLocation, customerLocation, restaurantLocation, route }) {
+function MapUpdater({ currentLocation, customerLocation, restaurantLocation, shopLocation, route }) {
   const map = useMap()
   
   useEffect(() => {
-    if (currentLocation && customerLocation) {
+    if (currentLocation) {
       const bounds = L.latLngBounds([
-        [currentLocation.latitude, currentLocation.longitude],
-        [customerLocation.latitude, customerLocation.longitude]
+        [currentLocation.latitude, currentLocation.longitude]
       ])
+      
+      if (customerLocation) {
+        bounds.extend([customerLocation.latitude, customerLocation.longitude])
+      }
+      if (shopLocation) {
+        bounds.extend([shopLocation.latitude, shopLocation.longitude])
+      }
       if (restaurantLocation) {
         bounds.extend([restaurantLocation.latitude, restaurantLocation.longitude])
       }
+      
       map.fitBounds(bounds, { padding: [20, 20] })
     }
-  }, [currentLocation, customerLocation, restaurantLocation, map])
+  }, [currentLocation, customerLocation, restaurantLocation, shopLocation, map])
 
   return null
 }
@@ -87,8 +94,10 @@ export default function DeliveryMap({
   orderId, 
   customerLocation, 
   restaurantLocation,
+  shopLocation,
   onLocationUpdate,
-  isTracking = false
+  isTracking = false,
+  routeTo = 'shop' // 'shop' | 'customer'
 }) {
   const { t } = useI18n()
   const { notify } = useToast()
@@ -106,8 +115,22 @@ export default function DeliveryMap({
         (currentLocation.longitude + customerLocation.longitude) / 2
       ]
     }
-    if (customerLocation) {
+    if (currentLocation && shopLocation) {
+      return [
+        (currentLocation.latitude + shopLocation.latitude) / 2,
+        (currentLocation.longitude + shopLocation.longitude) / 2
+      ]
+    }
+    if (routeTo === 'customer' && customerLocation) {
       return [customerLocation.latitude, customerLocation.longitude]
+    }
+    if (routeTo === 'shop') {
+      if (shopLocation) {
+        return [shopLocation.latitude, shopLocation.longitude]
+      }
+      if (restaurantLocation) {
+        return [restaurantLocation.latitude, restaurantLocation.longitude]
+      }
     }
     return [6.9271, 79.8612] // Default to Colombo
   }
@@ -151,11 +174,23 @@ export default function DeliveryMap({
   // Calculate route when locations change
   useEffect(() => {
     const calculateRoute = async () => {
-      if (!currentLocation || !customerLocation) return
+      if (!currentLocation) return
 
       setIsLoadingRoute(true)
       try {
-        const routeData = await getRoute(currentLocation, customerLocation)
+        let routeData = null
+        // Route logic controlled by routeTo
+        if (routeTo === 'shop') {
+          if (shopLocation) {
+            routeData = await getRoute(currentLocation, shopLocation)
+          } else if (restaurantLocation) {
+            // Fallback to merchant's registered shop coordinates
+            routeData = await getRoute(currentLocation, restaurantLocation)
+          }
+        } else if (routeTo === 'customer' && customerLocation) {
+          routeData = await getRoute(currentLocation, customerLocation)
+        }
+        
         if (routeData) {
           setRoute(routeData)
         }
@@ -167,7 +202,7 @@ export default function DeliveryMap({
     }
 
     calculateRoute()
-  }, [currentLocation, customerLocation])
+  }, [currentLocation, customerLocation, shopLocation, routeTo])
 
   // Auto-get location when component mounts if tracking is enabled
   useEffect(() => {
@@ -252,6 +287,7 @@ export default function DeliveryMap({
             currentLocation={currentLocation}
             customerLocation={customerLocation}
             restaurantLocation={restaurantLocation}
+            shopLocation={shopLocation}
             route={route}
           />
           
@@ -270,8 +306,24 @@ export default function DeliveryMap({
             </Marker>
           )}
 
-          {/* Restaurant location marker */}
-          {restaurantLocation && (
+          {/* Shop location marker */}
+          {shopLocation && (
+            <Marker
+              position={[shopLocation.latitude, shopLocation.longitude]}
+              icon={restaurantIcon}
+            >
+              <Popup>
+                <div className="text-center">
+                  <div className="font-medium text-gray-900">{t('Shop Location')}</div>
+                  <div className="text-sm text-gray-600 mt-1">{shopLocation.businessName || t('Pickup location')}</div>
+                  <div className="text-xs text-gray-500 mt-1">{shopLocation.fullAddress || 'Shop address'}</div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Restaurant location marker (fallback) */}
+          {restaurantLocation && !shopLocation && (
             <Marker
               position={[restaurantLocation.latitude, restaurantLocation.longitude]}
               icon={restaurantIcon}
@@ -374,7 +426,9 @@ export default function DeliveryMap({
                 <FiNavigation className="w-3 h-3 text-green-600" />
               </div>
               <div>
-                <div className="font-semibold text-gray-900 text-sm">{t('Route to Customer')}</div>
+                <div className="font-semibold text-gray-900 text-sm">
+                  {routeTo === 'shop' ? t('Route to Shop') : t('Route to Customer')}
+                </div>
                 <div className="text-xs text-gray-600">{t('Optimal path calculated')}</div>
               </div>
             </div>
@@ -392,15 +446,16 @@ export default function DeliveryMap({
             {/* Navigation Button */}
             <button
               onClick={() => {
-                if (customerLocation) {
-                  const url = `https://www.google.com/maps/dir/?api=1&destination=${customerLocation.latitude},${customerLocation.longitude}`
+                const destination = routeTo === 'shop' ? (shopLocation || restaurantLocation) : customerLocation
+                if (destination) {
+                  const url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}`
                   window.open(url, '_blank')
                 }
               }}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
             >
               <FiNavigation className="w-3 h-3" />
-              {t('Open in Navigation')}
+              {routeTo === 'shop' ? t('Navigate to Shop') : t('Navigate to Customer')}
             </button>
           </motion.div>
         )}

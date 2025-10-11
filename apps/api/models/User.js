@@ -58,6 +58,18 @@ const userSchema = new mongoose.Schema({
       return this.role === 'merchant';
     }
   },
+  shopLocation: {
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zipCode: { type: String },
+    country: { type: String },
+    coordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number }
+    },
+    fullAddress: { type: String }
+  },
   isApproved: { type: Boolean, default: true },
 
 

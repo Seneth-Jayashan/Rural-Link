@@ -64,7 +64,7 @@ export default function ProductEdit() {
     }
     const maxBytes = 5 * 1024 * 1024;
     if (file.size > maxBytes) {
-      setImageError("Image must be under 2MB");
+      setImageError("Image must be under 5MB");
       return;
     }
     const reader = new FileReader();

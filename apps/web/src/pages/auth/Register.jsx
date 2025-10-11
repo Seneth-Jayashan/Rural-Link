@@ -17,9 +17,11 @@ import {
   FiX,
   FiMapPin,
   FiHome,
+  FiNavigation,
 } from "react-icons/fi";
 import { useToast } from "../../shared/ui/Toast.jsx";
 import { useNavigate } from "react-router-dom";
+import MapLocationSelector from "../../shared/ui/MapLocationSelector.jsx";
 
 export default function Register() {
   const { t } = useI18n();
@@ -44,6 +46,18 @@ export default function Register() {
       zipCode: "",
       country: "Sri Lanka",
     },
+    shopLocation: {
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "Sri Lanka",
+      coordinates: {
+        latitude: null,
+        longitude: null,
+      },
+      fullAddress: "",
+    },
   });
 
   const [loading, setLoading] = useState(false);
@@ -53,6 +67,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePicPreview, setProfilePicPreview] = useState(null);
+  const [showShopLocationSelector, setShowShopLocationSelector] = useState(false);
 
   function update(k, v) {
     if (k.startsWith("address.")) {
@@ -62,6 +77,15 @@ export default function Register() {
         address: {
           ...prev.address,
           [addressField]: v,
+        },
+      }));
+    } else if (k.startsWith("shopLocation.")) {
+      const shopLocationField = k.split(".")[1];
+      setForm((prev) => ({
+        ...prev,
+        shopLocation: {
+          ...prev.shopLocation,
+          [shopLocationField]: v,
         },
       }));
     } else {
@@ -105,6 +129,21 @@ export default function Register() {
   function removeProfilePic() {
     setForm((prev) => ({ ...prev, profilePic: null }));
     setProfilePicPreview(null);
+  }
+
+  function handleShopLocationSelect(location, address) {
+    setForm((prev) => ({
+      ...prev,
+      shopLocation: {
+        ...prev.shopLocation,
+        coordinates: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        fullAddress: address,
+      },
+    }));
+    setShowShopLocationSelector(false);
   }
 
   async function submit(e) {
@@ -282,6 +321,18 @@ export default function Register() {
         type: "error",
         title: t("Validation Error"),
         message: t("Please enter your business name"),
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Validate shop location for merchants
+    if (form.role === "merchant" && (!form.shopLocation.coordinates.latitude || !form.shopLocation.coordinates.longitude)) {
+      setError(t("Shop location is required for merchants"));
+      notify({
+        type: "error",
+        title: t("Validation Error"),
+        message: t("Please select your shop location on the map"),
       });
       setLoading(false);
       return;
@@ -599,6 +650,42 @@ export default function Register() {
                   onChange={(e) => update("businessName", e.target.value)}
                 />
               </div>
+
+              {/* Shop Location Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiMapPin className="text-orange-500 text-lg" />
+                  <h3 className="text-sm font-medium text-gray-700">
+                    {t("Shop Location")}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowShopLocationSelector(true)}
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm hover:bg-gray-100 transition-colors text-left"
+                >
+                  <FiNavigation className="text-orange-500 text-lg" />
+                  <div className="flex-1">
+                    {form.shopLocation.coordinates.latitude ? (
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {t("Shop location selected")}
+                        </div>
+                        <div className="text-xs text-gray-600 truncate">
+                          {form.shopLocation.fullAddress || 
+                           `${form.shopLocation.coordinates.latitude.toFixed(6)}, ${form.shopLocation.coordinates.longitude.toFixed(6)}`}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        {t("Click to select shop location on map")}
+                      </div>
+                    )}
+                  </div>
+                  <FiMapPin className="text-orange-500 text-lg" />
+                </button>
+              </div>
             </div>
           )}
 
@@ -651,6 +738,15 @@ export default function Register() {
         transition={{ duration: 1 }}
         className="absolute bottom-0 left-0 w-40 h-40 bg-orange-200 rounded-full blur-3xl opacity-30"
       />
+
+      {/* Shop Location Selector Modal */}
+      {showShopLocationSelector && (
+        <MapLocationSelector
+          onLocationSelect={handleShopLocationSelect}
+          initialLocation={form.shopLocation.coordinates.latitude ? form.shopLocation.coordinates : null}
+          onClose={() => setShowShopLocationSelector(false)}
+        />
+      )}
     </div>
   );
 }

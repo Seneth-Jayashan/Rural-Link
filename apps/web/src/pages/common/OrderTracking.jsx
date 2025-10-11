@@ -436,6 +436,12 @@ export default function OrderTracking(){
                         longitude: order.deliveryAddress.coordinates.longitude,
                         address: order.deliveryAddress.fullAddress || `${order.deliveryAddress.street}, ${order.deliveryAddress.city}`
                       }}
+                      shopLocation={order.shopLocation ? {
+                        latitude: order.shopLocation.coordinates.latitude,
+                        longitude: order.shopLocation.coordinates.longitude,
+                        businessName: order.shopLocation.businessName,
+                        fullAddress: order.shopLocation.fullAddress
+                      } : null}
                       restaurantLocation={{
                         latitude: order.merchant?.location?.latitude || 6.9271,
                         longitude: order.merchant?.location?.longitude || 79.8612,

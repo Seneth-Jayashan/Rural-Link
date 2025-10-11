@@ -57,11 +57,17 @@ exports.createOrder = async (req, res) => {
     // Create order
     // Find merchant from first product
     const firstProduct = await Product.findById(items[0].product).select('merchant');
+    const merchantData = await User.findById(firstProduct.merchant).select('shopLocation businessName');
+    
     const order = await Order.create({
       customer: req.user._id,
       merchant: firstProduct.merchant,
       items: orderItems,
       deliveryAddress,
+      shopLocation: merchantData.shopLocation ? {
+        ...merchantData.shopLocation,
+        businessName: merchantData.businessName
+      } : null,
       paymentMethod,
       specialInstructions,
       subtotal,
