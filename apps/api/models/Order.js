@@ -162,7 +162,7 @@ orderSchema.statics.getOrdersByStatus = function(status, limit = 50) {
   return this.find({ status })
     .populate('customer', 'firstName lastName phone')
     .populate('merchant', 'firstName lastName businessName phone')
-    .populate('deliveryPerson', 'firstName lastName phone')
+    .populate('deliveryPerson', 'firstName lastName phone vehicleNumber vehicleType')
     .populate('items.product', 'name price images')
     .sort({ createdAt: -1 })
     .limit(limit);

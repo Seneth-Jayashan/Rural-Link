@@ -32,6 +32,18 @@ const userSchema = new mongoose.Schema({
     enum: ['customer', 'deliver', 'merchant'],
     default: 'customer'
   },
+  // Delivery-specific fields
+  vehicleNumber: {
+    type: String,
+    trim: true,
+    minlength: [3, 'Vehicle number is too short'],
+    maxlength: [20, 'Vehicle number is too long']
+  },
+  vehicleType: {
+    type: String,
+    enum: ['motor_bike', 'car', 'three_wheel'],
+    default: undefined
+  },
   phone: { type: String, trim: true },
   address: {
     street: String,

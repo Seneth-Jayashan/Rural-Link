@@ -49,7 +49,10 @@ router.post(
     body('lastName').notEmpty(),
     body('email').isEmail(),
     body('password').isLength({ min: 6 }),
-    body('role').optional().isIn(['customer', 'deliver', 'merchant'])
+    body('role').optional().isIn(['customer', 'deliver', 'merchant']),
+    // Vehicle details are mandatory for deliver role
+    body('vehicleNumber').if(body('role').equals('deliver')).notEmpty().withMessage('Vehicle number is required for deliver role'),
+    body('vehicleType').if(body('role').equals('deliver')).isIn(['motor_bike','car','three_wheel']).withMessage('Invalid vehicle type')
   ],
   authController.register
 );

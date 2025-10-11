@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
 
     const { 
       firstName, lastName, email, password, role = 'customer', phone, 
-      businessName, shopLocation
+      businessName, shopLocation, vehicleNumber, vehicleType
     } = req.body;
 
     // Handle address fields - they come as address.street, address.city, etc.
@@ -89,6 +89,14 @@ exports.register = async (req, res) => {
         userData.shopLocation = shopLocationData;
       }
     } 
+    // Deliver specific required fields
+    if (role === 'deliver') {
+      if (!vehicleNumber || !vehicleType) {
+        return res.status(400).json({ success: false, message: 'Vehicle number and type are required for deliver registration' })
+      }
+      userData.vehicleNumber = vehicleNumber;
+      userData.vehicleType = vehicleType;
+    }
 
     userData.isApproved = true;
 
@@ -223,7 +231,7 @@ exports.updateProfile = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: 'Validation failed', errors: errors.array() });
 
-    const allowedUpdates = ['firstName', 'lastName', 'phone', 'address'];
+    const allowedUpdates = ['firstName', 'lastName', 'phone', 'address', 'vehicleNumber', 'vehicleType'];
     const updates = {};
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
