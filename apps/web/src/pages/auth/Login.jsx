@@ -18,6 +18,7 @@ export default function Login() {
   const navigate = useNavigate()
 
   const [fcmToken, setFcmToken] = useState(null)
+  const [loadingToken, setLoadingToken] = useState(true) // 🔹 track token fetch
 
   // 🔹 Helper to wait for Android WebView token
   function getNativeFCMToken(timeout = 5000) {
@@ -41,29 +42,32 @@ export default function Login() {
     })
   }
 
-useEffect(() => {
-  if (window.Android?.flushQueuedToken) {
-    window.Android.flushQueuedToken()
-  }
+  useEffect(() => {
+    // 1️⃣ Try native WebView token
+    ;(async () => {
+      let token = await getNativeFCMToken()
 
-  // Define the callback for native token
-  window.onAppTokenReceived = (token) => {
-    console.log('🔥 FCM Token received from Android:', token)
-    setFcmToken(token)
-    notify({ type: 'success', title:'New FCM Token Found', message: 'Saved Your FCM Token' })
-  }
+      // 2️⃣ Fallback to web FCM
+      if (!token) {
+        try {
+          token = await requestNotificationPermission()
+        } catch (err) {
+          console.warn('Web FCM token request failed:', err)
+        }
+      }
 
-  // fallback to web FCM token
-  ;(async () => {
-    try {
-      const webToken = await requestNotificationPermission()
-      if (webToken) setFcmToken(webToken)
-    } catch (err) {
-      console.warn('Web FCM token request failed:', err)
-    }
-  })()
-}, [])
+      if (token) {
+        console.log('✅ FCM Token ready:', token)
+        setFcmToken(token)
+        notify({ type: 'success', title:'FCM Token Ready', message: 'Token is ready to be saved' })
+      } else {
+        console.warn('⚠️ FCM token not available')
+        notify({ type: 'error', title:'FCM Token Missing', message: 'Refresh the app' })
+      }
 
+      setLoadingToken(false)
+    })()
+  }, [])
 
   // 🔹 Redirect after login
   useEffect(() => {
@@ -79,33 +83,25 @@ useEffect(() => {
     setLoading(true)
     setError('')
 
+    if (!fcmToken) {
+      notify({ type: 'error', title:'FCM Token Missing', message: 'Wait until FCM token is ready' })
+      setLoading(false)
+      return
+    }
+
     try {
       const u = await login(email, password)
       if (u?.token) localStorage.setItem('token', u.token)
 
-      // Wait until fcmToken is available (max 3s)
-      if (!fcmToken) {
-        console.log('⏳ Waiting for FCM token...')
-        const start = Date.now()
-        while (!fcmToken && Date.now() - start < 3000) {
-          await new Promise(r => setTimeout(r, 100))
-        }
-      }
-
-      if (fcmToken) {
-        await saveFCMToken(fcmToken)
-        console.log('✅ FCM token saved successfully')
-      } else {
-        console.warn('⚠️ No FCM token available to save')
-        notify({ type: 'error', title:'FCM Token Missing', message: 'Refresh Your App' })
-      }
+      // Save FCM token after successful login
+      await saveFCMToken(fcmToken)
+      console.log('✅ FCM token saved successfully')
 
       notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
 
       if (u?.role === 'merchant') navigate('/merchant', { replace: true })
       else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
       else navigate('/', { replace: true })
-
     } catch (err) {
       setError(err.message)
       notify({ type: 'error', title: t('Login failed'), message: err.message })
@@ -113,6 +109,7 @@ useEffect(() => {
       setLoading(false)
     }
   }
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-5 py-10 text-black">
       <motion.div
@@ -121,7 +118,7 @@ useEffect(() => {
         transition={{ duration: 0.4 }}
         className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 border border-orange-100 flex flex-col items-center"
       >
-        {/* App Header */}
+        {/* Header */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -159,40 +156,26 @@ useEffect(() => {
             />
           </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-red-500 text-sm text-center"
-            >
-              {error}
-            </motion.div>
-          )}
+          {error && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 text-sm text-center">{error}</motion.div>}
 
           <motion.button
             whileTap={{ scale: 0.97 }}
-            disabled={loading}
+            disabled={loading || loadingToken}
             className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-3 rounded-2xl mt-2 shadow-md hover:shadow-lg transition-all disabled:opacity-70 active:scale-95"
           >
-            {loading ? t('Logging in...') : t('Login')}
+            {loadingToken ? t('Fetching FCM Token...') : loading ? t('Logging in...') : t('Login')}
           </motion.button>
         </form>
 
-        {/* Bottom Links */}
         <div className="flex flex-col items-center mt-5">
-          <a href="/forgot-password" className="text-sm text-orange-600 hover:underline">
-            {t('Forgot Password?')}
-          </a>
+          <a href="/forgot-password" className="text-sm text-orange-600 hover:underline">{t('Forgot Password?')}</a>
           <p className="text-center text-sm text-gray-600 mt-2">
             {t('Don’t have an account?')}{' '}
-            <a href="/register" className="text-orange-600 font-medium hover:underline">
-              {t('Register')}
-            </a>
+            <a href="/register" className="text-orange-600 font-medium hover:underline">{t('Register')}</a>
           </p>
         </div>
       </motion.div>
 
-      {/* Background Accent Circle */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
