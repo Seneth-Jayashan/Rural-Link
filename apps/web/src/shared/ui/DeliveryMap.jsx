@@ -4,6 +4,7 @@ import L from 'leaflet'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiTruck, FiMapPin, FiNavigation, FiRefreshCw, FiTarget } from 'react-icons/fi'
 import { useI18n } from '../i18n/LanguageContext.jsx'
+import { useToast } from './Toast.jsx'
 
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl
@@ -90,6 +91,7 @@ export default function DeliveryMap({
   isTracking = false
 }) {
   const { t } = useI18n()
+  const { notify } = useToast()
   const [currentLocation, setCurrentLocation] = useState(null)
   const [route, setRoute] = useState(null)
   const [isLoadingRoute, setIsLoadingRoute] = useState(false)
@@ -113,7 +115,11 @@ export default function DeliveryMap({
   // Get current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert(t('Geolocation is not supported by this browser'))
+      notify({
+        type: 'error',
+        title: t('Geolocation Not Supported'),
+        message: t('Geolocation is not supported by this browser')
+      })
       return
     }
 
@@ -131,7 +137,11 @@ export default function DeliveryMap({
       },
       (error) => {
         console.error('Geolocation error:', error)
-        alert(t('Unable to get your location. Please try again.'))
+        notify({
+          type: 'error',
+          title: t('Location Access Failed'),
+          message: t('Unable to get your location. Please try again.')
+        })
         setIsGettingLocation(false)
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
