@@ -50,38 +50,47 @@ export default function Login() {
     }
   }, [user, navigate])
 
-  async function submit(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+async function submit(e) {
+  e.preventDefault()
+  setLoading(true)
+  setError('')
 
-    try {
-      const u = await login(email, password)
-      if (u?.token) localStorage.setItem('token', u.token)
+  try {
+    const u = await login(email, password)
+    if (u?.token) localStorage.setItem('token', u.token)
 
-
-      // ✅ Save FCM token only after successful login
-      if (fcmToken) {
-        await saveFCMToken(fcmToken)
-        console.log('✅ FCM token saved successfully')
-      } else {
-        console.warn('⚠️ No FCM token available to save')
-        notify({ type: 'error', title:'New FCM Token Missing', message: 'Refresh Your App' })
-
+    // Wait until fcmToken is ready
+    if (!fcmToken) {
+      console.log('⏳ Waiting for FCM token...')
+      // Wait max 3 seconds
+      const start = Date.now()
+      while (!fcmToken && Date.now() - start < 3000) {
+        await new Promise(r => setTimeout(r, 100))
       }
-
-      notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
-
-      if (u?.role === 'merchant') navigate('/merchant', { replace: true })
-      else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
-      else navigate('/', { replace: true })
-    } catch (err) {
-      setError(err.message)
-      notify({ type: 'error', title: t('Login failed'), message: err.message })
-    } finally {
-      setLoading(false)
     }
+
+    if (fcmToken) {
+      await saveFCMToken(fcmToken)
+      console.log('✅ FCM token saved successfully')
+    } else {
+      console.warn('⚠️ No FCM token available to save')
+      notify({ type: 'error', title:'FCM Token Missing', message: 'Refresh Your App' })
+    }
+
+    notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
+
+    if (u?.role === 'merchant') navigate('/merchant', { replace: true })
+    else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
+    else navigate('/', { replace: true })
+
+  } catch (err) {
+    setError(err.message)
+    notify({ type: 'error', title: t('Login failed'), message: err.message })
+  } finally {
+    setLoading(false)
   }
+}
+
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-5 py-10 text-black">
