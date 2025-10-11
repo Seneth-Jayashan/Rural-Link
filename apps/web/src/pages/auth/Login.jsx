@@ -29,6 +29,31 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    
+    // Validate required fields
+    if (!email.trim()) {
+      setError(t('Email is required'))
+      notify({ type: 'error', title: t('Validation Error'), message: t('Please enter your email address') })
+      setLoading(false)
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError(t('Invalid email format'))
+      notify({ type: 'error', title: t('Validation Error'), message: t('Please enter a valid email address') })
+      setLoading(false)
+      return
+    }
+
+    if (!password.trim()) {
+      setError(t('Password is required'))
+      notify({ type: 'error', title: t('Validation Error'), message: t('Please enter your password') })
+      setLoading(false)
+      return
+    }
+
     try {
       let token = sessionStorage.getItem('FCM-Token')
       if (!token) {
