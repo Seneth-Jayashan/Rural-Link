@@ -40,11 +40,11 @@ const customerIcon = createCustomIcon('#ef4444', '🏠')
 const restaurantIcon = createCustomIcon('#f59e0b', '🍽️')
 
 // Map component that handles route updates
-function MapUpdater({ deliveryLocation, customerLocation, restaurantLocation, route }) {
+function MapUpdater({ deliveryLocation, customerLocation, restaurantLocation, route, shouldFitBounds }) {
   const map = useMap()
   
   useEffect(() => {
-    if (deliveryLocation && customerLocation) {
+    if (shouldFitBounds && deliveryLocation && customerLocation) {
       const bounds = L.latLngBounds([
         [deliveryLocation.latitude, deliveryLocation.longitude],
         [customerLocation.latitude, customerLocation.longitude]
@@ -54,7 +54,7 @@ function MapUpdater({ deliveryLocation, customerLocation, restaurantLocation, ro
       }
       map.fitBounds(bounds, { padding: [20, 20] })
     }
-  }, [deliveryLocation, customerLocation, restaurantLocation, map])
+  }, [shouldFitBounds, deliveryLocation, customerLocation, restaurantLocation, map])
 
   return null
 }
@@ -96,6 +96,7 @@ export default function DeliveryTrackingMap({
   const [lastUpdate, setLastUpdate] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isRequestingLocation, setIsRequestingLocation] = useState(false)
+  const [shouldFitBounds, setShouldFitBounds] = useState(true) // Only fit bounds on initial load
   const mapRef = useRef(null)
   const socket = getSocket()
 
@@ -150,6 +151,8 @@ export default function DeliveryTrackingMap({
           timestamp: data.timestamp
         })
         setLastUpdate(new Date(data.timestamp))
+        // Disable auto-fit after first location update
+        setShouldFitBounds(false)
       }
     }
 
@@ -210,6 +213,13 @@ export default function DeliveryTrackingMap({
     }, 3000)
   }
 
+  // Manual fit to view function
+  const fitToView = () => {
+    setShouldFitBounds(true)
+    // Reset after a short delay to prevent auto-fitting on future updates
+    setTimeout(() => setShouldFitBounds(false), 100)
+  }
+
   return (
     <div className="w-full h-full bg-white rounded-2xl overflow-hidden shadow-lg">
       {/* Header */}
@@ -233,6 +243,13 @@ export default function DeliveryTrackingMap({
               {t('Last update')}: {lastUpdate.toLocaleTimeString()}
             </div>
           )}
+          <button
+            onClick={fitToView}
+            className="p-2 hover:bg-orange-100 rounded-xl transition-colors"
+            title={t('Fit to view')}
+          >
+            <FiMapPin className="w-4 h-4 text-orange-600" />
+          </button>
           <button
             onClick={requestLocationUpdate}
             disabled={isRequestingLocation || !isConnected}
@@ -273,6 +290,7 @@ export default function DeliveryTrackingMap({
             customerLocation={customerLocation}
             restaurantLocation={restaurantLocation}
             route={route}
+            shouldFitBounds={shouldFitBounds}
           />
           
           {/* Customer location marker */}
