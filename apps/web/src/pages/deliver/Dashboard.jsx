@@ -388,6 +388,7 @@ export default function DeliveryDashboard(){
                       <div className="space-y-4 pt-4 border-t border-orange-200">
                         <LocationTracker 
                           orderId={o._id} 
+                          autoStart={['picked_up','in_transit'].includes(o.status)}
                           onLocationUpdate={(location) => {
                             console.log('Location updated:', location)
                           }}
