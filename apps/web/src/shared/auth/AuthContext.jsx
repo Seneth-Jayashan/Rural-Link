@@ -10,9 +10,14 @@ export function AuthProvider({ children }){
 
   const init = useCallback(async ()=>{
     try{
-      const res = await fetch(`${BASE}/api/auth/me`, { credentials:'include' })
-      const data = await res.json()
-      if(res.ok){ setUser(data.user) } else { setUser(null) }
+      const token = localStorage.getItem('token')
+      if (token) {
+        const res = await fetch(`${BASE}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if(res.ok){ setUser(data.user) } else { setUser(null) }
+      }
     }catch{ setUser(null) }
     setLoading(false)
   },[])
@@ -22,6 +27,7 @@ export function AuthProvider({ children }){
   const login = useCallback(async (email, password)=>{
     const res = await fetch(`${BASE}/api/auth/login`,{ method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ email, password }) })
     const data = await res.json()
+    if (data.token) localStorage.setItem('token', data.token)
     if(!res.ok) throw new Error(data.message || 'Login failed')
     setUser(data.user)
     return { ...data.user, token: data.token }

@@ -60,7 +60,7 @@ export function AppShell() {
       </motion.header> */}  
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 bg-gradient-to-br from-orange-50 to-amber-50/30 pt-8 min-h-screen">
         <Outlet />
       </main>
 

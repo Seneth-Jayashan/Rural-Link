@@ -62,7 +62,7 @@ export default function Login() {
         const handleNativeTokenReady = () => {
             if (globalFCMTokenBridge) {
                 setFcmToken(globalFCMTokenBridge);
-                notify({ type: 'success', title: 'FCM Token Found', message: 'Using native app token' })
+                // notify({ type: 'success', title: 'FCM Token Found', message: 'Using native app token' })
             }
         };
 
