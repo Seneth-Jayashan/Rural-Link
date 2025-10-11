@@ -398,6 +398,48 @@ export default function OrderTracking(){
               })()}
             </motion.div>
 
+            {/* Courier Details */}
+            {order.deliveryPerson?._id && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-orange-100 rounded-xl">
+                    <FiTruck className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('Courier Details')}</h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
+                    <div className="text-gray-600 mb-1">{t('Driver')}</div>
+                    <div className="font-medium text-gray-900">{order.deliveryPerson.firstName} {order.deliveryPerson.lastName}</div>
+                  </div>
+                  {order.deliveryPerson.vehicleNumber && (
+                    <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
+                      <div className="text-gray-600 mb-1">{t('Vehicle Number')}</div>
+                      <div className="font-medium text-gray-900">{order.deliveryPerson.vehicleNumber}</div>
+                    </div>
+                  )}
+                  {order.deliveryPerson.vehicleType && (
+                    <div className="p-3 bg-gray-50/50 rounded-2xl border border-gray-200">
+                      <div className="text-gray-600 mb-1">{t('Vehicle Type')}</div>
+                      <div className="font-medium text-gray-900 capitalize">{
+                        (
+                          order.deliveryPerson.vehicleType === 'motor_bike' ? t('Motor Bike') :
+                          order.deliveryPerson.vehicleType === 'three_wheel' ? t('Three Wheel') :
+                          t('Car')
+                        )
+                      }</div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
             {/* Delivery Tracking Map */}
             {order.deliveryAddress?.coordinates && ['picked_up','in_transit'].includes(order.status) && (
               <motion.div

@@ -127,7 +127,7 @@ exports.getCustomerOrders = async (req, res) => {
     
     const orders = await Order.find(query)
       .populate('merchant', 'businessName firstName lastName phone')
-      .populate('deliveryPerson', 'firstName lastName phone')
+      .populate('deliveryPerson', 'firstName lastName phone vehicleNumber vehicleType')
       .populate('items.product', 'name price images')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -163,7 +163,7 @@ exports.getMerchantOrders = async (req, res) => {
     
     const orders = await Order.find(query)
       .populate('customer', 'firstName lastName phone')
-      .populate('deliveryPerson', 'firstName lastName phone')
+      .populate('deliveryPerson', 'firstName lastName phone vehicleNumber vehicleType')
       .populate('items.product', 'name price images')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -231,7 +231,7 @@ exports.getOrder = async (req, res) => {
     const order = await Order.findById(req.params.id)
       .populate('customer', 'firstName lastName phone email')
       .populate('merchant', 'businessName firstName lastName phone')
-      .populate('deliveryPerson', 'firstName lastName phone')
+      .populate('deliveryPerson', 'firstName lastName phone vehicleNumber vehicleType')
       .populate('items.product', 'name price images description');
     
     if (!order) {
@@ -260,7 +260,7 @@ exports.getLastOrder = async (req, res) => {
     const order = await Order.findOne({ customer: req.user._id })
       .populate('customer', 'firstName lastName phone email')
       .populate('merchant', 'businessName firstName lastName phone')
-      .populate('deliveryPerson', 'firstName lastName phone')
+      .populate('deliveryPerson', 'firstName lastName phone vehicleNumber vehicleType')
       .populate('items.product', 'name price images description')
       .sort({ createdAt: -1 });
 

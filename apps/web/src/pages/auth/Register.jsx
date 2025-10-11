@@ -39,6 +39,8 @@ export default function Register() {
     phone: "",
     businessName: "",
     profilePic: null,
+    vehicleNumber: "",
+    vehicleType: "",
     address: {
       street: "",
       city: "",
@@ -336,6 +338,22 @@ export default function Register() {
       });
       setLoading(false);
       return;
+    }
+
+    // Validate vehicle details for deliver role
+    if (form.role === "deliver") {
+      if (!form.vehicleNumber.trim()) {
+        setError(t("Vehicle number is required for deliver"))
+        notify({ type: "error", title: t("Validation Error"), message: t("Please enter your vehicle number") })
+        setLoading(false)
+        return
+      }
+      if (!form.vehicleType.trim()) {
+        setError(t("Vehicle type is required for deliver"))
+        notify({ type: "error", title: t("Validation Error"), message: t("Please select your vehicle type") })
+        setLoading(false)
+        return
+      }
     }
 
     try {
@@ -685,6 +703,34 @@ export default function Register() {
                   </div>
                   <FiMapPin className="text-orange-500 text-lg" />
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Deliver fields */}
+          {form.role === "deliver" && (
+            <div className="space-y-3">
+              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+                <FiFileText className="text-orange-500 text-lg" />
+                <input
+                  className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
+                  placeholder={t("Vehicle number (e.g., ABC-1234)")}
+                  value={form.vehicleNumber}
+                  onChange={(e) => update("vehicleNumber", e.target.value)}
+                />
+              </div>
+              <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm focus-within:ring-2 ring-orange-400 transition">
+                <FiBriefcase className="text-orange-500 text-lg" />
+                <select
+                  className="flex-1 bg-transparent text-sm outline-none"
+                  value={form.vehicleType}
+                  onChange={(e) => update("vehicleType", e.target.value)}
+                >
+                  <option value="">{t("Select vehicle type")}</option>
+                  <option value="motor_bike">{t("Motor Bike")}</option>
+                  <option value="car">{t("Car")}</option>
+                  <option value="three_wheel">{t("Three Wheel")}</option>
+                </select>
               </div>
             </div>
           )}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { get, post, getImageUrl } from '../../shared/api.js'
+import { get, post, put, getImageUrl } from '../../shared/api.js'
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle, FiMap, FiX, FiPackage, FiClock, FiNavigation } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
@@ -21,6 +22,10 @@ export default function DeliveryDashboard(){
   const [dismissedIds, setDismissedIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem('driver_dismissed_orders') || '[]') } catch { return [] }
   })
+  const [profile, setProfile] = useState(null)
+  const [vehicleNumber, setVehicleNumber] = useState('')
+  const [vehicleType, setVehicleType] = useState('')
+  const [savingVehicle, setSavingVehicle] = useState(false)
 
   async function load(){
     try{
@@ -36,6 +41,12 @@ export default function DeliveryDashboard(){
   }
   useEffect(()=>{ 
     load()
+    get('/api/auth/me').then(d=>{
+      setProfile(d.user)
+      setVehicleNumber(d.user?.vehicleNumber || '')
+      setVehicleType(d.user?.vehicleType || '')
+    }).catch(()=>{})
+
     // Join delivery room for real-time updates
     joinDeliveryRoom()
     
@@ -133,6 +144,65 @@ export default function DeliveryDashboard(){
           </div>
         </div>
       </motion.div>
+
+      {profile?.role === 'deliver' && (!profile.vehicleNumber || !profile.vehicleType) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-4 max-w-2xl mx-auto mb-6"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-orange-100 rounded-xl">
+              <FiTruck className="w-4 h-4 text-orange-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">{t('Set Your Vehicle Details')}</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-gray-600 mb-1">{t('Vehicle Number')}</label>
+              <input
+                value={vehicleNumber}
+                onChange={e=> setVehicleNumber(e.target.value)}
+                className="w-full border border-gray-200 rounded-2xl p-2.5 text-sm bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 outline-none"
+                placeholder={t('e.g. ABC-1234')}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">{t('Vehicle Type')}</label>
+              <select
+                value={vehicleType}
+                onChange={e=> setVehicleType(e.target.value)}
+                className="w-full border border-gray-200 rounded-2xl p-2.5 text-sm bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 outline-none"
+              >
+                <option value="">{t('Select')}</option>
+                <option value="motor_bike">{t('Motor Bike')}</option>
+                <option value="car">{t('Car')}</option>
+                <option value="three_wheel">{t('Three Wheel')}</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={!vehicleNumber || !vehicleType || savingVehicle}
+              onClick={async ()=>{
+                try{
+                  setSavingVehicle(true)
+                  const res = await put('/api/auth/profile', { vehicleNumber, vehicleType })
+                  setProfile(res.user)
+                  notify({ type:'success', title:t('Saved'), message:t('Vehicle details updated') })
+                }catch(e){
+                  notify({ type:'error', title:t('Error'), message:e.message||t('Failed to save') })
+                }finally{ setSavingVehicle(false) }
+              }}
+              className="px-4 py-2 bg-orange-500 text-white rounded-2xl font-semibold disabled:opacity-50"
+            >
+              {savingVehicle ? t('Saving...') : t('Save Vehicle Info')}
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Tab Navigation */}
       <motion.div
