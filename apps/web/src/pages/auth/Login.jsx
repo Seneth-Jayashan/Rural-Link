@@ -9,63 +9,46 @@ import { requestNotificationPermission, saveFCMToken } from '../../notifications
 
 export default function Login() {
   const { t } = useI18n()
+  const { login, user } = useAuth()
+  const navigate = useNavigate()
+  const { notify } = useToast()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { login, user } = useAuth()
-  const { notify } = useToast()
-  const navigate = useNavigate()
-
   const [fcmToken, setFcmToken] = useState(null)
-  const [loadingToken, setLoadingToken] = useState(true) // 🔹 track token fetch
+  const [fcmReady, setFcmReady] = useState(false)
 
-  // 🔹 Helper to wait for Android WebView token
-  function getNativeFCMToken(timeout = 5000) {
-    return new Promise((resolve) => {
-      let resolved = false
-
-      window.onAppTokenReceived = (token) => {
-        if (!resolved) {
-          resolved = true
-          resolve(token)
-        }
-      }
-
-      // Fallback: timeout
-      setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          resolve(null)
-        }
-      }, timeout)
-    })
-  }
-
+  // 🔹 Wait for Android WebView token or fallback to web FCM
   useEffect(() => {
-    // 1️⃣ Try native WebView token
-    ;(async () => {
-      let token = await getNativeFCMToken()
+    let resolved = false
 
-      // 2️⃣ Fallback to web FCM
-      if (!token) {
+    window.onAppTokenReceived = (token) => {
+      if (!resolved) {
+        resolved = true
+        console.log('🔥 FCM Token received from Android:', token)
+        setFcmToken(token)
+        setFcmReady(true)
+        notify({ type: 'success', title: 'FCM Token Ready', message: 'Token received from Android' })
+      }
+    }
+
+    ;(async () => {
+      if (!resolved) {
         try {
-          token = await requestNotificationPermission()
+          const webToken = await requestNotificationPermission()
+          if (webToken && !resolved) {
+            resolved = true
+            console.log('🌐 Web FCM Token:', webToken)
+            setFcmToken(webToken)
+            setFcmReady(true)
+            notify({ type: 'success', title: 'FCM Token Ready', message: 'Token received from Web' })
+          }
         } catch (err) {
-          console.warn('Web FCM token request failed:', err)
+          console.warn('FCM token request failed:', err)
         }
       }
-
-      if (token) {
-        console.log('✅ FCM Token ready:', token)
-        setFcmToken(token)
-        notify({ type: 'success', title:'FCM Token Ready', message: 'Token is ready to be saved' })
-      } else {
-        console.warn('⚠️ FCM token not available')
-        notify({ type: 'error', title:'FCM Token Missing', message: 'Refresh the app' })
-      }
-
-      setLoadingToken(false)
     })()
   }, [])
 
@@ -83,8 +66,17 @@ export default function Login() {
     setLoading(true)
     setError('')
 
+    // 🔹 Wait until FCM token is ready (max 5s)
+    if (!fcmReady) {
+      notify({ type: 'info', title: 'Waiting', message: 'Waiting for FCM token...' })
+      const start = Date.now()
+      while (!fcmReady && Date.now() - start < 5000) {
+        await new Promise(r => setTimeout(r, 100))
+      }
+    }
+
     if (!fcmToken) {
-      notify({ type: 'error', title:'FCM Token Missing', message: 'Wait until FCM token is ready' })
+      notify({ type: 'error', title: 'FCM Token Missing', message: 'Cannot login without FCM token' })
       setLoading(false)
       return
     }
@@ -93,15 +85,14 @@ export default function Login() {
       const u = await login(email, password)
       if (u?.token) localStorage.setItem('token', u.token)
 
-      // Save FCM token after successful login
       await saveFCMToken(fcmToken)
       console.log('✅ FCM token saved successfully')
 
       notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
-
       if (u?.role === 'merchant') navigate('/merchant', { replace: true })
       else if (u?.role === 'deliver') navigate('/deliver', { replace: true })
       else navigate('/', { replace: true })
+
     } catch (err) {
       setError(err.message)
       notify({ type: 'error', title: t('Login failed'), message: err.message })
@@ -109,6 +100,7 @@ export default function Login() {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center px-5 py-10 text-black">
