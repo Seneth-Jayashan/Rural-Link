@@ -24,6 +24,7 @@ export default function Login() {
     // ✅ 1. Check if we’re inside Android WebView and waiting for native token
     window.onAppTokenReceived = (token) => {
       console.log('🔥 FCM Token received from Android:', token)
+      notify({ type: 'success', title:'New FCM Token Found', message: 'Saved Your FCM Token' })
       setFcmToken(token)
     }
 
@@ -58,12 +59,15 @@ export default function Login() {
       const u = await login(email, password)
       if (u?.token) localStorage.setItem('token', u.token)
 
+
       // ✅ Save FCM token only after successful login
       if (fcmToken) {
         await saveFCMToken(fcmToken)
         console.log('✅ FCM token saved successfully')
       } else {
         console.warn('⚠️ No FCM token available to save')
+        notify({ type: 'error', title:'New FCM Token Missing', message: 'Refresh Your App' })
+
       }
 
       notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })
