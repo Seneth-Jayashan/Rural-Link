@@ -1,53 +1,41 @@
-// src/pages/Onboarding.jsx
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
-import { requestNotificationPermission, listenForMessages } from "../../notifications.js";
 
 export default function Onboarding() {
   const [showSplash, setShowSplash] = useState(true)
   const [current, setCurrent] = useState(0)
-  const [permissionGranted, setPermissionGranted] = useState(false)
   const navigate = useNavigate()
   const { t } = useI18n()
 
-  // Splash screen
+  // --- Splash Screen ---
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 2000)
     return () => clearTimeout(timer)
   }, [])
 
-  // Function to request notification permission and handle response
-  const handleRequestPermission = async () => {
-    const token = await requestNotificationPermission()
-    if (token) {
-      setPermissionGranted(true)
-      listenForMessages()
-    }
-  }
-
-  // Slide navigation
+  // --- Slide Navigation ---
   const nextSlide = () => {
-    if (!permissionGranted) {
-      alert("You must allow notifications to continue!")
-      return
+    if (current < slides.length - 1) {
+      setCurrent((prev) => prev + 1)
+    } else {
+      navigate('/login')
     }
-
-    if (current < slides.length - 1) setCurrent(current + 1)
-    else navigate('/login')
   }
 
   const prevSlide = () => {
-    if (current > 0) setCurrent(current - 1)
+    if (current > 0) setCurrent((prev) => prev - 1)
   }
 
+  // --- Slide Content ---
   const slides = [
     { title: t('onboard1Title'), description: t('onboard1Desc'), image: '/onboard1.png' },
     { title: t('onboard2Title'), description: t('onboard2Desc'), image: '/onboard2.png' },
     { title: t('onboard3Title'), description: t('onboard3Desc'), image: '/onboard3.png' },
   ]
 
+  // --- Splash Screen Display ---
   if (showSplash) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-white relative overflow-hidden">
@@ -63,6 +51,7 @@ export default function Onboarding() {
     )
   }
 
+  // --- Onboarding Screen ---
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-white p-4">
       {/* Slide content */}
@@ -74,7 +63,11 @@ export default function Onboarding() {
         transition={{ duration: 0.4 }}
         className="flex flex-col items-center text-center w-full max-w-sm card p-6"
       >
-        <img src={slides[current].image} alt={slides[current].title} className="w-64 h-64 object-contain mb-6" />
+        <img
+          src={slides[current].image}
+          alt={slides[current].title}
+          className="w-64 h-64 object-contain mb-6"
+        />
         <h2 className="text-2xl font-bold mb-2 text-ink">{slides[current].title}</h2>
         <p className="text-gray-600">{slides[current].description}</p>
       </motion.div>
@@ -82,33 +75,32 @@ export default function Onboarding() {
       {/* Navigation Dots */}
       <div className="flex mt-6 space-x-2">
         {slides.map((_, i) => (
-          <div key={i} className={`w-3 h-3 rounded-full ${current === i ? 'bg-orange-500' : 'bg-gray-300'}`} />
+          <div
+            key={i}
+            className={`w-3 h-3 rounded-full ${current === i ? 'bg-orange-500' : 'bg-gray-300'}`}
+          />
         ))}
       </div>
 
       {/* Buttons */}
       <div className="flex mt-6 w-full max-w-sm justify-between">
         {current > 0 ? (
-          <button onClick={prevSlide} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
+          <button
+            onClick={prevSlide}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg"
+          >
             {t('back') || 'Back'}
           </button>
-        ) : <div /> }
-
-        {!permissionGranted ? (
-          <button
-            onClick={handleRequestPermission}
-            className="btn-brand px-4 py-2 rounded-lg"
-          >
-            {'Allow Notifications'}
-          </button>
         ) : (
-          <button
-            onClick={nextSlide}
-            className="btn-brand px-4 py-2 rounded-lg"
-          >
-            {current === slides.length - 1 ? t('getStarted') || 'Get Started' : t('next') || 'Next'}
-          </button>
+          <div />
         )}
+
+        <button
+          onClick={nextSlide}
+          className="btn-brand px-4 py-2 rounded-lg"
+        >
+          {current === slides.length - 1 ? t('getStarted') || 'Get Started' : t('next') || 'Next'}
+        </button>
       </div>
     </div>
   )

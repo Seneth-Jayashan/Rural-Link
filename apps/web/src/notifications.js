@@ -17,7 +17,6 @@ export async function requestNotificationPermission() {
       console.log("FCM Token:", token);
       sessionStorage.setItem('FCM-Token',token);
 
-      // Optionally send token to your backend
       return token;
     } else {
       console.log("Notification permission denied.");

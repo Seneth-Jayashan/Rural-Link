@@ -143,7 +143,7 @@ exports.login = async (req, res) => {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      sameSite: 'none'
     };
 
     res.cookie('token', token, options);
@@ -155,7 +155,13 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  res.cookie('token', '', { expires: new Date(0), httpOnly: true });
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    expires: new Date(0)
+  };
+  res.cookie('token', '', options);
   res.json({ success: true, message: 'Logged out successfully' });
 };
 
