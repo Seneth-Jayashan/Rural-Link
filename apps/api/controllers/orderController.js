@@ -80,11 +80,11 @@ exports.createOrder = async (req, res) => {
     
     // Create notifications
     const merchant = await User.findById(order.merchant)
-    if (merchant.fcmToken) {
+    if (merchant?.fcmToken?.length) {
       await sendNotification(
         merchant.fcmToken,
         'New Order Received',
-        `Order #${order.orderNumber} has been placed. Total LKR${order.total}`,
+        `Order #${order.orderNumber} has been placed. Total LKR ${order.total}`,
         { orderId: order._id.toString() }
       )
     }
@@ -305,31 +305,32 @@ exports.updateOrderStatus = async (req, res) => {
     } catch {}
 
     const customer = await User.findById(order.customer)
-    if (customer.fcmToken) {
+    if (customer?.fcmToken?.length) {
       await sendNotification(
         customer.fcmToken,
         'Order Status Update',
         status === 'cancelled'
-        ? `Your order #${order.orderNumber} was cancelled by the merchant${reason ? `: ${reason}` : ''}`
-        : `Your order #${order.orderNumber} status has been updated to ${status}`,
+          ? `Your order #${order.orderNumber} was cancelled by the merchant${reason ? `: ${reason}` : ''}`
+          : `Your order #${order.orderNumber} status has been updated to ${status}`,
         { orderId: order._id.toString() }
       )
     }
+
     if (status === 'ready') {
-      const drivers = await User.find({ role: 'deliver', isActive: true }).select('fcmToken');
+      const drivers = await User.find({ role: 'deliver', isActive: true }).select('fcmToken')
 
       const notifications = drivers
-        .filter(driver => driver.fcmToken)
+        .filter(driver => Array.isArray(driver.fcmToken) && driver.fcmToken.length > 0)
         .map(driver =>
           sendNotification(
             driver.fcmToken,
-            'New Delivery Available', // title
-            `Order #${order.orderNumber} is ready for pickup`, // message
-            { orderId: order._id.toString() } // optional data
+            'New Delivery Available',
+            `Order #${order.orderNumber} is ready for pickup`,
+            { orderId: order._id.toString() }
           )
-        );
+        )
 
-      await Promise.all(notifications); // send all in parallel
+      await Promise.all(notifications) // send all in parallel
     }
 
     
@@ -386,7 +387,7 @@ exports.acceptDelivery = async (req, res) => {
     await order.updateStatus('picked_up');
 
     const customer = await User.findById(order.customer)
-    if (customer.fcmToken) {
+    if (customer?.fcmToken?.length) {
       await sendNotification(
         customer.fcmToken,
         'Delivery Accepted',
@@ -395,16 +396,16 @@ exports.acceptDelivery = async (req, res) => {
       )
     }
 
+
     const merchant = await User.findById(order.merchant)
-    if (merchant.fcmToken) {
+    if (merchant?.fcmToken?.length) {
       await sendNotification(
         merchant.fcmToken,
         'Delivery Accepted',
-        `Order #${order.orderNumber} has been picked up by delivery person`,
+        `Order #${order.orderNumber} has been picked up by a delivery person`,
         { orderId: order._id.toString() }
       )
     }
-    
     res.json({
       success: true,
       message: 'Delivery accepted successfully',
@@ -443,10 +444,10 @@ exports.updateDeliveryStatus = async (req, res) => {
     } catch {}
 
     const customer = await User.findById(order.customer)
-    if (customer.fcmToken) {
+    if (customer?.fcmToken?.length) {
       await sendNotification(
-        customer.fcmToken,
-        `Order ${status.replace('_', ' ')} `,
+        customer.fcmToken, // now supports array
+        `Order ${status.replace('_', ' ')}`,
         `Order #${order.orderNumber} is now ${status.replace('_', ' ')}`,
         { orderId: order._id.toString() }
       )
@@ -494,11 +495,11 @@ exports.cancelOrder = async (req, res) => {
     }
 
     const merchant = await User.findById(order.merchant)
-    if (merchant.fcmToken) {
+    if (merchant?.fcmToken?.length) {
       await sendNotification(
         merchant.fcmToken,
         'Order Cancelled',
-        `Order #${order.orderNumber} has been placed`,
+        `Order #${order.orderNumber} has been cancelled`,
         { orderId: order._id.toString() }
       )
     }
