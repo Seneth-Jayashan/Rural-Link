@@ -8,7 +8,6 @@ exports.getProducts = async (req, res) => {
     const skip = (page - 1) * limit;
     
     let query = { merchant: req.user._id };
-    
     if (category) {
       query.category = category;
     }
@@ -64,6 +63,26 @@ exports.getProduct = async (req, res) => {
   }
 };
 
+// Public: Get single active product for customers
+exports.getPublicProduct = async (req, res) => {
+  try {
+    const product = await Product.findOne({ _id: req.params.id, isActive: true })
+      .populate('merchant', 'businessName firstName lastName isActive shopLocation');
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    if (!product.merchant || product.merchant.isActive === false) {
+      return res.status(404).json({ success: false, message: 'Product not available' });
+    }
+
+    res.json({ success: true, data: product });
+  } catch (error) {
+    console.error('Get public product error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // Create new product
 exports.createProduct = async (req, res) => {
   try {
@@ -76,7 +95,9 @@ exports.createProduct = async (req, res) => {
       ...req.body,
       merchant: req.user._id
     };
+
     
+
     // Handle uploaded image
     if (req.file) {
       productData.images = [{
@@ -291,11 +312,14 @@ exports.searchProducts = async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
     
-    const products = await Product.find(query)
+    const productsRaw = await Product.find(query)
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('merchant', 'businessName firstName lastName');
+      .populate('merchant', 'businessName firstName lastName isActive');
+
+    // Exclude products where merchant is missing or inactive
+    const products = productsRaw.filter(p => p.merchant && p.merchant.isActive !== false);
     
     const total = await Product.countDocuments(query);
     

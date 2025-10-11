@@ -4,6 +4,7 @@ import L from 'leaflet'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiMapPin, FiSearch, FiX, FiCheck, FiNavigation } from 'react-icons/fi'
 import { useI18n } from '../i18n/LanguageContext.jsx'
+import { useToast } from './Toast.jsx'
 
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl
@@ -84,6 +85,7 @@ export default function MapLocationSelector({
   onClose = null 
 }) {
   const { t } = useI18n()
+  const { notify } = useToast()
   const [selectedLocation, setSelectedLocation] = useState(initialLocation)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -148,7 +150,11 @@ export default function MapLocationSelector({
   // Get current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert(t('Geolocation is not supported by this browser'))
+      notify({
+        type: 'error',
+        title: t('Geolocation Not Supported'),
+        message: t('Geolocation is not supported by this browser')
+      })
       return
     }
 
@@ -162,7 +168,11 @@ export default function MapLocationSelector({
       },
       (error) => {
         console.error('Geolocation error:', error)
-        alert(t('Unable to get your location. Please select manually.'))
+        notify({
+          type: 'error',
+          title: t('Location Access Failed'),
+          message: t('Unable to get your location. Please select manually.')
+        })
       }
     )
   }

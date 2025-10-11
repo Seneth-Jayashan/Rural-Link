@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { get, post, getImageUrl } from "../../shared/api.js";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiSearch, FiPlus, FiShoppingBag, FiStar, FiTruck } from "react-icons/fi";
@@ -198,46 +199,50 @@ export default function CustomerHome() {
                   whileHover={{ y: -8, scale: 1.02 }}
                   className="group relative bg-white rounded-3xl border border-orange-100 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
                 >
-                  {/* Image Container */}
-                  <div className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50">
-                    {Array.isArray(p.images) && p.images.length ? (
-                      <motion.img
-                        src={getImageUrl(p.images[0].url)}
-                        alt={p.images[0].alt || p.name}
-                        className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
-                        whileHover={{ scale: 1.1 }}
-                      />
-                    ) : (
-                      <div className="h-48 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
-                        <FiShoppingBag className="w-12 h-12 text-orange-300" />
-                      </div>
-                    )}
+                  {/* Image Container (clickable) */}
+                  <Link to={`/product/${p._id}`} className="block focus:outline-none focus:ring-2 focus:ring-orange-300 rounded-3xl">
+                    <div className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50">
+                      {Array.isArray(p.images) && p.images.length ? (
+                        <motion.img
+                          src={getImageUrl(p.images[0].url)}
+                          alt={p.images[0].alt || p.name}
+                          className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
+                          whileHover={{ scale: 1.1 }}
+                        />
+                      ) : (
+                        <div className="h-48 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
+                          <FiShoppingBag className="w-12 h-12 text-orange-300" />
+                        </div>
+                      )}
 
-                    {/* Overlay Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      {/* Overlay Gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    {/* Merchant Badge */}
-                    {p?.merchant?.businessName && (
-                      <div className={`absolute top-3 left-3 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm ${
-                        canAddProduct(p) ? 'bg-black/70' : 'bg-red-500/80'
-                      }`}>
-                        {p.merchant.businessName}
-                        {!canAddProduct(p) && ' (Different)'}
-                      </div>
-                    )}
+                      {/* Merchant Badge */}
+                      {p?.merchant?.businessName && (
+                        <div className={`absolute top-3 left-3 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm ${
+                          canAddProduct(p) ? 'bg-black/70' : 'bg-red-500/80'
+                        }`}>
+                          {p.merchant.businessName}
+                          {!canAddProduct(p) && ' (Different)'}
+                        </div>
+                      )}
 
-                    {/* Stock Status Badge - Only show for low stock items */}
-                    {p.stock <= 5 && p.stock > 0 && (
-                      <div className="absolute top-3 right-3 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                        {p.stock <= 3 ? 'Low Stock' : 'Limited'}
-                      </div>
-                    )}
-                  </div>
+                      {/* Stock Status Badge - Only show for low stock items */}
+                      {p.stock <= 5 && p.stock > 0 && (
+                        <div className="absolute top-3 right-3 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                          {p.stock <= 3 ? 'Low Stock' : 'Limited'}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
 
                   {/* Content */}
                   <div className="p-4">
                     <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm leading-tight mb-2">
-                      {p.name}
+                      <Link to={`/product/${p._id}`} className="hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 rounded">
+                        {p.name}
+                      </Link>
                     </h3>
 
                     {/* Stock Information - Only show for low stock items */}

@@ -99,6 +99,19 @@ const orderSchema = new mongoose.Schema({
     fullAddress: String,
     instructions: String
   },
+  shopLocation: {
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zipCode: { type: String },
+    country: { type: String },
+    coordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number }
+    },
+    fullAddress: { type: String },
+    businessName: { type: String }
+  },
   estimatedDeliveryTime: Date,
   actualDeliveryTime: Date,
   preparationTime: {

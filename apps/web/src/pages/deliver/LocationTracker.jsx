@@ -5,7 +5,7 @@ import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { post } from '../../shared/api.js'
 import { useToast } from '../../shared/ui/Toast.jsx'
 
-export default function LocationTracker({ orderId, onLocationUpdate }) {
+export default function LocationTracker({ orderId, onLocationUpdate, autoStart = false }) {
   const { t } = useI18n()
   const { notify } = useToast()
   const [isTracking, setIsTracking] = useState(false)
@@ -148,6 +148,13 @@ export default function LocationTracker({ orderId, onLocationUpdate }) {
       }
     }
   }, [watchId])
+
+  // Auto-start tracking if requested
+  useEffect(() => {
+    if (autoStart && !isTracking) {
+      startTracking()
+    }
+  }, [autoStart])
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-6">

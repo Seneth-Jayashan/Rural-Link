@@ -24,8 +24,48 @@ exports.register = async (req, res) => {
 
     const { 
       firstName, lastName, email, password, role = 'customer', phone, 
-      businessName, address
+      businessName, shopLocation
     } = req.body;
+
+    // Handle address fields - they come as address.street, address.city, etc.
+    const address = {};
+    Object.keys(req.body).forEach(key => {
+      if (key.startsWith('address.')) {
+        const addressField = key.split('.')[1];
+        address[addressField] = req.body[key];
+      }
+    });
+
+    // Handle shop location fields for merchants
+    const shopLocationData = {};
+    // Merge object payload if sent as JSON
+    if (shopLocation && typeof shopLocation === 'object') {
+      shopLocationData.street = shopLocation.street || '';
+      shopLocationData.city = shopLocation.city || '';
+      shopLocationData.state = shopLocation.state || '';
+      shopLocationData.zipCode = shopLocation.zipCode || '';
+      shopLocationData.country = shopLocation.country || 'Sri Lanka';
+      shopLocationData.fullAddress = shopLocation.fullAddress || '';
+      if (shopLocation.coordinates) {
+        shopLocationData.coordinates = {
+          latitude: shopLocation.coordinates.latitude ?? null,
+          longitude: shopLocation.coordinates.longitude ?? null
+        };
+      }
+    }
+    // Also support dot-notated fields from FormData (e.g., 'shopLocation.coordinates.latitude')
+    Object.keys(req.body).forEach(key => {
+      if (key.startsWith('shopLocation.')) {
+        const path = key.split('.').slice(1); // remove 'shopLocation'
+        if (path[0] === 'coordinates') {
+          shopLocationData.coordinates = shopLocationData.coordinates || {};
+          if (path[1] === 'latitude') shopLocationData.coordinates.latitude = parseFloat(req.body[key]);
+          if (path[1] === 'longitude') shopLocationData.coordinates.longitude = parseFloat(req.body[key]);
+        } else {
+          shopLocationData[path[0]] = req.body[key];
+        }
+      }
+    });
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -34,8 +74,8 @@ exports.register = async (req, res) => {
 
     const userData = { firstName, lastName, email, password, role, phone };
     
-    // Add address if provided
-    if (address) {
+    // Add address if provided and has content
+    if (address && Object.keys(address).length > 0 && Object.values(address).some(val => val && val.trim())) {
       userData.address = address;
     }
     
@@ -45,6 +85,9 @@ exports.register = async (req, res) => {
     }
     if (role === 'merchant') {
       Object.assign(userData, { businessName });
+      if (Object.keys(shopLocationData).length > 0) {
+        userData.shopLocation = shopLocationData;
+      }
     } 
 
     userData.isApproved = true;
