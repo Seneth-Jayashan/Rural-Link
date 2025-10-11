@@ -5,12 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiPlus, FiTrash2, FiEdit2, FiPackage, FiSearch, FiFilter, FiBox, FiDollarSign, FiActivity } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
+import ConfirmationModal from '../../shared/ui/ConfirmationModal.jsx'
 
 export default function ProductsList(){
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [productToDelete, setProductToDelete] = useState(null)
   const { notify } = useToast()
   const navigate = useNavigate()
 
@@ -28,14 +31,22 @@ export default function ProductsList(){
 
   useEffect(()=>{ load() },[])
 
-  async function remove(id){
-    if(!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) return
+  const handleDeleteClick = (product) => {
+    setProductToDelete(product)
+    setShowDeleteModal(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return
+    
     try{
-      await del(`/api/products/${id}`)
+      await del(`/api/products/${productToDelete._id}`)
       notify({ type:'success', title:'Product Deleted', message: 'Product has been removed successfully' })
-      setProducts(prev => prev.filter(p => p._id !== id))
+      setProducts(prev => prev.filter(p => p._id !== productToDelete._id))
     }catch(err){
       notify({ type:'error', title:'Delete Failed', message: err.message })
+    } finally {
+      setProductToDelete(null)
     }
   }
 
@@ -271,7 +282,7 @@ export default function ProductsList(){
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => remove(p._id)}
+                          onClick={() => handleDeleteClick(p)}
                           className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors"
                         >
                           <FiTrash2 className="w-3.5 h-3.5" />
@@ -298,6 +309,21 @@ export default function ProductsList(){
           </motion.div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setProductToDelete(null)
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${productToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   )
 }

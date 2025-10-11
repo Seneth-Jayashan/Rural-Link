@@ -9,6 +9,9 @@ const { uploadSingle, uploadMultiple } = require('../middlewares/upload');
 // Authenticated search (customers must be logged in)
 router.get('/search', auth, productController.searchProducts);
 
+// Public product details (no auth required)
+router.get('/public/:id', productController.getPublicProduct);
+
 // Merchant protected routes
 router.get('/', auth, roles('merchant'), productController.getProducts);
 router.get('/:id', auth, roles('merchant'), productController.getProduct);

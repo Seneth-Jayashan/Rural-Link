@@ -48,6 +48,27 @@ export function AuthProvider({ children }){
       if (value === undefined || value === null) return
       if (key === 'profilePic') {
         if (value instanceof File) formData.append('profilePic', value)
+      } else if (key === 'address' && typeof value === 'object') {
+        // Handle nested address object by flattening it
+        Object.entries(value).forEach(([addrKey, addrValue]) => {
+          if (addrValue !== undefined && addrValue !== null) {
+            formData.append(`address.${addrKey}`, addrValue)
+          }
+        })
+      } else if (key === 'shopLocation' && typeof value === 'object') {
+        // Flatten shopLocation including coordinates
+        Object.entries(value).forEach(([shopKey, shopVal]) => {
+          if (shopKey === 'coordinates' && typeof shopVal === 'object') {
+            if (shopVal.latitude !== undefined && shopVal.latitude !== null) {
+              formData.append('shopLocation.coordinates.latitude', shopVal.latitude)
+            }
+            if (shopVal.longitude !== undefined && shopVal.longitude !== null) {
+              formData.append('shopLocation.coordinates.longitude', shopVal.longitude)
+            }
+          } else if (shopVal !== undefined && shopVal !== null) {
+            formData.append(`shopLocation.${shopKey}`, shopVal)
+          }
+        })
       } else {
         formData.append(key, value)
       }

@@ -21,9 +21,12 @@ import Checkout from './pages/common/Checkout.jsx'
 import Account from './pages/common/Account.jsx'
 import AccountEdit from './pages/common/AccountEdit.jsx'
 import Terms from './pages/common/Terms.jsx'
+import Privacy from './pages/common/Privacy.jsx'
+import Help from './pages/common/Help.jsx'
 import CustomerOrders from './pages/customer/Orders.jsx'
 import TrackAll from './pages/common/TrackAll.jsx'
 import MapDemo from './pages/common/MapDemo.jsx'
+import ProductDetails from './pages/common/ProductDetails.jsx'
 import { LanguageProvider } from './shared/i18n/LanguageContext.jsx'
 import { ToastProvider } from './shared/ui/Toast.jsx'
 import { useAuth, AuthProvider } from './shared/auth/AuthContext.jsx'
@@ -89,6 +92,7 @@ const router = createBrowserRouter([
       { path: 'track/:orderId', element: <RequireAuth><OrderTracking /></RequireAuth> },
       { path: 'track', element: <RequireRole role="customer"><TrackAll /></RequireRole> },
       { path: 'orders', element: <RequireRole role="customer"><CustomerOrders /></RequireRole> },
+      { path: 'product/:id', element: <ProductDetails /> },
       // Chat/Call demo route removed
       { path: 'cart', element: <RequireRole role="customer"><Cart /></RequireRole> },
       { path: 'checkout', element: <RequireRole role="customer"><Checkout /></RequireRole> },
@@ -96,6 +100,8 @@ const router = createBrowserRouter([
       { path: 'account/edit', element: <RequireAuth><AccountEdit /></RequireAuth> },
       { path: 'map-demo', element: <MapDemo /> },
       { path: 'terms', element: <Terms /> },
+      { path: 'privacy', element: <Privacy /> },
+      { path: 'help', element: <Help /> },
     ],
   },
 ])

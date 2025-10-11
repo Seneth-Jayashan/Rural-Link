@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { get, post } from '../../shared/api.js'
+import { get, post, getImageUrl } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiMapPin, FiTruck, FiUser, FiPhone, FiCheckCircle, FiMap, FiX, FiPackage, FiClock, FiNavigation } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
@@ -18,6 +18,9 @@ export default function DeliveryDashboard(){
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [activeTab, setActiveTab] = useState('available')
   const { notify } = useToast()
+  const [dismissedIds, setDismissedIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('driver_dismissed_orders') || '[]') } catch { return [] }
+  })
 
   async function load(){
     try{
@@ -25,8 +28,10 @@ export default function DeliveryDashboard(){
         get('/api/orders/available'),
         get('/api/orders/deliver')
       ])
-      setAvailable(a.data||[])
-      setAssigned(mine.data||[])
+      const sortDesc = (arr=[]) => [...arr].sort((x,y)=> new Date(y.createdAt||0) - new Date(x.createdAt||0))
+      const dismissedSet = new Set(dismissedIds)
+      setAvailable((sortDesc(a.data||[])).filter(o => !dismissedSet.has(o._id)))
+      setAssigned(sortDesc(mine.data||[]))
     }catch{}
   }
   useEffect(()=>{ 
@@ -58,15 +63,25 @@ export default function DeliveryDashboard(){
       // Remove from available list immediately
       setAvailable(prev => prev.filter(o => o._id !== order._id))
       // Add to assigned list
-      setAssigned(prev => [...prev, { ...order, deliveryPerson: 'current_user', status: 'picked_up' }])
+      const accepted = { ...order, deliveryPerson: 'current_user', status: 'picked_up' }
+      setAssigned(prev => [accepted, ...prev])
+      // Directly open My Deliveries for this order and show map
+      setActiveTab('assigned')
+      setSelectedOrder(accepted)
+      setShowMap(true)
     } catch (error) {
       notify({ type:'error', title:'Error', message:'Failed to accept order' })
     }
   }
   async function decline(order){
-    await post(`/api/orders/${order._id}/decline`, { reason:'Not available' })
-    notify({ type:'success', title:'Declined', message:`Order ${order.orderNumber}` })
-    load()
+    // Client-side only: hide for this driver by persisting in localStorage
+    setAvailable(prev => prev.filter(o => o._id !== order._id))
+    setDismissedIds(prev => {
+      const next = Array.from(new Set([...(prev||[]), order._id]))
+      try { localStorage.setItem('driver_dismissed_orders', JSON.stringify(next)) } catch {}
+      return next
+    })
+    notify({ type:'success', title:'Hidden', message:`Order ${order.orderNumber} removed from your list` })
   }
   async function startDelivery(order){
     await post(`/api/orders/${order._id}/delivery-status`, { status:'in_transit' })
@@ -295,9 +310,35 @@ export default function DeliveryDashboard(){
                       </div>
                       <p className="text-sm font-medium text-gray-900">Items</p>
                     </div>
-                    <p className="text-sm text-gray-700 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl p-3 border border-orange-200">
-                      {o.items?.map((it, idx) => `${it.product?.name || 'Item'} x${it.quantity}`).join(', ')}
-                    </p>
+                    <div className="space-y-2">
+                      {o.items?.map((it, idx) => (
+                        <div key={idx} className="flex items-center gap-3 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl p-3 border border-orange-200">
+                          {it.product?.images?.[0]?.url ? (
+                            <img
+                              src={getImageUrl(it.product.images[0].url)}
+                              alt={it.product.name}
+                              className="w-10 h-10 object-cover rounded-xl border border-orange-200"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'block';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="w-10 h-10 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl border border-orange-200"
+                            style={{ display: it.product?.images?.[0]?.url ? 'none' : 'block' }}
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{it.product?.name || 'Item'}</p>
+                            <p className="text-xs text-gray-600">Qty: {it.quantity}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-gray-900">{formatLKR(it.total ?? (it.price * it.quantity))}</p>
+                            <p className="text-xs text-gray-500">{formatLKR(it.price)} each</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
@@ -347,6 +388,7 @@ export default function DeliveryDashboard(){
                       <div className="space-y-4 pt-4 border-t border-orange-200">
                         <LocationTracker 
                           orderId={o._id} 
+                          autoStart={['picked_up','in_transit'].includes(o.status)}
                           onLocationUpdate={(location) => {
                             console.log('Location updated:', location)
                           }}
@@ -430,11 +472,40 @@ export default function DeliveryDashboard(){
                     longitude: selectedOrder.deliveryAddress?.coordinates?.longitude || 79.8612,
                     address: selectedOrder.deliveryAddress?.fullAddress || `${selectedOrder.deliveryAddress?.street}, ${selectedOrder.deliveryAddress?.city}`
                   }}
-                  restaurantLocation={{
-                    latitude: selectedOrder.merchant?.location?.latitude || 6.9147,
-                    longitude: selectedOrder.merchant?.location?.longitude || 79.8730,
-                    name: selectedOrder.merchant?.businessName || 'Restaurant'
-                  }}
+                  shopLocation={(() => {
+                    const sl = selectedOrder.shopLocation
+                    let lat = sl?.coordinates?.latitude ?? sl?.latitude
+                    let lng = sl?.coordinates?.longitude ?? sl?.longitude
+                    let businessName = sl?.businessName
+                    let fullAddress = sl?.fullAddress
+
+                    if (lat == null || lng == null) {
+                      const msl = selectedOrder.merchant?.shopLocation
+                      lat = msl?.coordinates?.latitude ?? msl?.latitude
+                      lng = msl?.coordinates?.longitude ?? msl?.longitude
+                      businessName = businessName || selectedOrder.merchant?.businessName
+                      fullAddress = fullAddress || msl?.fullAddress || ''
+                    }
+
+                    if (lat == null || lng == null) return null
+                    return {
+                      latitude: lat,
+                      longitude: lng,
+                      businessName,
+                      fullAddress
+                    }
+                  })()}
+                  restaurantLocation={(() => {
+                    const msl = selectedOrder.merchant?.shopLocation
+                    const lat = msl?.coordinates?.latitude ?? msl?.latitude ?? 6.9147
+                    const lng = msl?.coordinates?.longitude ?? msl?.longitude ?? 79.8730
+                    return {
+                      latitude: lat,
+                      longitude: lng,
+                      name: selectedOrder.merchant?.businessName || 'Restaurant'
+                    }
+                  })()}
+                  routeTo={selectedOrder.status === 'in_transit' ? 'customer' : 'shop'}
                   onLocationUpdate={(location) => {
                     console.log('Location updated:', location)
                   }}

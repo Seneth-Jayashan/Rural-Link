@@ -40,21 +40,28 @@ const customerIcon = createCustomIcon('#ef4444', '🏠')
 const restaurantIcon = createCustomIcon('#f59e0b', '🍽️')
 
 // Map component that handles route updates
-function MapUpdater({ deliveryLocation, customerLocation, restaurantLocation, route }) {
+function MapUpdater({ deliveryLocation, customerLocation, restaurantLocation, shopLocation, route, shouldFitBounds }) {
   const map = useMap()
   
   useEffect(() => {
-    if (deliveryLocation && customerLocation) {
+    if (shouldFitBounds && deliveryLocation && deliveryLocation.latitude && deliveryLocation.longitude) {
       const bounds = L.latLngBounds([
-        [deliveryLocation.latitude, deliveryLocation.longitude],
-        [customerLocation.latitude, customerLocation.longitude]
+        [deliveryLocation.latitude, deliveryLocation.longitude]
       ])
-      if (restaurantLocation) {
+      
+      if (customerLocation && customerLocation.latitude && customerLocation.longitude) {
+        bounds.extend([customerLocation.latitude, customerLocation.longitude])
+      }
+      if (shopLocation && shopLocation.latitude && shopLocation.longitude) {
+        bounds.extend([shopLocation.latitude, shopLocation.longitude])
+      }
+      if (restaurantLocation && restaurantLocation.latitude && restaurantLocation.longitude) {
         bounds.extend([restaurantLocation.latitude, restaurantLocation.longitude])
       }
+      
       map.fitBounds(bounds, { padding: [20, 20] })
     }
-  }, [deliveryLocation, customerLocation, restaurantLocation, map])
+  }, [shouldFitBounds, deliveryLocation, customerLocation, restaurantLocation, shopLocation, map])
 
   return null
 }
@@ -62,9 +69,24 @@ function MapUpdater({ deliveryLocation, customerLocation, restaurantLocation, ro
 // OSRM Route Service
 const getRoute = async (start, end) => {
   try {
+    // Validate input coordinates
+    if (!start || !end || 
+        !start.latitude || !start.longitude || 
+        !end.latitude || !end.longitude ||
+        isNaN(start.latitude) || isNaN(start.longitude) ||
+        isNaN(end.latitude) || isNaN(end.longitude)) {
+      console.error('Invalid coordinates for route calculation:', { start, end })
+      return null
+    }
+
     const response = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=geojson`
     )
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
     const data = await response.json()
     
     if (data.routes && data.routes.length > 0) {
@@ -86,6 +108,7 @@ export default function DeliveryTrackingMap({
   orderId, 
   customerLocation, 
   restaurantLocation,
+  shopLocation,
   deliveryPerson = null,
   status = 'pending'
 }) {
@@ -96,6 +119,7 @@ export default function DeliveryTrackingMap({
   const [lastUpdate, setLastUpdate] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isRequestingLocation, setIsRequestingLocation] = useState(false)
+  const [shouldFitBounds, setShouldFitBounds] = useState(true) // Only fit bounds on initial load
   const mapRef = useRef(null)
   const socket = getSocket()
 
@@ -107,8 +131,17 @@ export default function DeliveryTrackingMap({
         (deliveryLocation.longitude + customerLocation.longitude) / 2
       ]
     }
+    if (deliveryLocation && shopLocation) {
+      return [
+        (deliveryLocation.latitude + shopLocation.latitude) / 2,
+        (deliveryLocation.longitude + shopLocation.longitude) / 2
+      ]
+    }
     if (customerLocation) {
       return [customerLocation.latitude, customerLocation.longitude]
+    }
+    if (shopLocation) {
+      return [shopLocation.latitude, shopLocation.longitude]
     }
     return [6.9271, 79.8612] // Default to Colombo
   }
@@ -116,11 +149,27 @@ export default function DeliveryTrackingMap({
   // Calculate route when delivery location changes
   useEffect(() => {
     const calculateRoute = async () => {
-      if (!deliveryLocation || !customerLocation) return
+      if (!deliveryLocation) return
 
       setIsLoadingRoute(true)
       try {
-        const routeData = await getRoute(deliveryLocation, customerLocation)
+        let routeData = null
+        
+        // If delivery person is at shop, show route to customer
+        if (status === 'picked_up' || status === 'in_transit') {
+          if (customerLocation && customerLocation.latitude && customerLocation.longitude) {
+            routeData = await getRoute(deliveryLocation, customerLocation)
+          }
+        } else {
+          // If delivery person needs to go to shop first
+          if (shopLocation && shopLocation.latitude && shopLocation.longitude) {
+            routeData = await getRoute(deliveryLocation, shopLocation)
+          } else if (customerLocation && customerLocation.latitude && customerLocation.longitude) {
+            // Fallback to customer if no shop location
+            routeData = await getRoute(deliveryLocation, customerLocation)
+          }
+        }
+        
         if (routeData) {
           setRoute(routeData)
         }
@@ -132,82 +181,121 @@ export default function DeliveryTrackingMap({
     }
 
     calculateRoute()
-  }, [deliveryLocation, customerLocation])
+  }, [deliveryLocation, customerLocation, shopLocation, status])
 
   // Socket connection for real-time updates
   useEffect(() => {
     if (!socket || !orderId) return
 
-    // Join order room
-    socket.emit('joinOrderRoom', orderId)
+    try {
+      // Join order room
+      socket.emit('joinOrderRoom', orderId)
 
-    // Listen for delivery location updates
-    const handleLocationUpdate = (data) => {
-      if (data.type === 'delivery_location') {
-        setDeliveryLocation({
-          latitude: data.latitude,
-          longitude: data.longitude,
-          timestamp: data.timestamp
-        })
-        setLastUpdate(new Date(data.timestamp))
+      // Listen for delivery location updates
+      const handleLocationUpdate = (data) => {
+        try {
+          if (data && data.type === 'delivery_location' && 
+              data.latitude && data.longitude && 
+              !isNaN(data.latitude) && !isNaN(data.longitude)) {
+            setDeliveryLocation({
+              latitude: parseFloat(data.latitude),
+              longitude: parseFloat(data.longitude),
+              timestamp: data.timestamp
+            })
+            setLastUpdate(new Date(data.timestamp))
+            // Disable auto-fit after first location update
+            setShouldFitBounds(false)
+          }
+        } catch (error) {
+          console.error('Error handling location update:', error)
+        }
       }
-    }
 
-    // Listen for order status updates
-    const handleStatusUpdate = (data) => {
-      if (data.status === 'delivered') {
-        setDeliveryLocation(null)
+      // Listen for order status updates
+      const handleStatusUpdate = (data) => {
+        try {
+          if (data && data.status === 'delivered') {
+            setDeliveryLocation(null)
+          }
+        } catch (error) {
+          console.error('Error handling status update:', error)
+        }
       }
-    }
 
-    socket.on('orderMessage', handleLocationUpdate)
-    socket.on('orderStatus', handleStatusUpdate)
+      socket.on('orderMessage', handleLocationUpdate)
+      socket.on('orderStatus', handleStatusUpdate)
 
-    // Connection status
-    socket.on('connect', () => setIsConnected(true))
-    socket.on('disconnect', () => setIsConnected(false))
+      // Connection status
+      socket.on('connect', () => setIsConnected(true))
+      socket.on('disconnect', () => setIsConnected(false))
 
-    return () => {
-      socket.off('orderMessage', handleLocationUpdate)
-      socket.off('orderStatus', handleStatusUpdate)
-      socket.off('connect')
-      socket.off('disconnect')
+      return () => {
+        socket.off('orderMessage', handleLocationUpdate)
+        socket.off('orderStatus', handleStatusUpdate)
+        socket.off('connect')
+        socket.off('disconnect')
+      }
+    } catch (error) {
+      console.error('Socket connection error:', error)
     }
   }, [socket, orderId])
 
   // Get estimated delivery time
   const getEstimatedTime = () => {
-    if (!route) return null
+    if (!route || !route.duration || isNaN(route.duration)) return null
     
-    const minutes = Math.ceil(route.duration / 60)
-    if (minutes < 60) {
-      return `${minutes} ${t('minutes')}`
-    } else {
-      const hours = Math.floor(minutes / 60)
-      const remainingMinutes = minutes % 60
-      return `${hours}h ${remainingMinutes}m`
+    try {
+      const minutes = Math.ceil(route.duration / 60)
+      if (minutes < 60) {
+        return `${minutes} ${t('minutes')}`
+      } else {
+        const hours = Math.floor(minutes / 60)
+        const remainingMinutes = minutes % 60
+        return `${hours}h ${remainingMinutes}m`
+      }
+    } catch (error) {
+      console.error('Error calculating estimated time:', error)
+      return null
     }
   }
 
   // Get distance in km
   const getDistance = () => {
-    if (!route) return null
-    return `${(route.distance / 1000).toFixed(1)} km`
+    if (!route || !route.distance || isNaN(route.distance)) return null
+    
+    try {
+      return `${(route.distance / 1000).toFixed(1)} km`
+    } catch (error) {
+      console.error('Error calculating distance:', error)
+      return null
+    }
   }
 
   // Request location update from delivery person
   const requestLocationUpdate = () => {
     if (!socket || !orderId || isRequestingLocation) return
 
-    setIsRequestingLocation(true)
-    
-    // Emit request for location update
-    socket.emit('requestLocationUpdate', { orderId })
-    
-    // Reset loading state after 3 seconds
-    setTimeout(() => {
+    try {
+      setIsRequestingLocation(true)
+      
+      // Emit request for location update
+      socket.emit('requestLocationUpdate', { orderId })
+      
+      // Reset loading state after 3 seconds
+      setTimeout(() => {
+        setIsRequestingLocation(false)
+      }, 3000)
+    } catch (error) {
+      console.error('Error requesting location update:', error)
       setIsRequestingLocation(false)
-    }, 3000)
+    }
+  }
+
+  // Manual fit to view function
+  const fitToView = () => {
+    setShouldFitBounds(true)
+    // Reset after a short delay to prevent auto-fitting on future updates
+    setTimeout(() => setShouldFitBounds(false), 100)
   }
 
   return (
@@ -233,6 +321,13 @@ export default function DeliveryTrackingMap({
               {t('Last update')}: {lastUpdate.toLocaleTimeString()}
             </div>
           )}
+          <button
+            onClick={fitToView}
+            className="p-2 hover:bg-orange-100 rounded-xl transition-colors"
+            title={t('Fit to view')}
+          >
+            <FiMapPin className="w-4 h-4 text-orange-600" />
+          </button>
           <button
             onClick={requestLocationUpdate}
             disabled={isRequestingLocation || !isConnected}
@@ -272,7 +367,9 @@ export default function DeliveryTrackingMap({
             deliveryLocation={deliveryLocation}
             customerLocation={customerLocation}
             restaurantLocation={restaurantLocation}
+            shopLocation={shopLocation}
             route={route}
+            shouldFitBounds={shouldFitBounds}
           />
           
           {/* Customer location marker */}
@@ -290,8 +387,24 @@ export default function DeliveryTrackingMap({
             </Marker>
           )}
 
-          {/* Restaurant location marker */}
-          {restaurantLocation && (
+          {/* Shop location marker */}
+          {shopLocation && (
+            <Marker
+              position={[shopLocation.latitude, shopLocation.longitude]}
+              icon={restaurantIcon}
+            >
+              <Popup>
+                <div className="text-center">
+                  <div className="font-medium text-gray-900">{t('Shop Location')}</div>
+                  <div className="text-sm text-gray-600 mt-1">{shopLocation.businessName || t('Pickup location')}</div>
+                  <div className="text-xs text-gray-500 mt-1">{shopLocation.fullAddress || 'Shop address'}</div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Restaurant location marker (fallback) */}
+          {restaurantLocation && !shopLocation && (
             <Marker
               position={[restaurantLocation.latitude, restaurantLocation.longitude]}
               icon={restaurantIcon}
@@ -360,7 +473,11 @@ export default function DeliveryTrackingMap({
             <div>
               <div className="text-sm font-medium text-gray-900">{t('Status')}</div>
               <div className="text-sm text-gray-600">
-                {deliveryLocation ? t('In Transit') : t('Waiting for pickup')}
+                {deliveryLocation ? (
+                  status === 'picked_up' || status === 'in_transit' 
+                    ? t('In Transit to Customer') 
+                    : t('Going to Shop')
+                ) : t('Waiting for pickup')}
               </div>
             </div>
           </div>

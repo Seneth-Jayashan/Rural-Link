@@ -43,6 +43,17 @@ export default function Account(){
   },[])
 
   const fullName = useMemo(()=> `${profile.firstName} ${profile.lastName}`.trim() || user?.email || '—', [profile, user])
+  
+  const formattedAddress = useMemo(() => {
+    if (!profile.address) return '—'
+    if (typeof profile.address === 'string') return profile.address
+    if (typeof profile.address === 'object') {
+      const { street, city, state, zipCode, country } = profile.address
+      const parts = [street, city, state, zipCode, country].filter(Boolean)
+      return parts.length > 0 ? parts.join(', ') : '—'
+    }
+    return '—'
+  }, [profile.address])
 
   const onPhotoChange = (e)=>{
     const file = e.target.files?.[0]
@@ -253,7 +264,7 @@ export default function Account(){
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-500 mb-1">{t('Address')}</p>
-                  <p className="text-gray-900 font-medium text-lg break-words">{profile.address || '—'}</p>
+                  <p className="text-gray-900 font-medium text-lg break-words">{formattedAddress}</p>
                 </div>
               </div>
             </div>

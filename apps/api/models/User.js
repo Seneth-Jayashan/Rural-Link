@@ -58,6 +58,18 @@ const userSchema = new mongoose.Schema({
       return this.role === 'merchant';
     }
   },
+  shopLocation: {
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zipCode: { type: String },
+    country: { type: String },
+    coordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number }
+    },
+    fullAddress: { type: String }
+  },
   isApproved: { type: Boolean, default: true },
 
 
@@ -105,5 +117,29 @@ userSchema.virtual('fullName').get(function() {
 
 // Ensure virtual fields are serialized
 userSchema.set('toJSON', { virtuals: true });
+
+// delete products when a merchant user is deleted
+userSchema.pre('findOneAndDelete', async function(next) {
+  try {
+    const doc = await this.model.findOne(this.getFilter());
+    if (doc && doc.role === 'merchant') {
+      await mongoose.model('Product').deleteMany({ merchant: doc._id });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+userSchema.post('remove', async function(doc, next) {
+  try {
+    if (doc && doc.role === 'merchant') {
+      await mongoose.model('Product').deleteMany({ merchant: doc._id });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = mongoose.model('User', userSchema);
