@@ -10,7 +10,7 @@ export default function Account(){
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { lang, setLang, t } = useI18n()
-  const [profile, setProfile] = useState({ firstName:'', lastName:'', phone:'', address:'', profileImage:'' })
+  const [profile, setProfile] = useState({ firstName:'', lastName:'', phone:'', address:'', profileImage:'', vehicleType:'', vehicleNumber:'', businessName:'' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -31,7 +31,10 @@ export default function Account(){
             lastName: res.user.lastName || '',
             phone: res.user.phone || '',
             address: res.user.address || '',
-            profileImage: res.user.profileImage || ''
+            profileImage: res.user.profileImage || '',
+            vehicleType: res.user.vehicleType || '',
+            vehicleNumber: res.user.vehicleNumber || '',
+            businessName: res.user.businessName || ''
           })
           setPhotoUrl(res.user.profileImage ? `${API_BASE}${res.user.profileImage}` : '')
         }
@@ -267,6 +270,43 @@ export default function Account(){
                   <p className="text-gray-900 font-medium text-lg break-words">{formattedAddress}</p>
                 </div>
               </div>
+
+              {/* Merchant Business Name */}
+              {user?.role === 'merchant' && (
+                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <UserIcon className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">{t('Business Name')}</p>
+                    <p className="text-gray-900 font-medium text-lg break-words">{profile.businessName || '—'}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Deliver Vehicle Details */}
+              {user?.role === 'deliver' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <UserIcon className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 mb-1">{t('Vehicle Type')}</p>
+                      <p className="text-gray-900 font-medium text-lg break-words">{(profile.vehicleType || '—').replace('_',' ')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50/50 to-amber-50/50 rounded-2xl border border-orange-200">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <UserIcon className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 mb-1">{t('Vehicle Number')}</p>
+                      <p className="text-gray-900 font-medium text-lg break-words">{profile.vehicleNumber || '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.section>
 

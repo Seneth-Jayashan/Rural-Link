@@ -31,6 +31,9 @@ export default function AccountEdit() {
       country: "Sri Lanka",
     },
     profileImage: "",
+    vehicleType: "",
+    vehicleNumber: "",
+    businessName: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,6 +62,9 @@ export default function AccountEdit() {
               country: "Sri Lanka",
             },
             profileImage: res.user.profileImage || "",
+            vehicleType: res.user.vehicleType || "",
+            vehicleNumber: res.user.vehicleNumber || "",
+            businessName: res.user.businessName || "",
           });
           setPhotoUrl(
             res.user.profileImage ? `${API_BASE}${res.user.profileImage}` : ""
@@ -154,7 +160,21 @@ export default function AccountEdit() {
           setPhotoBust((v) => v + 1);
         }
       }
-      const res = await put("/api/auth/profile", profile);
+      // Build payload of only fields we expect backend to accept
+      const payload = {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phone: profile.phone,
+        address: profile.address,
+      };
+      if (user?.role === "deliver") {
+        payload.vehicleType = profile.vehicleType || undefined;
+        payload.vehicleNumber = profile.vehicleNumber || undefined;
+      }
+      if (user?.role === "merchant") {
+        payload.businessName = profile.businessName || "";
+      }
+      const res = await put("/api/auth/profile", payload);
       if (res?.success) {
         setMessage(t("Profile updated successfully"));
         setTimeout(() => navigate("/account"), 1000);
@@ -319,6 +339,56 @@ export default function AccountEdit() {
                   placeholder={t("Enter your last name")}
                 />
               </div>
+
+              {/* Merchant: Business Name */}
+              {user?.role === 'merchant' && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t("Business Name")}
+                  </label>
+                  <input
+                    name="businessName"
+                    value={profile.businessName}
+                    onChange={onChange}
+                    placeholder={t("Enter your business name")}
+                    className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                  />
+                </div>
+              )}
+
+              {/* Deliver: Vehicle Type & Number */}
+              {user?.role === 'deliver' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t("Vehicle Type")}
+                    </label>
+                    <select
+                      name="vehicleType"
+                      value={profile.vehicleType}
+                      onChange={onChange}
+                      className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                    >
+                      <option value="">{t("Select vehicle type")}</option>
+                      <option value="motor_bike">{t("Motor Bike")}</option>
+                      <option value="car">{t("Car")}</option>
+                      <option value="three_wheel">{t("Three Wheel")}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t("Vehicle Number")}
+                    </label>
+                    <input
+                      name="vehicleNumber"
+                      value={profile.vehicleNumber}
+                      onChange={onChange}
+                      placeholder={t("Enter vehicle number")}
+                      className="w-full border border-gray-200 rounded-2xl px-4 py-3 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none"
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Email (Read-only) */}
               <div className="md:col-span-2">

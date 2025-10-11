@@ -231,7 +231,7 @@ exports.updateProfile = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: 'Validation failed', errors: errors.array() });
 
-    const allowedUpdates = ['firstName', 'lastName', 'phone', 'address', 'vehicleNumber', 'vehicleType'];
+    const allowedUpdates = ['firstName', 'lastName', 'phone', 'address', 'vehicleNumber', 'vehicleType', 'businessName'];
     const updates = {};
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
