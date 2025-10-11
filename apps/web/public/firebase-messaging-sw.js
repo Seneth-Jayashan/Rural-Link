@@ -12,9 +12,10 @@ firebase.initializeApp({
   measurementId: "G-1B0XWFCT9K"
 });
 
-const messaging = firebase.messaging()
+const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function(payload) {
-  const { title, body } = payload.notification
-  self.registration.showNotification(title, { body })
-})
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message', payload);
+  const { title, body } = payload.notification;
+  self.registration.showNotification(title, { body });
+});

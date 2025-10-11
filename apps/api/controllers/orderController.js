@@ -446,7 +446,7 @@ exports.updateDeliveryStatus = async (req, res) => {
     if (customer.fcmToken) {
       await sendNotification(
         customer.fcmToken,
-        'Order Cancelled',
+        `Order ${status.replace('_', ' ')} `,
         `Order #${order.orderNumber} is now ${status.replace('_', ' ')}`,
         { orderId: order._id.toString() }
       )
