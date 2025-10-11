@@ -61,8 +61,7 @@ exports.register = async (req, res) => {
 
     const user = await User.create(userData);
 
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${encodeURIComponent(rawToken)}/${tokenHint}`;
-
+    const verifyUrl = `rurallink://verify-email/${encodeURIComponent(rawToken)}/${tokenHint}`;
     await sendEmail({
       to: user.email,
       subject: 'Verify your email',
