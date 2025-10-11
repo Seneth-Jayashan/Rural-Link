@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
-import { requestNotificationPermission, listenForMessages } from "../../notifications.js";
 
 export default function Onboarding() {
   const [showSplash, setShowSplash] = useState(true)
   const [current, setCurrent] = useState(0)
-  const [permissionGranted, setPermissionGranted] = useState(false)
   const navigate = useNavigate()
   const { t } = useI18n()
 
@@ -17,40 +15,8 @@ export default function Onboarding() {
     return () => clearTimeout(timer)
   }, [])
 
-  // --- Auto check existing FCM token ---
-  useEffect(() => {
-    const existingToken = sessionStorage.getItem('FCM-Token')
-    if (existingToken) {
-      console.log("✅ Existing FCM token found:", existingToken)
-      setPermissionGranted(true)
-      listenForMessages()
-    }
-  }, [])
-
-  // --- Request permission & handle response ---
-  // const handleRequestPermission = async () => {
-  //   try {
-  //     const token = await requestNotificationPermission()
-  //     if (token) {
-  //       console.log("✅ Notifications enabled with token:", token)
-  //       setPermissionGranted(true)
-  //       listenForMessages()
-  //     } else {
-  //       alert("Please allow notifications to continue.")
-  //     }
-  //   } catch (err) {
-  //     console.error("Error during notification permission request:", err)
-  //     alert("An error occurred while enabling notifications. Please try again.")
-  //   }
-  // }
-
   // --- Slide Navigation ---
   const nextSlide = () => {
-    if (!permissionGranted) {
-      alert("You must allow notifications to continue!")
-      return
-    }
-
     if (current < slides.length - 1) {
       setCurrent((prev) => prev + 1)
     } else {
@@ -111,9 +77,7 @@ export default function Onboarding() {
         {slides.map((_, i) => (
           <div
             key={i}
-            className={`w-3 h-3 rounded-full ${
-              current === i ? 'bg-orange-500' : 'bg-gray-300'
-            }`}
+            className={`w-3 h-3 rounded-full ${current === i ? 'bg-orange-500' : 'bg-gray-300'}`}
           />
         ))}
       </div>
@@ -131,23 +95,12 @@ export default function Onboarding() {
           <div />
         )}
 
-        {!permissionGranted ? (
-          <button
-            onClick={handleRequestPermission}
-            className="btn-brand px-4 py-2 rounded-lg"
-          >
-            {'Allow Notifications'}
-          </button>
-        ) : (
-          <button
-            onClick={nextSlide}
-            className="btn-brand px-4 py-2 rounded-lg"
-          >
-            {current === slides.length - 1
-              ? t('getStarted') || 'Get Started'
-              : t('next') || 'Next'}
-          </button>
-        )}
+        <button
+          onClick={nextSlide}
+          className="btn-brand px-4 py-2 rounded-lg"
+        >
+          {current === slides.length - 1 ? t('getStarted') || 'Get Started' : t('next') || 'Next'}
+        </button>
       </div>
     </div>
   )
