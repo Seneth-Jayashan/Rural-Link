@@ -1,27 +1,41 @@
 // server/notifications.js
-// Use 'import' since firebaseAdmin.js uses 'export default admin;'
-import admin from './firebaseAdmin.js';
+import admin from './firebaseAdmin.js'
 
 /**
- * Send push notification to a user
- * @param {string} token - User's FCM token
+ * Send push notification to one or multiple tokens
+ * @param {string|string[]} tokens - Single token or array of tokens
  * @param {string} title - Notification title
  * @param {string} body - Notification body
  * @param {object} data - Optional additional data
  */
-export async function sendNotification(token, title, body, data = {}) {
-  if (!token) return;
+export async function sendNotification(tokens, title, body, data = {}) {
+  if (!tokens) return
+
+  // Ensure we have an array
+  const tokenList = Array.isArray(tokens) ? tokens : [tokens]
 
   const message = {
-    token,
     notification: { title, body },
     data: { ...data },
-  };
+  }
 
   try {
-    const response = await admin.messaging().send(message);
-    console.log('Notification sent:', response);
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens: tokenList,
+      ...message,
+    })
+
+    // Optional logging
+    console.log(
+      `✅ Notifications sent: ${response.successCount}, failed: ${response.failureCount}`
+    )
+
+    if (response.failureCount > 0) {
+      console.warn('Failed tokens:', response.responses
+        .filter(r => !r.success)
+        .map((r, i) => tokenList[i]))
+    }
   } catch (error) {
-    console.error('Error sending notification:', error);
+    console.error('❌ Error sending notification:', error)
   }
 }

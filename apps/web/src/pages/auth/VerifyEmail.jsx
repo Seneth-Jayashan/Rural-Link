@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import { useToast } from '../../shared/ui/Toast.jsx'
-import { useNavigate } from 'react-router-dom'  // <== Import useNavigate
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 
 export default function VerifyEmail() {
@@ -11,9 +10,8 @@ export default function VerifyEmail() {
   const [status, setStatus] = useState('loading')
   const [message, setMessage] = useState('')
   const ranRef = useRef(false)
-  const navigate = useNavigate() // <== Initialize navigate
+  const navigate = useNavigate()
   const { t } = useI18n()
-
 
   useEffect(() => {
     if (ranRef.current) return
@@ -24,16 +22,7 @@ export default function VerifyEmail() {
         const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/verify-email/${token}/${hint}`
         console.log('🔍 Fetching:', apiUrl)
         const res = await fetch(apiUrl)
-
-        // Handle non-JSON responses gracefully
-        let data = {}
-        try {
-          data = await res.json()
-        } catch (e) {
-          console.warn('⚠️ Non-JSON response from server:', e)
-          data = { message: 'Unexpected response from server' }
-        }
-
+        const data = await res.json().catch(() => ({ message: 'Invalid response' }))
         console.log('✅ Response:', res.status, data)
 
         if (res.ok) {
@@ -41,9 +30,16 @@ export default function VerifyEmail() {
           setMessage(data.message || t('Email verified successfully'))
           notify({ type: 'success', title: t('Verified'), message: t('You can now log in') })
 
+          // Wait 2 seconds, then open the app
           setTimeout(() => {
-            navigate('/login')
-          }, 2500)
+            // Try to open the Android app via deep link
+            window.location.href = `rurallink://login`
+
+            // Fallback: navigate to login on web after 2 more seconds
+            setTimeout(() => {
+              navigate('/login')
+            }, 2000)
+          }, 2000)
         } else {
           setStatus('error')
           setMessage(data.message || t('Invalid or expired token'))
@@ -59,8 +55,6 @@ export default function VerifyEmail() {
 
     verify()
   }, [token, hint])
-
-  console.log('🧩 Render status:', status, message)
 
   return (
     <div className="p-6 max-w-sm mx-auto text-center">
