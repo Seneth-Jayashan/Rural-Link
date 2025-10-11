@@ -28,21 +28,21 @@ export default function Onboarding() {
   }, [])
 
   // --- Request permission & handle response ---
-  const handleRequestPermission = async () => {
-    try {
-      const token = await requestNotificationPermission()
-      if (token) {
-        console.log("✅ Notifications enabled with token:", token)
-        setPermissionGranted(true)
-        listenForMessages()
-      } else {
-        alert("Please allow notifications to continue.")
-      }
-    } catch (err) {
-      console.error("Error during notification permission request:", err)
-      alert("An error occurred while enabling notifications. Please try again.")
-    }
-  }
+  // const handleRequestPermission = async () => {
+  //   try {
+  //     const token = await requestNotificationPermission()
+  //     if (token) {
+  //       console.log("✅ Notifications enabled with token:", token)
+  //       setPermissionGranted(true)
+  //       listenForMessages()
+  //     } else {
+  //       alert("Please allow notifications to continue.")
+  //     }
+  //   } catch (err) {
+  //     console.error("Error during notification permission request:", err)
+  //     alert("An error occurred while enabling notifications. Please try again.")
+  //   }
+  // }
 
   // --- Slide Navigation ---
   const nextSlide = () => {
