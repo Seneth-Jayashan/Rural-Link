@@ -344,19 +344,20 @@ export default function DeliveryDashboard(){
                   {/* Action Buttons */}
                   <div className="space-y-3">
                     {/* Map Button */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setSelectedOrder(o)
-                        setShowMap(true)
-                      }}
-                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl py-3 font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
-                    >
-                      <FiNavigation className="w-4 h-4" />
-                      View Delivery Route
-                    </motion.button>
-
+                    {o.status !== 'delivered' && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setSelectedOrder(o)
+                          setShowMap(true)
+                        }}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl py-3 font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                      >
+                        <FiNavigation className="w-4 h-4" />
+                        View Delivery Route
+                      </motion.button>
+                    )}
                     {/* Status Actions */}
                     <div className="flex gap-2">
                       {o.status === 'picked_up' && (

@@ -98,12 +98,6 @@ export default function LocationTracker({ orderId, onLocationUpdate, autoStart =
       
       setLastUpdate(new Date())
       onLocationUpdate?.(location)
-      
-      notify({ 
-        type: 'success', 
-        title: t('Location updated'), 
-        message: t('Your location has been shared with the customer') 
-      })
     } catch (error) {
       console.error('Location update error:', error)
       notify({ type: 'error', title: t('Failed to update location') })
