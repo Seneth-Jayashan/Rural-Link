@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Sub-schema for order items
 const orderItemSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,6 +24,7 @@ const orderItemSchema = new mongoose.Schema({
   }
 });
 
+// Main Order schema
 const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
@@ -47,7 +49,10 @@ const orderSchema = new mongoose.Schema({
   items: [orderItemSchema],
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'in_transit', 'delivered', 'cancelled', 'refunded'],
+    enum: [
+      'pending', 'confirmed', 'preparing', 'ready', 'picked_up',
+      'in_transit', 'delivered', 'cancelled', 'refunded'
+    ],
     default: 'pending'
   },
   paymentStatus: {
@@ -61,31 +66,11 @@ const orderSchema = new mongoose.Schema({
     default: 'cash'
   },
   paymentId: String,
-  subtotal: {
-    type: Number,
-    required: [true, 'Subtotal is required'],
-    min: [0, 'Subtotal cannot be negative']
-  },
-  deliveryFee: {
-    type: Number,
-    default: 0,
-    min: [0, 'Delivery fee cannot be negative']
-  },
-  tax: {
-    type: Number,
-    default: 0,
-    min: [0, 'Tax cannot be negative']
-  },
-  discount: {
-    type: Number,
-    default: 0,
-    min: [0, 'Discount cannot be negative']
-  },
-  total: {
-    type: Number,
-    required: [true, 'Total is required'],
-    min: [0, 'Total cannot be negative']
-  },
+  subtotal: { type: Number, required: true, min: 0 },
+  deliveryFee: { type: Number, default: 0, min: 0 },
+  tax: { type: Number, default: 0, min: 0 },
+  discount: { type: Number, default: 0, min: 0 },
+  total: { type: Number, required: true, min: 0 },
   deliveryAddress: {
     street: { type: String, required: true },
     city: { type: String, required: true },
@@ -100,53 +85,31 @@ const orderSchema = new mongoose.Schema({
     instructions: String
   },
   shopLocation: {
-    street: { type: String },
-    city: { type: String },
-    state: { type: String },
-    zipCode: { type: String },
-    country: { type: String },
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String,
     coordinates: {
-      latitude: { type: Number },
-      longitude: { type: Number }
+      latitude: Number,
+      longitude: Number
     },
-    fullAddress: { type: String },
-    businessName: { type: String }
+    fullAddress: String,
+    businessName: String
   },
   estimatedDeliveryTime: Date,
   actualDeliveryTime: Date,
-  preparationTime: {
-    type: Number,
-    default: 0,
-    min: [0, 'Preparation time cannot be negative']
-  },
-  deliveryTime: {
-    type: Number,
-    default: 0,
-    min: [0, 'Delivery time cannot be negative']
-  },
+  preparationTime: { type: Number, default: 0, min: 0 },
+  deliveryTime: { type: Number, default: 0, min: 0 },
   specialInstructions: String,
-  isOffline: {
-    type: Boolean,
-    default: false
-  },
+  isOffline: { type: Boolean, default: false },
   offlineSyncTime: Date,
-  customerRating: {
-    type: Number,
-    min: [1, 'Rating must be at least 1'],
-    max: [5, 'Rating cannot exceed 5']
-  },
+  customerRating: { type: Number, min: 1, max: 5 },
   customerReview: String,
-  deliveryRating: {
-    type: Number,
-    min: [1, 'Rating must be at least 1'],
-    max: [5, 'Rating cannot exceed 5']
-  },
+  deliveryRating: { type: Number, min: 1, max: 5 },
   deliveryReview: String,
   cancellationReason: String,
-  refundAmount: {
-    type: Number,
-    min: [0, 'Refund amount cannot be negative']
-  },
+  refundAmount: { type: Number, min: 0 },
   trackingHistory: [{
     status: String,
     timestamp: { type: Date, default: Date.now },
@@ -156,65 +119,45 @@ const orderSchema = new mongoose.Schema({
     },
     note: String
   }]
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
-// Auto-generate order number if missing
-orderSchema.pre('validate', function(next){
-  if(!this.orderNumber){
-    const rand = Math.floor(1000 + Math.random()*9000)
-    this.orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}-${rand}`
-  }
-  next()
-})
-
-// Index for better query performance
+// --- Indexes for faster queries ---
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ merchant: 1, status: 1 });
 orderSchema.index({ deliveryPerson: 1, status: 1 });
-orderSchema.index({ orderNumber: 1 });
+// orderNumber already has unique index via schema, no need to add index()
 
-// Pre-save middleware to generate order number
-orderSchema.pre('save', async function(next) {
-  if (this.isNew && !this.orderNumber) {
-    const count = await mongoose.model('Order').countDocuments();
-    this.orderNumber = `ORD-${Date.now()}-${(count + 1).toString().padStart(4, '0')}`;
+// --- Auto-generate order number ---
+orderSchema.pre('validate', function(next) {
+  if (!this.orderNumber) {
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    this.orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}-${rand}`;
   }
   next();
 });
 
-// Method to update order status
-orderSchema.methods.updateStatus = function(newStatus, location = null, note = '') {
+// --- Instance methods ---
+orderSchema.methods.updateStatus = async function(newStatus, location = null, note = '') {
   this.status = newStatus;
-  this.trackingHistory.push({
-    status: newStatus,
-    timestamp: new Date(),
-    location,
-    note
-  });
-  
-  if (newStatus === 'delivered') {
-    this.actualDeliveryTime = new Date();
-  }
-  
+  this.trackingHistory.push({ status: newStatus, timestamp: new Date(), location, note });
+
+  if (newStatus === 'delivered') this.actualDeliveryTime = new Date();
   return this.save();
 };
 
-// Method to calculate delivery time
 orderSchema.methods.calculateDeliveryTime = function() {
   if (this.actualDeliveryTime && this.createdAt) {
-    this.deliveryTime = Math.round((this.actualDeliveryTime - this.createdAt) / (1000 * 60)); // in minutes
+    this.deliveryTime = Math.round((this.actualDeliveryTime - this.createdAt) / (1000 * 60));
   }
   return this.deliveryTime;
 };
 
-// Virtual for order age
+// --- Virtuals ---
 orderSchema.virtual('orderAge').get(function() {
   return Math.round((Date.now() - this.createdAt) / (1000 * 60)); // in minutes
 });
 
-// Static method to get orders by status
+// --- Static methods ---
 orderSchema.statics.getOrdersByStatus = function(status, limit = 50) {
   return this.find({ status })
     .populate('customer', 'firstName lastName phone')
