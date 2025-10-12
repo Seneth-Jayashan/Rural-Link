@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react' // Import Fragment
 import { get } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Listbox, Transition } from '@headlessui/react' // Import Listbox
 import { 
   FiDownload, 
   FiFileText, 
@@ -12,7 +13,9 @@ import {
   FiPieChart,
   FiDatabase,
   FiShoppingBag,
-  FiTruck
+  FiTruck,
+  FiCheck,       // New Icon
+  FiChevronDown  // New Icon
 } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
@@ -26,6 +29,13 @@ export default function Reports(){
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('monthly')
   const [refreshing, setRefreshing] = useState(false)
+
+  const periodOptions = [
+    { value: 'daily', label: t('Last 30 Days') },
+    { value: 'weekly', label: t('Last 12 Weeks') },
+    { value: 'monthly', label: t('Last 12 Months') },
+    { value: 'yearly', label: t('Last 5 Years') }
+  ]
 
   async function loadAnalytics() {
     try {
@@ -174,19 +184,56 @@ export default function Reports(){
       >
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-none">
-              <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 w-4 h-4" />
-              <select 
-                value={period} 
-                onChange={(e) => setPeriod(e.target.value)}
-                className="w-full border border-orange-200 rounded-2xl pl-10 pr-4 py-3 bg-white text-gray-700 focus:border-orange-300 focus:ring-2 focus:ring-orange-200 outline-none appearance-none"
-              >
-                <option value="daily">{t('Last 30 Days')}</option>
-                <option value="weekly">{t('Last 12 Weeks')}</option>
-                <option value="monthly">{t('Last 12 Months')}</option>
-                <option value="yearly">{t('Last 5 Years')}</option>
-              </select>
+            {/* --- REPLACEMENT CODE STARTS HERE --- */}
+            <div className="relative flex-1 sm:w-52">
+              <Listbox value={period} onChange={setPeriod}>
+                <div className="relative">
+                  <Listbox.Button className="relative w-full cursor-pointer border border-orange-200 rounded-2xl pl-10 pr-4 py-3 bg-white text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-opacity-75 text-left">
+                    <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 w-4 h-4" />
+                    <span className="block truncate">
+                      {periodOptions.find(p => p.value === period)?.label}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                      <FiChevronDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    </span>
+                  </Listbox.Button>
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-10">
+                      {periodOptions.map((option, optionIdx) => (
+                        <Listbox.Option
+                          key={optionIdx}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
+                              active ? 'bg-orange-100 text-orange-900' : 'text-gray-900'
+                            }`
+                          }
+                          value={option.value}
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                                {option.label}
+                              </span>
+                              {selected ? (
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-orange-600">
+                                  <FiCheck className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
+            {/* --- REPLACEMENT CODE ENDS HERE --- */}
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -195,7 +242,7 @@ export default function Reports(){
               disabled={refreshing}
               className="p-3 bg-orange-100 rounded-2xl border border-orange-200 disabled:opacity-50"
             >
-              <FiRefreshCw className={`w-4 h-4 text-orange-600 ${refreshing ? 'animate-spin' : ''}`} />
+              <FiRefreshCw className={`w-5 h-5 text-orange-600 ${refreshing ? 'animate-spin' : ''}`} />
             </motion.button>
           </div>
         </div>
@@ -325,7 +372,7 @@ export default function Reports(){
         </div>
       </motion.div>
 
-      {/* Quick Stats - PROPER MOBILE FIX */}
+      {/* Quick Stats */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -339,27 +386,22 @@ export default function Reports(){
           <h3 className="text-lg font-semibold text-gray-900">{t('Quick Statistics')}</h3>
         </div>
 
-        {/* Proper 2x2 grid for mobile */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Total Revenue - Top Left */}
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
             <p className="text-lg font-bold text-green-600">{formatLKR(overview?.totalRevenue || 0)}</p>
             <p className="text-xs text-gray-600 mt-1">{t('Total Revenue')}</p>
           </div>
           
-          {/* Total Orders - Top Right */}
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
             <p className="text-lg font-bold text-blue-600">{overview?.totalOrders || 0}</p>
             <p className="text-xs text-gray-600 mt-1">{t('Total Orders')}</p>
           </div>
           
-          {/* Deliveries - Bottom Left */}
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
             <p className="text-lg font-bold text-purple-600">{deliveries?.totalDeliveries || 0}</p>
             <p className="text-xs text-gray-600 mt-1">{t('Deliveries')}</p>
           </div>
           
-          {/* Avg Order Value - Bottom Right */}
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
             <p className="text-lg font-bold text-orange-600">{formatLKR(overview?.averageOrderValue || 0)}</p>
             <p className="text-xs text-gray-600 mt-1">{t('Avg Order Value')}</p>

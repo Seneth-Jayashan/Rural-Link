@@ -1,8 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react' // Import Fragment
 import { useNavigate } from 'react-router-dom'
 import { get, del, getImageUrl } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiPlus, FiTrash2, FiEdit2, FiPackage, FiSearch, FiFilter, FiBox, FiDollarSign, FiActivity } from 'react-icons/fi'
+import { Listbox, Transition } from '@headlessui/react' // Import Listbox
+import { 
+  FiPlus, 
+  FiTrash2, 
+  FiEdit2, 
+  FiPackage, 
+  FiSearch, 
+  FiFilter, 
+  FiBox, 
+  FiDollarSign, 
+  FiActivity,
+  FiChevronDown, // New Icon
+  FiCheck       // New Icon
+} from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { Spinner } from '../../shared/ui/Spinner.jsx'
 import ConfirmationModal from '../../shared/ui/ConfirmationModal.jsx'
@@ -16,6 +29,12 @@ export default function ProductsList(){
   const [productToDelete, setProductToDelete] = useState(null)
   const { notify } = useToast()
   const navigate = useNavigate()
+
+  const statusOptions = [
+    { value: 'all', label: 'All Statuses' },
+    { value: 'in', label: 'In Stock' },
+    { value: 'out', label: 'Out of Stock' }
+  ]
 
   async function load(){
     try{
@@ -137,19 +156,56 @@ export default function ProductsList(){
 
           {/* Filter and Add Button */}
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            {/* Status Filter */}
-            <div className="relative">
-              <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-200 rounded-2xl pl-10 pr-4 py-2 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none appearance-none"
-              >
-                <option value="all">All</option>
-                <option value="in">In Stock</option>
-                <option value="out">Out of Stock</option>
-              </select>
+            {/* --- REPLACEMENT CODE STARTS HERE --- */}
+            <div className="relative w-full sm:w-40">
+              <Listbox value={filterStatus} onChange={setFilterStatus}>
+                <div className="relative">
+                  <Listbox.Button className="relative w-full cursor-pointer border border-gray-200 rounded-2xl pl-10 pr-4 py-2 bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none text-left">
+                    <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <span className="block truncate text-sm">
+                      {statusOptions.find(opt => opt.value === filterStatus)?.label}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                      <FiChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
+                    </span>
+                  </Listbox.Button>
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-10">
+                      {statusOptions.map((option, optionIdx) => (
+                        <Listbox.Option
+                          key={optionIdx}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
+                              active ? 'bg-orange-100 text-orange-900' : 'text-gray-900'
+                            }`
+                          }
+                          value={option.value}
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                                {option.label}
+                              </span>
+                              {selected ? (
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-orange-600">
+                                  <FiCheck className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
+            {/* --- REPLACEMENT CODE ENDS HERE --- */}
 
             {/* Add Product Button */}
             <motion.button

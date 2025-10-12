@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react' // Import Fragment
 import { get } from '../../shared/api.js'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Listbox, Transition } from '@headlessui/react' // Import Listbox
 import { 
   FiDollarSign, 
   FiShoppingBag, 
@@ -14,7 +15,9 @@ import {
   FiBarChart2,
   FiStar,
   FiChevronRight,
-  FiEye
+  FiEye,
+  FiChevronDown, // New Icon
+  FiCheck       // New Icon
 } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
@@ -29,6 +32,14 @@ export default function MerchantDashboard(){
   const [period, setPeriod] = useState('monthly')
   const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+
+  // Create an array for cleaner mapping
+  const periodOptions = [
+    { value: 'daily', label: t('30 Days') },
+    { value: 'weekly', label: t('12 Weeks') },
+    { value: 'monthly', label: t('12 Months') },
+    { value: 'yearly', label: t('5 Years') }
+  ]
 
   async function loadAnalytics() {
     try {
@@ -101,28 +112,75 @@ export default function MerchantDashboard(){
             </div>
           </div>
           
-          
-        </div>
-
-        {/* Period Selector - Improved mobile UX */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100 p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FiClock className="text-orange-500 w-4 h-4" />
-              <span className="text-sm font-medium text-gray-700">{t('Period')}</span>
-            </div>
-            <select 
-              value={period} 
-              onChange={(e) => setPeriod(e.target.value)}
-              className="w-full sm:w-auto border border-orange-200 rounded-2xl pl-4 pr-8 py-3 bg-white text-gray-700 focus:border-orange-300 focus:ring-2 focus:ring-orange-200 outline-none appearance-none text-sm"
+          {/* Quick Actions */}
+          <div className="flex gap-2">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={loadAnalytics}
+              disabled={refreshing}
+              className="p-3 bg-white rounded-2xl shadow-lg border border-orange-200 disabled:opacity-50"
             >
-              <option value="daily">{t('Last 30 Days')}</option>
-              <option value="weekly">{t('Last 12 Weeks')}</option>
-              <option value="monthly">{t('Last 12 Months')}</option>
-              <option value="yearly">{t('Last 5 Years')}</option>
-            </select>
+              <FiRefreshCw className={`w-5 h-5 text-orange-600 ${refreshing ? 'animate-spin' : ''}`} />
+            </motion.button>
           </div>
         </div>
+
+        {/* --- REPLACEMENT CODE STARTS HERE --- */}
+        <div className="relative">
+          <Listbox value={period} onChange={setPeriod}>
+            <div className="relative">
+              <Listbox.Button className="relative w-full cursor-pointer bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100 p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-opacity-75">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FiClock className="text-orange-500 w-4 h-4" />
+                    <span className="text-sm font-medium text-gray-700">{t('Period')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="block truncate text-sm font-medium text-orange-600">
+                      {periodOptions.find(p => p.value === period)?.label}
+                    </span>
+                    <FiChevronDown className="h-4 w-4 text-orange-400" aria-hidden="true" />
+                  </div>
+                </div>
+              </Listbox.Button>
+              <Transition
+                as={Fragment}
+                leave="transition ease-in duration-100"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-10">
+                  {periodOptions.map((option, optionIdx) => (
+                    <Listbox.Option
+                      key={optionIdx}
+                      className={({ active }) =>
+                        `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
+                          active ? 'bg-orange-100 text-orange-900' : 'text-gray-900'
+                        }`
+                      }
+                      value={option.value}
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                            {option.label}
+                          </span>
+                          {selected ? (
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-orange-600">
+                              <FiCheck className="h-5 w-5" aria-hidden="true" />
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </Transition>
+            </div>
+          </Listbox>
+        </div>
+        {/* --- REPLACEMENT CODE ENDS HERE --- */}
       </motion.div>
 
       {/* Navigation Tabs */}
@@ -166,7 +224,7 @@ export default function MerchantDashboard(){
                 <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                   <FiDollarSign className="text-xl text-white" />
                 </div>
-                <span className="text-orange-200 text-sm bg-white/10 px-2 py-1 rounded-full">
+                <span className="text-orange-200 text-sm bg-white/10 px-2 py-1 rounded-full capitalize">
                   {period}
                 </span>
               </div>
@@ -185,7 +243,6 @@ export default function MerchantDashboard(){
                   label: t('Total Orders'), 
                   value: overview?.totalOrders || 0, 
                   icon: FiShoppingBag, 
-                  color: 'blue',
                   bg: 'bg-blue-50',
                   text: 'text-blue-600'
                 },
@@ -193,7 +250,6 @@ export default function MerchantDashboard(){
                   label: t('Deliveries'), 
                   value: deliveries?.totalDeliveries || 0, 
                   icon: FiTruck, 
-                  color: 'green',
                   bg: 'bg-green-50',
                   text: 'text-green-600'
                 },
@@ -201,7 +257,6 @@ export default function MerchantDashboard(){
                   label: t('Completed'), 
                   value: overview?.completedOrders || 0, 
                   icon: FiPackage, 
-                  color: 'green',
                   bg: 'bg-green-50',
                   text: 'text-green-600'
                 },
@@ -209,7 +264,6 @@ export default function MerchantDashboard(){
                   label: t('Pending'), 
                   value: overview?.pendingOrders || 0, 
                   icon: FiClock, 
-                  color: 'yellow',
                   bg: 'bg-yellow-50',
                   text: 'text-yellow-600'
                 }
