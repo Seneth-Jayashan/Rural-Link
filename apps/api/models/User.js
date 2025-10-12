@@ -61,6 +61,7 @@ const userSchema = new mongoose.Schema({
   verificationTokenHint: { type: String, index: true }, // short lookup string
 
   resetPasswordToken: String,
+  resetPasswordCode: String,
   resetPasswordExpire: Date,
 
   // Merchant specific fields

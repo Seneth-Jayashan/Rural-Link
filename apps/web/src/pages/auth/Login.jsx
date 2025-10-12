@@ -5,7 +5,6 @@ import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { motion } from 'framer-motion'
 import { FiMail, FiLock } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
-// Assuming requestNotificationPermission handles both web permission and token retrieval
 import { requestNotificationPermission, saveFCMToken } from '../../notifications.js'
 
 

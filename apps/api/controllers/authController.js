@@ -3,8 +3,10 @@ const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
-const { verifyEmailTemplate } = require('../emails/emailTemplates');
+const { verifyEmailTemplate, forgotPasswordTemplate, passwordChangedTemplate ,verificationCodeTemplate} = require('../emails/emailTemplates');
 require("dotenv").config();
+const crypto = require('crypto');
+const otpGenerator = require('otp-generator');
 // Profile image upload logic removed
 
 // Generate JWT Token
@@ -293,60 +295,130 @@ exports.changePassword = async (req, res) => {
 };
 
 
+// =================================================================
+// 1. FORGOT PASSWORD (Request Code and get Verification ID)
+// =================================================================
 exports.forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        
+        // --- Security Note: Return a generic message even if the user isn't found.
+        if (!user) {
+            return res.json({ success: true, message: 'If a user with that email exists, a verification code has been sent.', verificationId: null });
+        }
 
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
-    await user.save({ validateBeforeSave: false });
+        // --- Generate and store 6-digit OTP ---
+        const verificationCode = otpGenerator.generate(6, { 
+            upperCaseAlphabets: false, 
+            lowerCaseAlphabets: false, 
+            specialChars: false 
+        });
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    await sendEmail({
-      to: user.email,
-      subject: 'Password Reset Request',
-      html: forgotPasswordTemplate(resetUrl, user.firstName)
-    });
+        // 1. Generate a temporary ID the client will use for the next request.
+        const verificationId = crypto.randomBytes(16).toString('hex'); 
 
-    res.json({ success: true, message: 'Password reset email sent' });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+        // 2. Store the HASHED code AND the verificationId on the user record.
+        user.resetPasswordCode = crypto.createHash('sha256').update(verificationCode).digest('hex'); // Storing the OTP hash
+        user.resetPasswordToken = verificationId; 
+        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes for code validity
+        await user.save({ validateBeforeSave: false });
+
+        // --- Send the Code via Email ---
+        await sendEmail({
+            to: user.email,
+            subject: 'Password Reset Verification Code',
+            html: verificationCodeTemplate(verificationCode, user.firstName) 
+        });
+
+        // 3. Return the verificationId to the client.
+        res.json({ 
+            success: true, 
+            message: 'A 6-digit verification code has been sent to your email.',
+            verificationId: verificationId // <--- Client needs this for the next step
+        });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 };
 
+// =================================================================
+// 2. VERIFY CODE (Verify Code and Verification ID)
+// =================================================================
+exports.verifyCode = async (req, res) => {
+    try {
+        // Client sends only the ID it received and the 6-digit code.
+        const { verificationId, code } = req.body; 
+        const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
+
+        // Search by the client-provided ID (resetPasswordToken field) AND the code hash
+        const user = await User.findOne({
+            resetPasswordToken: verificationId, // This field now holds the client's verificationId
+            resetPasswordCode: hashedCode,     // This field now holds the hashed 6-digit code
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired code or verification ID.' });
+        }
+
+        // Code and ID are correct. Generate a new, secure, long-lived token for the final reset.
+        const longResetToken = crypto.randomBytes(32).toString('hex');
+
+        // Store the HASHED long token (ready for the final step)
+        user.resetPasswordToken = crypto.createHash('sha256').update(longResetToken).digest('hex');
+        user.resetPasswordCode = undefined; // Clear the short 6-digit code hash
+        user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour for the long token
+        await user.save({ validateBeforeSave: false });
+
+        // Send the UNHASHED long token back to the client to use for the final reset
+        res.json({ 
+            success: true, 
+            message: 'Code verified. Proceed to reset password.', 
+            token: longResetToken 
+        });
+
+    } catch (error) {
+        console.error('Verify code error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+// =================================================================
+// 3. RESET PASSWORD (Final step using the temporary token)
+// =================================================================
 exports.resetPassword = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const { newPassword } = req.body;
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    // This logic remains exactly the same as the previous implementation
+    try {
+        const { token } = req.params; 
+        const { newPassword } = req.body;
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpire: { $gt: Date.now() }
-    });
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
 
-    if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+        if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired reset token. Please restart the forgot password process.' });
 
-    user.password = newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-    await user.save();
+        user.password = newPassword; 
+        user.resetPasswordToken = undefined;
+        user.resetPasswordCode = undefined; // Clear any lingering codes
+        user.resetPasswordExpire = undefined;
+        await user.save();
 
-    await sendEmail({
-      to: user.email,
-      subject: 'Your password has been reset',
-      html: passwordChangedTemplate(user.firstName)
-    });
+        await sendEmail({
+            to: user.email,
+            subject: 'Your password has been reset',
+            html: passwordChangedTemplate(user.firstName)
+        });
 
-    res.json({ success: true, message: 'Password has been reset successfully' });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+        res.json({ success: true, message: 'Password has been reset successfully' });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 };
 
 exports.updateFCMToken = async(req,res) => {

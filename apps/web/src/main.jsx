@@ -5,6 +5,9 @@ import './index.css'
 import { AppShell } from './shell/AppShell.jsx'
 import Login from './pages/auth/Login.jsx'
 import Register from './pages/auth/Register.jsx'
+import ForgotPassword from './pages/auth/ForgotPassword.jsx'
+import VerifyCode from './pages/auth/VerifyCode.jsx'
+import ResetPassword from './pages/auth/ResetPassword.jsx'
 import VerifyEmail from './pages/auth/VerifyEmail.jsx'
 import CustomerHome from './pages/customer/Home.jsx'
 import MerchantDashboard from './pages/merchant/Dashboard.jsx'
@@ -79,6 +82,9 @@ const router = createBrowserRouter([
       { index: true, element: <HomeRouter /> },
       { path: 'login', element: <NotAuthOnly><Login /></NotAuthOnly> },
       { path: 'register', element: <NotAuthOnly><Register /></NotAuthOnly> },
+      { path: 'forgot-password', element: <NotAuthOnly><ForgotPassword /></NotAuthOnly> },
+      { path: 'reset-password', element: <NotAuthOnly><ResetPassword /></NotAuthOnly> },
+      { path: 'verify-code', element: <NotAuthOnly><VerifyCode /></NotAuthOnly> },
       { path: 'verify-email/:token/:hint', element: <NotAuthOnly><VerifyEmail /></NotAuthOnly> },
       { path: 'merchant', element: <RequireRole role="merchant"><Navigate to="/merchant/dashboard" replace /></RequireRole> },
       { path: 'merchant/dashboard', element: <RequireRole role="merchant"><MerchantDashboard /></RequireRole> },

@@ -56,6 +56,20 @@ const forgotPasswordTemplate = (resetUrl, firstName) => `
   </div>
 `;
 
+const verificationCodeTemplate = (code, firstName) => `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; text-align: center;">
+        <h2>Password Reset Verification</h2>
+        <p>Hello ${firstName},</p>
+        <p>You recently requested to reset your password. Use the following 6-digit code to complete the process:</p>
+        <div style="background-color: #f0f0f0; padding: 20px; border-radius: 8px; margin: 20px auto; width: fit-content;">
+            <strong style="font-size: 32px; letter-spacing: 5px; color: #dc3545;">${code}</strong>
+        </div>
+        <p>This code is valid for 10 minutes.</p>
+        <p>If you did not request this, please ignore this email.</p>
+        <p>Regards,<br/>Rural Link Team</p>
+    </div>
+`;
+
 const passwordChangedTemplate = (firstName) => `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <h2>Hello ${firstName},</h2>
@@ -250,5 +264,6 @@ module.exports = {
     supplierPaymentTemplate,
     genericNotificationTemplate,
     paymentConfirmationTemplate,
-    lowStockTemplate
+    lowStockTemplate,
+    verificationCodeTemplate
 };

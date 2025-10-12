@@ -81,8 +81,14 @@ router.post('/change-password', auth, [
 ], authController.changePassword);
 
 router.post('/forgot-password', [body('email').isEmail()], authController.forgotPassword);
-router.post('/reset-password/:token', [body('newPassword').isLength({ min: 6 })], authController.resetPassword);
 
+// New endpoint: Expects verificationId and the 6-digit code
+router.post('/verify-code', [
+    body('verificationId').notEmpty().withMessage('Verification ID is required.'),
+    body('code').isLength({ min: 6, max: 6 }).withMessage('Code must be 6 digits.'),
+], authController.verifyCode);
+
+router.post('/reset-password/:token', [body('newPassword').isLength({ min: 6 })], authController.resetPassword);
 // Removed profile photo upload and fetch routes
 
 router.put('/update/fcm-token',auth, authController.updateFCMToken);
