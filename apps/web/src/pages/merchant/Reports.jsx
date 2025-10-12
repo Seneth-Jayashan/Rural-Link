@@ -44,6 +44,34 @@ export default function Reports(){
     loadAnalytics()
   }, [period])
 
+    async function pdfToNativeDownload(pdf, filename) {
+    try {
+      // 1. Get the PDF output as a Data URI (which contains the Base64 data)
+      const dataUri = pdf.output('datauristring'); // Assuming jsPDF or similar library
+      
+      // 2. Split the Data URI to get just the Base64 string
+      // Format is: data:application/pdf;base64,BASE64_STRING
+      const [header, base64Data] = dataUri.split(',');
+      const mimeType = header.split(':')[1].split(';')[0]; // Extract the mime type
+
+      // 3. Check if the native Android interface is available
+      if (window.Android && window.Android.downloadBase64File) {
+        // Call the native method to save the file
+        window.Android.downloadBase64File(base64Data, filename, mimeType);
+        return true; // Successfully handed off to native
+      } else {
+        // Fallback for standard browsers or if interface isn't ready
+        console.warn('Android interface not found, falling back to browser download.');
+        pdf.save(filename); // Use original save method
+        return false;
+      }
+    } catch (error) {
+      console.error("Error converting PDF to Base64:", error);
+      return false;
+    }
+  }
+
+
   function generateReport(type) {
     if (!analytics) return
     
@@ -96,16 +124,20 @@ export default function Reports(){
           filename = `financial-report-${period}-${new Date().toISOString().split('T')[0]}.pdf`
           break
       }
+
+      pdfToNativeDownload(pdf, filename).then(isNative => {
+          if (isNative) {
+              notify({ type: 'success', title: `${type.charAt(0).toUpperCase() + type.slice(1)} PDF report exported successfully` });
+          }
+      });
       
-      pdf.save(filename)
-      notify({ type: 'success', title: `${type.charAt(0).toUpperCase() + type.slice(1)} PDF report exported successfully` })
     } catch (error) {
       console.error('PDF generation error:', error)
       notify({ type: 'error', title: 'Failed to generate PDF', message: error.message })
     }
   }
 
-  function exportCSV() {
+  async function exportCSV() {
     if (!analytics) return
     
     const csvData = [
@@ -120,19 +152,49 @@ export default function Reports(){
       ['Total Distance', analytics.deliveries?.totalDistance || 0]
     ]
     
-    const csvContent = csvData.map(row => row.join(',')).join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `merchant-report-${period}-${new Date().toISOString().split('T')[0]}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    
-    notify({ type: 'success', title: 'CSV report exported successfully' })
-  }
+    const csvContent = csvData.map(row => row.join(',')).join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const filename = `merchant-report-${period}-${new Date().toISOString().split('T')[0]}.csv`
+    const mimeType = 'text/csv'
+
+    try {
+        if (window.Android && window.Android.downloadBase64File) {
+            // New logic: Convert blob to Base64 and call native Android method
+
+            const reader = new FileReader();
+
+            // Return a promise to wait for the FileReader to complete
+            await new Promise((resolve, reject) => {
+                reader.onloadend = function() {
+                    const base64Data = reader.result.split(',')[1];
+                    window.Android.downloadBase64File(base64Data, filename, mimeType);
+                    resolve();
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+            
+            notify({ type: 'success', title: 'CSV report exported successfully (Native)' })
+            
+        } else {
+            // Original logic: Fallback for web browser download (uses blob: URI)
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = filename
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+            
+            notify({ type: 'success', title: 'CSV report exported successfully' })
+        }
+        
+    } catch (error) {
+        console.error('CSV generation error:', error);
+        notify({ type: 'error', title: 'Failed to generate CSV', message: error.message })
+    }
+  }
 
   if (loading) {
     return (
