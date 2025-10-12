@@ -27,7 +27,7 @@ export async function sendNotification(tokens, title, body, data = {}) {
 
     // Optional logging
     console.log(
-      `✅ Notifications sent: ${response.successCount}, failed: ${response.failureCount}`
+      `✅ Notifications sent: ${response.successCount}, failed: ${response.failureCount}, tokens : ${tokenList}, title ${title}`
     )
 
     if (response.failureCount > 0) {
