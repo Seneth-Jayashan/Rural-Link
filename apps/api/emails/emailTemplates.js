@@ -70,6 +70,21 @@ const verificationCodeTemplate = (code, firstName) => `
     </div>
 `;
 
+const whatsappVerificationTemplate = (code, firstName) => `
+👋 Hello *${firstName}*,
+
+We received a request to reset your Rural Link password.
+
+Verification Code 🔑:
+
+ *${code}*
+
+⏳ This code is valid for the next *10 minutes*. Please enter it in the app to proceed.
+
+---
+Rural Link Team
+`;
+
 const passwordChangedTemplate = (firstName) => `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <h2>Hello ${firstName},</h2>
@@ -265,5 +280,6 @@ module.exports = {
     genericNotificationTemplate,
     paymentConfirmationTemplate,
     lowStockTemplate,
-    verificationCodeTemplate
+    verificationCodeTemplate,
+    whatsappVerificationTemplate
 };

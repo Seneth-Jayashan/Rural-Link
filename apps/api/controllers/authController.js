@@ -3,10 +3,12 @@ const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
-const { verifyEmailTemplate, forgotPasswordTemplate, passwordChangedTemplate ,verificationCodeTemplate} = require('../emails/emailTemplates');
+const { verifyEmailTemplate, forgotPasswordTemplate, passwordChangedTemplate ,verificationCodeTemplate,whatsappVerificationTemplate} = require('../emails/emailTemplates');
 require("dotenv").config();
 const crypto = require('crypto');
 const otpGenerator = require('otp-generator');
+const { sendWhatsapp } = require('../utils/whatsapp'); // <--- IMPORT NEW UTILITY
+
 // Profile image upload logic removed
 
 // Generate JWT Token
@@ -303,39 +305,81 @@ exports.forgotPassword = async (req, res) => {
         const { email } = req.body;
         const user = await User.findOne({ email });
         
-        // --- Security Note: Return a generic message even if the user isn't found.
         if (!user) {
             return res.json({ success: true, message: 'If a user with that email exists, a verification code has been sent.', verificationId: null });
         }
 
-        // --- Generate and store 6-digit OTP ---
+        // --- Generate Code and Verification ID ---
         const verificationCode = otpGenerator.generate(6, { 
             upperCaseAlphabets: false, 
             lowerCaseAlphabets: false, 
             specialChars: false 
         });
 
-        // 1. Generate a temporary ID the client will use for the next request.
         const verificationId = crypto.randomBytes(16).toString('hex'); 
 
-        // 2. Store the HASHED code AND the verificationId on the user record.
-        user.resetPasswordCode = crypto.createHash('sha256').update(verificationCode).digest('hex'); // Storing the OTP hash
+        user.resetPasswordCode = crypto.createHash('sha256').update(verificationCode).digest('hex');
         user.resetPasswordToken = verificationId; 
-        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes for code validity
+        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; 
         await user.save({ validateBeforeSave: false });
 
-        // --- Send the Code via Email ---
-        await sendEmail({
-            to: user.email,
-            subject: 'Password Reset Verification Code',
-            html: verificationCodeTemplate(verificationCode, user.firstName) 
-        });
+        // =======================================================
+        // 👇 CONCURRENT DELIVERY LOGIC
+        // =======================================================
+        
+        const deliveryPromises = [];
+        const waMessage = whatsappVerificationTemplate(verificationCode, user.firstName);
+        let deliveryMethods = ['email']; 
 
-        // 3. Return the verificationId to the client.
+        // 1. WhatsApp Delivery Attempt
+        if (user.phone) {
+            
+            // --- FIX: Convert phone number to international format (94) ---
+            
+            let cleanPhone = user.phone.replace(/[^0-9]/g, ''); // Remove all non-digits (e.g., spaces, dashes)
+            
+            // If the number starts with '0', remove it (local trunk code)
+            if (cleanPhone.startsWith('0')) {
+                cleanPhone = cleanPhone.substring(1); 
+            }
+            
+            // Prepend the country code if it's not already present
+            if (!cleanPhone.startsWith('94')) {
+                cleanPhone = '94' + cleanPhone;
+            }
+            
+            // Final WhatsApp ID format (e.g., 9471xxxxxxx@s.whatsapp.net)
+            const whatsappId = cleanPhone + '@s.whatsapp.net';
+
+            // Push the WhatsApp sending promise
+            deliveryPromises.push(
+                sendWhatsapp(whatsappId, waMessage)
+                    .then(success => {
+                        if (success) deliveryMethods.push('WhatsApp');
+                        return success;
+                    })
+            );
+        }
+        // 2. Email Delivery Attempt (always send for redundancy)
+        deliveryPromises.push(
+            sendEmail({
+                to: user.email,
+                subject: 'Password Reset Verification Code',
+                html: verificationCodeTemplate(verificationCode, user.firstName) 
+            })
+        );
+        
+        // Wait for all promises. Using Promise.allSettled is safer 
+        // as it prevents a single failure (e.g., WA failure) from stopping the entire function.
+        await Promise.allSettled(deliveryPromises);
+
+        // --- Determine final success message ---
+        const message = `A 6-digit verification code has been sent to your ${deliveryMethods.join(' and ')}.`;
+
         res.json({ 
             success: true, 
-            message: 'A 6-digit verification code has been sent to your email.',
-            verificationId: verificationId // <--- Client needs this for the next step
+            message: message,
+            verificationId: verificationId
         });
     } catch (error) {
         console.error('Forgot password error:', error);

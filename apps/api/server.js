@@ -9,9 +9,10 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const { connectToWhatsApp } = require('./utils/whatsapp'); 
 
 const connectDB = require('./config/db');
-
+connectToWhatsApp();
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
