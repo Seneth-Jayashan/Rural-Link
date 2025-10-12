@@ -23,7 +23,7 @@ function Timeline({ status, history }){
   return (
     <div className="relative">
       {/* Progress Line */}
-      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200">
+      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 mb-4">
         <div 
           className="bg-orange-500 transition-all duration-500"
           style={{ height: `${(currentIdx / (steps.length - 1)) * 100}%` }}
