@@ -268,6 +268,24 @@ const strings = {
     'Accuracy': 'Accuracy',
     'Location found': 'Location found',
     'Location not set': 'Location not set',
+    // New Account Page Translations
+    'My Profile': 'My Profile',
+    'Manage your account settings': 'Manage your account settings',
+    'Uploading...': 'Uploading...',
+    'Save Photo': 'Save Photo',
+    'Personal Information': 'Personal Information',
+    'Full Name': 'Full Name',
+    'Address': 'Address',
+    'Business Name': 'Business Name',
+    'Vehicle Type': 'Vehicle Type',
+    'Vehicle Number': 'Vehicle Number',
+    'Settings': 'Settings',
+    'App language preference': 'App language preference',
+    'Read our terms of service': 'Read our terms of service',
+    'Privacy Policy': 'Privacy Policy',
+    'How we handle your data': 'How we handle your data',
+    'Help & Support': 'Help & Support',
+    'Get help with the app': 'Get help with the app',
   },
   si: {
     login: 'ඇතුල් වන්න',
@@ -534,6 +552,24 @@ const strings = {
     'Accuracy': 'නිරවද්‍යතාව',
     'Location found': 'ස්ථානය හමු විය',
     'Location not set': 'ස්ථානය සකස් නොකරන ලදී',
+    // New Account Page Translations
+    'My Profile': 'මගේ පැතිකඩ',
+    'Manage your account settings': 'ඔබගේ ගිණුම් සැකසුම් කළමනාකරණය කරන්න',
+    'Uploading...': 'උඩුගත කරමින්...',
+    'Save Photo': 'ඡායාරූපය සුරකින්න',
+    'Personal Information': 'පුද්ගලික තොරතුරු',
+    'Full Name': 'සම්පූර්ණ නම',
+    'Address': 'ලිපිනය',
+    'Business Name': 'ව්‍යාපාර නාමය',
+    'Vehicle Type': 'වාහන වර්ගය',
+    'Vehicle Number': 'වාහන අංකය',
+    'Settings': 'සැකසුම්',
+    'App language preference': 'යෙදුමේ භාෂා මනාපය',
+    'Read our terms of service': 'අපගේ සේවා නියම කියවන්න',
+    'Privacy Policy': 'රහස්‍යතා ප්‍රතිපත්තිය',
+    'How we handle your data': 'අපි ඔබගේ දත්ත හසුරුවන ආකාරය',
+    'Help & Support': 'උදව් සහ සහාය',
+    'Get help with the app': 'යෙදුම සමඟ උදව් ලබා ගන්න',
   },
   ta: {
     login: 'உள்நுழை',
@@ -684,7 +720,7 @@ const strings = {
     'Track all your orders in one place': 'உங்கள் அனைத்து ஆர்டர்களையும் ஒரே இடத்தில் பின்தொடர்க',
     'No orders yet': 'இன்னும் ஆர்டர்கள் இல்லை',
     'Your order history will appear here': 'உங்கள் ஆர்டர் வரலாறு இங்கே தோன்றும்',
-    'Total Amount': 'மொத்த தொகை',
+    'Total Amount': 'மொத்த தொகை',
     'Items': 'உருப்படிகள்',
     'Order Status': 'ஆர்டர் நிலை',
     'Courier': 'டெலிவரி நபர்',
@@ -800,15 +836,40 @@ const strings = {
     'Accuracy': 'துல்லியம்',
     'Location found': 'இருப்பிடம் கிடைத்தது',
     'Location not set': 'இருப்பிடம் அமைக்கப்படவில்லை',
+    // New Account Page Translations
+    'My Profile': 'எனது சுயவிவரம்',
+    'Manage your account settings': 'உங்கள் கணக்கு அமைப்புகளை நிர்வகிக்கவும்',
+    'Uploading...': 'பதிவேற்றுகிறது...',
+    'Save Photo': 'புகைப்படத்தை சேமி',
+    'Personal Information': 'தனிப்பட்ட தகவல்',
+    'Full Name': 'முழு பெயர்',
+    'Address': 'முகவரி',
+    'Business Name': 'வணிகப் பெயர்',
+    'Vehicle Type': 'வாகன வகை',
+    'Vehicle Number': 'வாகன எண்',
+    'Settings': 'அமைப்புகள்',
+    'App language preference': 'பயன்பாட்டு மொழி விருப்பம்',
+    'Read our terms of service': 'எங்கள் சேவை விதிமுறைகளைப் படிக்கவும்',
+    'Privacy Policy': 'தனியுரிமைக் கொள்கை',
+    'How we handle your data': 'உங்கள் தரவை நாங்கள் எவ்வாறு கையாளுகிறோம்',
+    'Help & Support': 'உதவி மற்றும் ஆதரவு',
+    'Get help with the app': 'பயன்பாட்டிற்கான உதவியைப் பெறுங்கள்',
   }
 };
 
-
-
 export function LanguageProvider({ children }){
   const initialLang = typeof window !== 'undefined' ? (localStorage.getItem('lang') || 'en') : 'en'
-  const [lang, setLang] = useState(initialLang)
+  const [lang, setLangState] = useState(initialLang)
+  
+  const setLang = (newLang) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lang', newLang)
+    }
+    setLangState(newLang)
+  }
+
   const t = useMemo(()=> (key)=> strings[lang]?.[key] || key, [lang])
+  
   return (
     <LanguageContext.Provider value={{ lang, setLang, t }}>
       {children}
@@ -819,5 +880,3 @@ export function LanguageProvider({ children }){
 export function useI18n(){
   return useContext(LanguageContext)
 }
-
-

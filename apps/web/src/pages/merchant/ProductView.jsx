@@ -303,7 +303,7 @@ export default function ProductView(){
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mt-6"
+          className="mt-6 mb-6"
         >
           <motion.button 
             whileHover={{ scale: 1.02 }}

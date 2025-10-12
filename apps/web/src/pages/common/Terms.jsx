@@ -110,7 +110,7 @@ export default function Terms() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 mb-4">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

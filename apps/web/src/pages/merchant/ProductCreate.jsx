@@ -224,7 +224,7 @@ export default function ProductCreate() {
         </div>
       </motion.div>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto mb-4">
         <motion.form
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
