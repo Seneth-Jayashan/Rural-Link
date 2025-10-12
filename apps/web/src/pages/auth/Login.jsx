@@ -128,7 +128,8 @@ export default function Login() {
             
             // If the token is still missing, try to get it again (mostly for web fallback)
             if (!tokenToSave) {
-                notify({ type: 'error', title: 'Need Notification Permission', message: 'Please allow notifications before logging in' })
+                notify({ type: 'error', title: t('Need Notification Permission'), message: t('Please allow notifications before logging in') })
+
                 tokenToSave = await requestNotificationPermission()
                 if (!tokenToSave) return
             }
@@ -139,10 +140,11 @@ export default function Login() {
             // ✅ Save the token to the backend after successful login
             if (tokenToSave) {
                 await saveFCMToken(tokenToSave)
-                console.log('✅ FCM token saved successfully to backend')
+                console.log(t('✅ FCM token saved successfully to backend'))
             } else {
-                console.warn('⚠️ No FCM token available to save. Notifications may not work.')
-                notify({ type: 'error', title: 'Token Missing', message: 'Notifications may not work. Please refresh.' })
+                console.warn(t('⚠️ No FCM token available to save. Notifications may not work. Please refresh.'))
+                notify({ type: 'error', title: t('Token Missing'), message: t('Notifications may not work. Please refresh.') })
+
             }
 
             notify({ type: 'success', title: t('Welcome back!'), message: t('Login successful') })

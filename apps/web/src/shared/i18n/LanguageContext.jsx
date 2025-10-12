@@ -28,6 +28,8 @@ const strings = {
     Orders: 'Orders',
     Add: 'Add',
     Deliver: 'Deliver',
+    Dashboard: 'Dashboard',
+    Reports: 'Reports',
     // Auth screens
     'Welcome Back': 'Welcome Back',
     'Welcome back': 'Welcome back',
@@ -56,6 +58,12 @@ const strings = {
     'Passwords do not match': 'Passwords do not match',
     'Validation Error': 'Validation Error',
     'Password must be at least 6 characters long': 'Password must be at least 6 characters long',
+    'Email is required': 'Email is required',
+    'Please enter your email address': 'Please enter your email address',
+    'Invalid email format': 'Invalid email format',
+    'Please enter a valid email address': 'Please enter a valid email address',
+    'Password is required': 'Password is required',
+    'Please enter your password': 'Please enter your password',
     'Registered successfully. Please verify your email.': 'Registered successfully. Please verify your email.',
     'Registration complete': 'Registration complete',
     'Check your email to verify your account.': 'Check your email to verify your account.',
@@ -63,6 +71,10 @@ const strings = {
     'Login failed': 'Login failed',
     'Login successful': 'Login successful',
     'Welcome back!': 'Welcome back!',
+    'Need Notification Permission': 'Need Notification Permission',
+    'Please allow notifications before logging in': 'Please allow notifications before logging in',
+    'Token Missing': 'Token Missing',
+    'Notifications may not work. Please refresh.': 'Notifications may not work. Please refresh.',
     // Home
     'Discover Products': 'Discover Products',
     'Find amazing items for your needs': 'Find amazing items for your needs',
@@ -282,6 +294,8 @@ const strings = {
     Orders: 'ඇණවුම්',
     Add: 'එක් කරන්න',
     Deliver: 'බෙදාහැරීම',
+    Dashboard: 'ඩැෂ්බෝඩ්',
+    Reports: 'වාර්තා',
     // Auth screens
     'Welcome Back': 'ආපසු සාදරයෙන්',
     'Welcome back': 'ආපසු සාදරයෙන්',
@@ -310,6 +324,12 @@ const strings = {
     'Passwords do not match': 'මුරපද නොගැලපේ',
     'Validation Error': 'තහවුරු කිරීමේ දෝෂය',
     'Password must be at least 6 characters long': 'මුරපදය අඩුම ගණනක් අක්ෂර 6ක් විය යුතුය',
+    'Email is required': 'ඊමේල් අවශ්‍යයි',
+    'Please enter your email address': 'කරුණාකර ඔබේ ඊමේල් ලිපිනය ඇතුල් කරන්න',
+    'Invalid email format': 'ඊමේල් ආකෘතිය වැරදියි',
+    'Please enter a valid email address': 'වලංගු ඊමේල් ලිපිනයක් ඇතුල් කරන්න',
+    'Password is required': 'මුරපදය අවශ්‍යයි',
+    'Please enter your password': 'කරුණාකර ඔබගේ මුරපදය ඇතුල් කරන්න',
     'Registered successfully. Please verify your email.': 'සාර්ථකව ලියාපදිංචි විය. කරුණාකර ඔබේ ඊමේල් තහවුරු කරන්න.',
     'Registration complete': 'ලියාපදිංචිය සම්පූර්ණයි',
     'Check your email to verify your account.': 'ඔබගේ ගිණුම තහවුරු කිරීමට ඊමේල් පරීක්ෂා කරන්න.',
@@ -317,6 +337,10 @@ const strings = {
     'Login failed': 'ඇතුල් වීම අසාර්ථකයි',
     'Login successful': 'ඇතුල් වීම සාර්ථකයි',
     'Welcome back!': 'ආපසු සාදරයෙන්!',
+    'Need Notification Permission': 'දැනුම්දීම් අවසරය අවශ්‍යයි',
+    'Please allow notifications before logging in': 'ඇතුල් වීමට පෙර දැනුම්දීම් සඳහා අවසර දෙන්න',
+    'Token Missing': 'ටෝකනය නොමැත',
+    'Notifications may not work. Please refresh.': 'දැනුම්දීම් ක්‍රියා නොකරන්න පුළලද. කරුණාකර නැවත පූරණය කරන්න.',
     // Home
     'Discover Products': 'නිෂ්පාදන සොයන්න',
     'Find amazing items for your needs': 'ඔබේ අවශ්යතා සඳහා අද්භූත අයිතම සොයන්න',
@@ -536,6 +560,8 @@ const strings = {
     Orders: 'ஆர்டர்கள்',
     Add: 'சேர்',
     Deliver: 'விநியோகம்',
+    Dashboard: 'டாஷ்போர்டு',
+    Reports: 'அறிக்கைகள்',
     // Auth screens
     'Welcome Back': 'மீண்டும் வரவேற்பு',
     'Welcome back': 'மீண்டும் வரவேற்பு',
@@ -564,6 +590,12 @@ const strings = {
     'Passwords do not match': 'கடவுச்சொற்கள் பொருந்தவில்லை',
     'Validation Error': 'சரிபார்ப்பு பிழை',
     'Password must be at least 6 characters long': 'கடவுச்சொல் குறைந்தது 6 எழுத்துகள் இருக்க வேண்டும்',
+    'Email is required': 'மின்னஞ்சல் அவசியம்',
+    'Please enter your email address': 'உங்கள் மின்னஞ்சல் முகவரியை உள்ளிடவும்',
+    'Invalid email format': 'தவறான மின்னஞ்சல் வடிவம்',
+    'Please enter a valid email address': 'செல்லுபடியாகும் மின்னஞ்சல் முகவரியை உள்ளிடவும்',
+    'Password is required': 'கடவுச்சொல் அவசியம்',
+    'Please enter your password': 'உங்கள் கடவுச்சொல்லை உள்ளிடவும்',
     'Registered successfully. Please verify your email.': 'வெற்றிகரமாக பதிவு செய்யப்பட்டது. மின்னஞ்சலை சரிபார்க்கவும்.',
     'Registration complete': 'பதிவு முடிந்தது',
     'Check your email to verify your account.': 'கணக்கை உறுதிப்படுத்த மின்னஞ்சலைச் சரிபார்க்கவும்.',
@@ -571,6 +603,10 @@ const strings = {
     'Login failed': 'உள்நுழைவு தோல்வியடைந்தது',
     'Login successful': 'உள்நுழைவு வெற்றிகரமாக முடிந்தது',
     'Welcome back!': 'மீண்டும் வரவேற்கிறோம்!',
+    'Need Notification Permission': 'அறிவிப்புகளுக்கான அனுமதி தேவை',
+    'Please allow notifications before logging in': 'உள்நுழைவதற்கு முன் அறிவிப்புகளை அனுமதிக்கவும்',
+    'Token Missing': 'டோக்கன் இல்லை',
+    'Notifications may not work. Please refresh.': 'அறிவிப்புகள் வேலை செய்யாமல் இருக்கலாம். தயவுசெய்து புதுப்பிக்கவும்.',
     // Home
     'Discover Products': 'பொருட்களை கண்டறியவும்',
     'Find amazing items for your needs': 'உங்கள் தேவைகளுக்கான சிறந்த பொருட்களைத் தேடுங்கள்',
@@ -770,7 +806,8 @@ const strings = {
 
 
 export function LanguageProvider({ children }){
-  const [lang, setLang] = useState('en')
+  const initialLang = typeof window !== 'undefined' ? (localStorage.getItem('lang') || 'en') : 'en'
+  const [lang, setLang] = useState(initialLang)
   const t = useMemo(()=> (key)=> strings[lang]?.[key] || key, [lang])
   return (
     <LanguageContext.Provider value={{ lang, setLang, t }}>
