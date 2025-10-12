@@ -158,7 +158,7 @@ export default function Reports(){
   const { overview, deliveries } = analytics || {}
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50/30 p-4 pb-24 mb-4">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -176,17 +176,20 @@ export default function Reports(){
         </div>
       </motion.div>
 
+     {/* --- REPLACEMENT CODE STARTS HERE --- */}
+
       {/* Controls */}
+      {/* 1. Add 'relative' and 'z-10' to this main wrapper */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-4 mb-6"
+        className="relative z-10 bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-orange-100 p-4 mb-6"
       >
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            {/* --- REPLACEMENT CODE STARTS HERE --- */}
             <div className="relative flex-1 sm:w-52">
-              <Listbox value={period} onChange={setPeriod}>
+              {/* 2. Add the 'static' prop here */}
+              <Listbox value={period} onChange={setPeriod} static>
                 <div className="relative">
                   <Listbox.Button className="relative w-full cursor-pointer border border-orange-200 rounded-2xl pl-10 pr-4 py-3 bg-white text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-opacity-75 text-left">
                     <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500 w-4 h-4" />
@@ -203,7 +206,8 @@ export default function Reports(){
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-10">
+                    {/* The z-index on Options is no longer strictly necessary but doesn't hurt */}
+                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                       {periodOptions.map((option, optionIdx) => (
                         <Listbox.Option
                           key={optionIdx}
@@ -233,7 +237,6 @@ export default function Reports(){
                 </div>
               </Listbox>
             </div>
-            {/* --- REPLACEMENT CODE ENDS HERE --- */}
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -248,6 +251,7 @@ export default function Reports(){
         </div>
       </motion.div>
 
+      {/* --- REPLACEMENT CODE ENDS HERE --- */}
       {/* Report Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* Overview Report */}
@@ -402,6 +406,7 @@ export default function Reports(){
             <p className="text-xs text-gray-600 mt-1">{t('Deliveries')}</p>
           </div>
           
+
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4 text-center">
             <p className="text-lg font-bold text-orange-600">{formatLKR(overview?.averageOrderValue || 0)}</p>
             <p className="text-xs text-gray-600 mt-1">{t('Avg Order Value')}</p>
