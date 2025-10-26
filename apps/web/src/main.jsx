@@ -38,13 +38,21 @@ import Onboarding from './pages/common/Onboarding.jsx'
 
 function RequireAuth({ children }){
   const { user, loading } = useAuth()
-  if (loading) return <div className="p-4">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
   return user ? children : <Login />
 }
 
 function RequireRole({ role, children }){
   const { user, loading } = useAuth()
-  if (loading) return <div className="p-4">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
   if (!user) return <Login />
   if (user.role === role) return children
   // Redirect to the correct dashboard instead of showing Access Denied
@@ -55,7 +63,11 @@ function RequireRole({ role, children }){
 
 function NotAuthOnly({ children }){
   const { user, loading } = useAuth()
-  if (loading) return <div className="p-4">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
   if (!user) return children
   // Redirect logged-in users by role
   if (user.role === 'merchant') return <MerchantDashboard />
@@ -66,7 +78,11 @@ function NotAuthOnly({ children }){
 // Home route that sends logged-in users to their role dashboard
 function HomeRouter(){
   const { user, loading } = useAuth()
-  if (loading) return <div className="p-4">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
   if (!user) return <Onboarding />
   if (user.role === 'merchant') return <Navigate to="/merchant" replace />
   if (user.role === 'deliver') return <Navigate to="/deliver" replace />
