@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useI18n } from "../../shared/i18n/LanguageContext.jsx";
 import { useAuth } from "../../shared/auth/AuthContext.jsx";
 import { motion } from "framer-motion";
@@ -69,6 +69,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePicPreview, setProfilePicPreview] = useState(null);
+  const profilePicRef = useRef(null);
   const [showShopLocationSelector, setShowShopLocationSelector] = useState(false);
 
   function update(k, v) {
@@ -131,6 +132,12 @@ export default function Register() {
   function removeProfilePic() {
     setForm((prev) => ({ ...prev, profilePic: null }));
     setProfilePicPreview(null);
+    // Clear the file input so the same file can be re-selected and to avoid stale file references
+    try {
+      if (profilePicRef && profilePicRef.current) profilePicRef.current.value = "";
+    } catch (e) {
+      // ignore
+    }
   }
 
   function handleShopLocationSelect(location, address) {
@@ -446,6 +453,7 @@ export default function Register() {
             type="file"
             accept="image/*"
             onChange={handleProfilePicChange}
+            ref={profilePicRef}
             className="hidden"
           />
 
@@ -681,7 +689,8 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setShowShopLocationSelector(true)}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm hover:bg-gray-100 transition-colors text-left"
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-2 shadow-sm hover:bg-gray-100 transition-colors text-left overflow-hidden"
+                  title={form.shopLocation.fullAddress || (form.shopLocation.coordinates.latitude ? `${form.shopLocation.coordinates.latitude.toFixed(6)}, ${form.shopLocation.coordinates.longitude.toFixed(6)}` : '')}
                 >
                   <FiNavigation className="text-orange-500 text-lg" />
                   <div className="flex-1">
@@ -690,7 +699,7 @@ export default function Register() {
                         <div className="text-sm font-medium text-gray-900">
                           {t("Shop location selected")}
                         </div>
-                        <div className="text-xs text-gray-600 truncate">
+                        <div className="text-xs text-gray-600 truncate overflow-hidden whitespace-nowrap">
                           {form.shopLocation.fullAddress || 
                            `${form.shopLocation.coordinates.latitude.toFixed(6)}, ${form.shopLocation.coordinates.longitude.toFixed(6)}`}
                         </div>

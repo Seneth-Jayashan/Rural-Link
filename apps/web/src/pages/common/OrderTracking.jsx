@@ -587,7 +587,7 @@ export default function OrderTracking(){
                                   <textarea 
                                     className="w-full border border-gray-200 rounded-2xl p-3 text-sm bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none resize-none"
                                     rows={3}
-                                    placeholder={t('Share your experience with this product... (optional)')}
+                                    placeholder={ghostText[pid] && !(productReviews[pid]?.comment || '').length ? '' : t('Share your experience with this product... (optional)')}
                                     value={productReviews[pid]?.comment||''}
                                     onChange={(e)=> handleProductTextChange(pid, it.product?.name || 'product', e.target.value)}
                                     onKeyDown={(e)=> handleKeyPress(e, pid, true)}
@@ -595,10 +595,10 @@ export default function OrderTracking(){
                                     onTouchEnd={(e)=> handleTouchEnd(e, pid, true)}
                                   />
                                   
-                                  {/* Ghost Text Overlay */}
-                                  {ghostText[pid] && productReviews[pid]?.comment && productReviews[pid]?.comment.length >= 2 && (
+                                  {/* Ghost Text Overlay (show even when textarea is empty so "Get AI Suggestion" displays) */}
+                                  {ghostText[pid] && (
                                     <div className="absolute inset-0 p-3 text-sm pointer-events-none">
-                                      <span className="text-transparent">{productReviews[pid]?.comment}</span>
+                                      <span className="text-transparent">{productReviews[pid]?.comment || ''}</span>
                                       <span 
                                         className="text-gray-400 italic cursor-pointer hover:text-orange-500 hover:bg-orange-50 px-1 rounded transition-colors"
                                         onClick={() => acceptWordSuggestion(pid, true)}
@@ -610,29 +610,7 @@ export default function OrderTracking(){
                                   )}
                                 </div>
 
-                                {/* Ghost Text Actions */}
-                                {ghostText[pid] && productReviews[pid]?.comment && productReviews[pid]?.comment.length >= 2 && (
-                                  <div className="mt-2 flex gap-2">
-                                    <motion.button 
-                                      whileHover={{ scale: 1.05 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      type="button"
-                                      className="px-3 py-1.5 text-xs bg-orange-100 text-orange-700 rounded-full border border-orange-300 hover:bg-orange-200 active:bg-orange-300 transition-colors"
-                                      onClick={() => acceptWordSuggestion(pid, true)}
-                                    >
-                                      ✓ {t('Accept')} "{ghostText[pid]}"
-                                    </motion.button>
-                                    <motion.button 
-                                      whileHover={{ scale: 1.05 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      type="button"
-                                      className="px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full border border-gray-300 hover:bg-gray-200 active:bg-gray-300 transition-colors"
-                                      onClick={() => setGhostText(prev => ({ ...prev, [pid]: null }))}
-                                    >
-                                      ✕ {t('Dismiss')}
-                                    </motion.button>
-                                  </div>
-                                )}
+                                {/* Ghost actions removed — we keep only Get AI Suggestion and Use Full Suggestion buttons below for simpler UX */}
 
                                 {/* AI Loading State */}
                                 {generatingGhost[pid] && (
@@ -648,12 +626,14 @@ export default function OrderTracking(){
                               {/* AI Actions */}
                               <div className="flex gap-2">
                                 <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  type="button" 
-                                  className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-xl border border-blue-300 hover:bg-blue-200 disabled:opacity-50 transition-colors flex items-center gap-2"
+                                  whileHover={{ scale: 1.03 }}
+                                  whileTap={{ scale: 0.97 }}
+                                  type="button"
+                                  className="px-4 py-2 text-sm bg-white border border-blue-300 text-blue-700 rounded-xl hover:bg-blue-50 disabled:opacity-50 transition-colors flex items-center gap-2"
                                   onClick={() => generateProductGhostText(pid, it.product?.name || 'product')}
                                   disabled={generatingGhost[pid]}
+                                  title="Generate an AI suggestion for this comment"
+                                  aria-label="Get AI suggestion"
                                 >
                                   {generatingGhost[pid] ? (
                                     <>
@@ -663,18 +643,23 @@ export default function OrderTracking(){
                                   ) : (
                                     <>
                                       <span>🤖</span>
-                                      Get AI Suggestion
+                                      <span className="font-medium">{t('Get AI Suggestion')}</span>
                                     </>
                                   )}
                                 </motion.button>
 
                                 {ghostText[pid] && (
                                   <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    type="button" 
-                                    className="px-4 py-2 text-sm bg-green-100 text-green-700 rounded-xl border border-green-300 hover:bg-green-200 transition-colors flex items-center gap-2"
-                                    onClick={() => setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: ghostText[pid] }}))}
+                                    whileHover={{ scale: 1.03 }}
+                                    whileTap={{ scale: 0.97 }}
+                                    type="button"
+                                    className="px-4 py-2 text-sm bg-green-600 text-white rounded-xl border border-green-700 hover:bg-green-700 transition-colors flex items-center gap-2"
+                                    title={ghostText[pid]}
+                                    aria-label={`Use full AI suggestion: ${ghostText[pid]}`}
+                                    onClick={() => {
+                                      setProductReviews(prev=> ({...prev, [pid]: { ...(prev[pid]||{}), comment: ghostText[pid] }}))
+                                      setGhostText(prev => ({ ...prev, [pid]: null }))
+                                    }}
                                   >
                                     <FiCheck className="w-4 h-4" />
                                     {t('Use Full Suggestion')}
@@ -776,18 +761,18 @@ export default function OrderTracking(){
                           <textarea 
                               className="w-full border border-gray-200 rounded-2xl p-3 text-sm bg-gray-50/50 focus:bg-white focus:border-orange-300 focus:ring-2 focus:ring-orange-200 transition-all outline-none resize-none"
                               rows={3}
-                            placeholder={t('How was your delivery experience? (optional)')}
-                              value={driverReview.comment}
-                              onChange={(e)=> handleDeliveryTextChange(e.target.value)}
+                              placeholder={ghostText['delivery'] && !driverReview.comment ? '' : t('How was your delivery experience? (optional)')}
+                                value={driverReview.comment}
+                                onChange={(e)=> handleDeliveryTextChange(e.target.value)}
                               onKeyDown={(e)=> handleKeyPress(e, 'delivery', false)}
                               onTouchStart={(e)=> handleTouchStart(e, 'delivery', false)}
                               onTouchEnd={(e)=> handleTouchEnd(e, 'delivery', false)}
                             />
                             
-                            {/* Ghost Text Overlay */}
-                            {ghostText['delivery'] && driverReview.comment && driverReview.comment.length >= 2 && (
+                            {/* Ghost Text Overlay (show even when textarea is empty so "Get AI Suggestion" displays) */}
+                            {ghostText['delivery'] && (
                               <div className="absolute inset-0 p-3 text-sm pointer-events-none">
-                                <span className="text-transparent">{driverReview.comment}</span>
+                                <span className="text-transparent">{driverReview.comment || ''}</span>
                                 <span 
                                   className="text-gray-400 italic cursor-pointer hover:text-orange-500 hover:bg-orange-50 px-1 rounded transition-colors"
                                   onClick={() => acceptWordSuggestion('delivery', false)}
@@ -799,29 +784,8 @@ export default function OrderTracking(){
                             )}
                           </div>
 
-                          {/* Ghost Text Actions */}
-                          {ghostText['delivery'] && driverReview.comment && driverReview.comment.length >= 2 && (
-                            <div className="mt-2 flex gap-2">
-                              <motion.button 
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                type="button"
-                                className="px-3 py-1.5 text-xs bg-orange-100 text-orange-700 rounded-full border border-orange-300 hover:bg-orange-200 active:bg-orange-300 transition-colors"
-                                onClick={() => acceptWordSuggestion('delivery', false)}
-                              >
-                                ✓ {t('Accept')} "{ghostText['delivery']}"
-                              </motion.button>
-                              <motion.button 
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                type="button"
-                                className="px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full border border-gray-300 hover:bg-gray-200 active:bg-gray-300 transition-colors"
-                                onClick={() => setGhostText(prev => ({ ...prev, 'delivery': null }))}
-                              >
-                                ✕ {t('Dismiss')}
-                              </motion.button>
-                            </div>
-                          )}
+                          {/* Ghost Text Actions (show when suggestion exists) */}
+                          {/* Ghost actions removed — keep only Get AI Suggestion and Use Full Suggestion buttons for delivery section */}
 
                           {/* AI Loading State */}
                           {generatingGhost['delivery'] && (
@@ -837,12 +801,14 @@ export default function OrderTracking(){
                         {/* AI Actions */}
                         <div className="flex gap-2">
                           <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            type="button" 
-                            className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-xl border border-blue-300 hover:bg-blue-200 disabled:opacity-50 transition-colors flex items-center gap-2"
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            type="button"
+                            className="px-4 py-2 text-sm bg-white border border-blue-300 text-blue-700 rounded-xl hover:bg-blue-50 disabled:opacity-50 transition-colors flex items-center gap-2"
                             onClick={generateDeliveryGhostText}
                             disabled={generatingGhost['delivery']}
+                            title="Generate an AI suggestion for this comment"
+                            aria-label="Get AI suggestion"
                           >
                             {generatingGhost['delivery'] ? (
                               <>
@@ -852,18 +818,23 @@ export default function OrderTracking(){
                             ) : (
                               <>
                                 <span>🤖</span>
-                                Get AI Suggestion
+                                <span className="font-medium">{t('Get AI Suggestion')}</span>
                               </>
                             )}
                           </motion.button>
 
                           {ghostText['delivery'] && (
                             <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
                               type="button" 
-                              className="px-4 py-2 text-sm bg-green-100 text-green-700 rounded-xl border border-green-300 hover:bg-green-200 transition-colors flex items-center gap-2"
-                              onClick={() => setDriverReview(prev=> ({...prev, comment: ghostText['delivery']}))}
+                              className="px-4 py-2 text-sm bg-green-600 text-white rounded-xl border border-green-700 hover:bg-green-700 transition-colors flex items-center gap-2"
+                              title={ghostText['delivery']}
+                              aria-label={`Use full AI suggestion: ${ghostText['delivery']}`}
+                              onClick={() => {
+                                setDriverReview(prev=> ({...prev, comment: ghostText['delivery']}))
+                                setGhostText(prev => ({ ...prev, 'delivery': null }))
+                              }}
                             >
                               <FiCheck className="w-4 h-4" />
                               {t('Use Full Suggestion')}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useI18n } from '../../shared/i18n/LanguageContext.jsx'
 import { useAuth } from '../../shared/auth/AuthContext.jsx'
 import { motion } from 'framer-motion'
-import { FiMail, FiLock } from 'react-icons/fi'
+import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi'
 import { useToast } from '../../shared/ui/Toast.jsx'
 import { requestNotificationPermission, saveFCMToken } from '../../notifications.js'
 
@@ -37,6 +37,7 @@ export default function Login() {
     const { t } = useI18n()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const { login, user } = useAuth()
@@ -200,10 +201,18 @@ export default function Login() {
                         <input
                             className="flex-1 bg-transparent placeholder-gray-400 text-sm outline-none"
                             placeholder={t('Password')}
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                         />
+                        <button
+                            type="button"
+                            aria-label={showPassword ? t('Hide password') : t('Show password')}
+                            onClick={() => setShowPassword(s => !s)}
+                            className="text-orange-500 hover:text-orange-600 focus:outline-none"
+                        >
+                            {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+                        </button>
                     </div>
 
                     {error && (
